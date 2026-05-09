@@ -1,12 +1,1212 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Acedex MVP</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Collabify · Academic Collaboration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+
+<style>
+  :root {
+    --bg-0:#0f1117; --bg-1:#161922; --bg-2:#1c2030; --bg-3:#232838;
+    --border:#262b3d; --border-bright:#353b54;
+    --text:#eef0f7; --text-2:#b9bfd4; --muted:#7a809b; --muted-2:#5a6080;
+    --indigo:#7c6cff; --indigo-bright:#9d8eff; --violet:#a875ff;
+    --grad:linear-gradient(135deg,#7c6cff 0%,#a875ff 100%);
+    --grad-soft:linear-gradient(135deg,rgba(124,108,255,.12) 0%,rgba(168,117,255,.08) 100%);
+    --success:#4ade80; --warn:#f5b56b; --info:#6bb5f5;
+    --shadow-1:0 1px 2px rgba(0,0,0,.2);
+    --shadow-2:0 4px 16px rgba(0,0,0,.25);
+    --r-md:14px; --r-lg:18px; --r-xl:22px; --r-2xl:28px;
+    --safe-bot:env(safe-area-inset-bottom,0px);
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --t:160ms var(--ease);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  html,body{overscroll-behavior:none}
+  body{background:#0a0b10;color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--muted);font-size:14px;z-index:9999;background:#0a0b10}
+  .ldr{width:32px;height:32px;border:3px solid var(--bg-3);border-top-color:var(--indigo);border-radius:50%;animation:s 700ms linear infinite}
+
+  .phone{width:390px;height:844px;background:var(--bg-0);border-radius:50px;border:11px solid #14151c;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  @media(max-width:480px){body{padding:0}.phone{width:100vw;height:100vh;border-radius:0;border:none;box-shadow:none}}
+
+  .status-bar{height:50px;padding:18px 28px 0;display:flex;justify-content:space-between;font-size:14px;font-weight:600;flex-shrink:0;z-index:10;background:var(--bg-0)}
+  .status-icons{display:flex;gap:6px;align-items:center;font-size:12px;opacity:.85}
+  .island{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:116px;height:30px;background:#000;border-radius:22px;z-index:20}
+  .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:100px}
+  .screen::-webkit-scrollbar{display:none}
+
+  .header{padding:12px 24px 24px;display:flex;justify-content:space-between;align-items:flex-start;background:var(--bg-0)}
+  .greeting{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:4px}
+  .display{font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+  .display .accent{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .icon-btn{width:42px;height:42px;border-radius:14px;background:var(--bg-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;position:relative;transition:all var(--t);flex-shrink:0;color:inherit}
+  .icon-btn:active{transform:scale(.94);background:var(--bg-3)}
+  .icon-btn .dot{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--indigo);box-shadow:0 0 0 2px var(--bg-0),0 0 8px var(--indigo)}
+
+  .section{padding:0 24px;margin-bottom:32px}
+  .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .section-head h3{font-size:18px;font-weight:700;letter-spacing:-.02em}
+
+  .role-switch{display:flex;background:var(--bg-1);border:1px solid var(--border);border-radius:14px;padding:4px;margin:0 24px 24px;box-shadow:var(--shadow-1)}
+  .role-opt{flex:1;padding:10px 12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;transition:all 220ms var(--ease);color:var(--muted)}
+  .role-opt.active{background:var(--grad);color:#fff;box-shadow:0 0 0 1px rgba(124,108,255,.18),0 8px 32px rgba(124,108,255,.18)}
+
+  .welcome{margin:0 24px 28px;padding:22px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-xl);position:relative;overflow:hidden;box-shadow:var(--shadow-2)}
+  .welcome::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,108,255,.18),transparent 65%);pointer-events:none}
+  .welcome-eye{font-size:11px;font-weight:600;color:var(--indigo-bright);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;position:relative}
+  .welcome-t{font-size:18px;font-weight:700;line-height:1.3;margin-bottom:6px;position:relative;letter-spacing:-.02em}
+  .welcome-s{font-size:13.5px;color:var(--text-2);line-height:1.5;position:relative}
+
+  .demo-banner{margin:0 24px 16px;padding:10px 14px;background:var(--grad-soft);border:1px solid rgba(124,108,255,.2);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-2)}
+  .demo-banner strong{color:var(--indigo-bright);font-weight:600}
+
+  .stats{display:flex;gap:12px;overflow-x:auto;padding:0 24px;margin:0 -24px 28px;scroll-snap-type:x mandatory}
+  .stats::-webkit-scrollbar{display:none}
+  .stat{flex-shrink:0;width:158px;padding:18px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);scroll-snap-align:start}
+  .stat-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:14px;background:var(--grad-soft);border:1px solid rgba(124,108,255,.15);color:var(--indigo-bright)}
+  .stat-v{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.03em}
+  .stat-l{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:500}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .card{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:12px;cursor:pointer;transition:all var(--t);box-shadow:var(--shadow-1)}
+  .card:active{transform:scale(.99);border-color:var(--border-bright);background:var(--bg-2)}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
+  .card-title{font-weight:600;font-size:15px;line-height:1.35;letter-spacing:-.015em}
+  .card-sub{font-size:12.5px;color:var(--muted);margin-top:4px;font-weight:500}
+  .card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+
+  .pb{height:6px;background:var(--bg-3);border-radius:99px;overflow:hidden}
+  .pb-fill{height:100%;border-radius:99px;background:var(--grad);transition:width 600ms var(--ease)}
+
+  .pc{width:48px;height:48px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pc svg{transform:rotate(-90deg);position:absolute;inset:0}
+  .pc .pct{font-size:11px;font-weight:700;letter-spacing:-.02em}
+
+  .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;color:#fff;letter-spacing:-.02em}
+  .av-s{display:flex}
+  .av-s .av{border:2px solid var(--bg-1);margin-left:-8px}
+  .av-s .av:first-child{margin-left:0}
+
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:-.01em;border:1px solid transparent}
+  .tag-a{background:rgba(124,108,255,.12);color:var(--indigo-bright);border-color:rgba(124,108,255,.18)}
+  .tag-s{background:rgba(74,222,128,.1);color:var(--success);border-color:rgba(74,222,128,.15)}
+  .tag-w{background:rgba(245,181,107,.1);color:var(--warn);border-color:rgba(245,181,107,.15)}
+  .tag-i{background:rgba(107,181,245,.1);color:var(--info);border-color:rgba(107,181,245,.15)}
+  .tag-m{background:var(--bg-3);color:var(--muted);border-color:var(--border)}
+
+  .bnav{position:absolute;bottom:0;left:0;right:0;background:rgba(15,17,23,.78);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-top:1px solid var(--border);display:flex;padding:12px 16px calc(22px + var(--safe-bot));z-index:50}
+  .nav{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0;cursor:pointer;transition:all var(--t);color:var(--muted-2);position:relative;background:none;border:none;font-family:inherit}
+  .nav:active{transform:scale(.92)}
+  .nav.active{color:var(--indigo-bright)}
+  .nav-i{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1}
+  .nav-l{font-size:10.5px;font-weight:600}
+  .nav-b{position:absolute;top:0;right:calc(50% - 22px);background:var(--indigo);color:#fff;font-size:9px;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg-0)}
+
+  .fab{position:absolute;bottom:100px;right:24px;width:56px;height:56px;border-radius:18px;border:none;cursor:pointer;background:var(--grad);color:#fff;font-size:24px;font-weight:300;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,108,255,.35);transition:all var(--t);z-index:30}
+  .fab:active{transform:scale(.92)}
+
+  .sh-head{padding:14px 20px 14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--bg-0);position:sticky;top:0;z-index:5}
+  .back{width:40px;height:40px;border-radius:12px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;flex-shrink:0;transition:all var(--t);color:var(--text-2);border:none;font-family:inherit}
+  .back:active{background:var(--bg-3);transform:scale(.94)}
+  .sh-title{font-size:16px;font-weight:600;letter-spacing:-.02em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .dtabs{display:flex;gap:8px;padding:14px 20px;overflow-x:auto;background:var(--bg-0);border-bottom:1px solid var(--border);position:sticky;top:69px;z-index:4}
+  .dtabs::-webkit-scrollbar{display:none}
+  .dtab{padding:8px 16px;border-radius:99px;background:var(--bg-2);border:1px solid var(--border);font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;flex-shrink:0;transition:all var(--t);font-family:inherit}
+  .dtab.active{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(124,108,255,.25)}
+
+  .ms{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
+  .ms:last-child{border-bottom:none}
+  .ms-n{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+  .ms-n.done{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+  .ms-n.active{background:var(--grad);color:#fff;box-shadow:0 4px 12px rgba(124,108,255,.3)}
+  .ms-n.pending{background:var(--bg-2);color:var(--muted);border:1px solid var(--border)}
+  .ms-info{flex:1;min-width:0}
+  .ms-name{font-weight:600;font-size:14.5px;letter-spacing:-.015em}
+  .ms-meta{font-size:12.5px;color:var(--muted);margin-top:4px;font-weight:500}
+
+  .task{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:13px;transition:all var(--t)}
+  .check{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border-bright);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t)}
+  .check.done{background:var(--grad);border-color:transparent;color:#fff;font-size:12px;font-weight:700}
+  .task-n{font-size:13.5px;font-weight:500;flex:1;letter-spacing:-.01em}
+  .task-n.done{text-decoration:line-through;color:var(--muted)}
+
+  .heat{display:grid;grid-template-columns:repeat(14,1fr);gap:5px}
+  .h-c{aspect-ratio:1;border-radius:4px;background:var(--bg-3)}
+
+  .ctb{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .ctb:last-child{border-bottom:none}
+
+  .ins{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:12px;position:relative;overflow:hidden}
+  .ins::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:99px}
+  .ins.review::before{background:var(--grad)}
+  .ins.note::before{background:var(--info)}
+  .ins.positive::before{background:var(--success)}
+  .ins-b{font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;letter-spacing:-.01em;display:inline-block;margin-bottom:10px}
+  .ins-b.review{background:rgba(124,108,255,.12);color:var(--indigo-bright);border:1px solid rgba(124,108,255,.18)}
+  .ins-b.note{background:rgba(107,181,245,.1);color:var(--info);border:1px solid rgba(107,181,245,.15)}
+  .ins-b.positive{background:rgba(74,222,128,.1);color:var(--success);border:1px solid rgba(74,222,128,.15)}
+  .ins-t{font-size:15px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
+  .ins-body{font-size:13.5px;color:var(--text-2);line-height:1.55}
+  .ins-ev{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+  .ins-act{display:flex;gap:8px;margin-top:14px}
+  .conf{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:10px;font-weight:500}
+  .conf-d{display:flex;gap:3px}
+  .conf-d > span{width:5px;height:5px;border-radius:50%;background:var(--bg-3)}
+  .conf-d > span.f{background:var(--indigo-bright)}
+
+  .btn{padding:11px 18px;border:none;border-radius:12px;font-family:inherit;font-size:13.5px;font-weight:600;letter-spacing:-.01em;cursor:pointer;transition:all var(--t);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  .btn:active{transform:scale(.96)}
+  .btn-p{background:var(--grad);color:#fff;box-shadow:0 4px 12px rgba(124,108,255,.25)}
+  .btn-g{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+  .btn-sm{padding:8px 14px;font-size:12.5px;border-radius:10px}
+  .btn-bl{width:100%;padding:14px;border-radius:14px;font-size:14.5px}
+
+  .alert{padding:14px 16px;border-radius:var(--r-md);background:var(--grad-soft);border:1px solid rgba(124,108,255,.15);display:flex;gap:12px;font-size:13px;line-height:1.5}
+  .alert strong{color:var(--text);font-weight:600}
+
+  .ovl{position:absolute;inset:0;z-index:100;background:rgba(8,9,14,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:flex-end;animation:fade 200ms var(--ease)}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .sheet{width:100%;background:var(--bg-1);border-radius:var(--r-2xl) var(--r-2xl) 0 0;padding:8px 24px calc(28px + var(--safe-bot));max-height:88%;overflow-y:auto;border-top:1px solid var(--border);animation:up 280ms var(--ease);box-shadow:0 -20px 60px rgba(0,0,0,.5)}
+  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .handle{width:38px;height:4px;background:var(--border-bright);border-radius:99px;margin:10px auto 22px}
+  .sh-h2{font-size:22px;font-weight:700;margin-bottom:22px;letter-spacing:-.025em}
+
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:8px}
+  .input,.textarea,.select{width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:13px 15px;color:var(--text);font-family:inherit;font-size:14px;font-weight:500;outline:none;transition:all var(--t);-webkit-appearance:none;appearance:none}
+  .input:focus,.textarea:focus,.select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(124,108,255,.15)}
+  .textarea{resize:none;min-height:90px}
+
+  .chat{display:flex;flex-direction:column;height:100%}
+  .msgs{flex:1;overflow-y:auto;padding:4px 24px 20px;display:flex;flex-direction:column;gap:14px}
+  .msgs::-webkit-scrollbar{display:none}
+  .msg{display:flex;gap:10px;align-items:flex-start;animation:in 280ms var(--ease)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .msg.user{flex-direction:row-reverse}
+  .bubble{padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.55;max-width:80%;letter-spacing:-.01em}
+  .msg.ai .bubble{background:var(--bg-1);border:1px solid var(--border);border-bottom-left-radius:6px}
+  .msg.user .bubble{background:var(--grad);color:#fff;border-bottom-right-radius:6px;box-shadow:0 4px 12px rgba(124,108,255,.25);font-weight:500}
+  .ai-av{width:32px;height:32px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#fff;box-shadow:0 4px 12px rgba(124,108,255,.25)}
+  .ibar{padding:12px 20px calc(16px + var(--safe-bot));background:var(--bg-0);border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
+  .ai-in{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:22px;padding:12px 18px;color:var(--text);font-family:inherit;font-size:14px;font-weight:500;outline:none;resize:none;max-height:100px;-webkit-appearance:none;transition:all var(--t)}
+  .ai-in:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(124,108,255,.15)}
+  .send{width:44px;height:44px;border-radius:14px;padding:0;background:var(--grad);color:#fff;flex-shrink:0;font-size:17px;font-weight:600;box-shadow:0 4px 12px rgba(124,108,255,.3);border:none;cursor:pointer}
+  .send:disabled{opacity:.35;box-shadow:none;cursor:not-allowed}
+
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:s 700ms linear infinite}
+  .msg.ai .spin{border:2px solid rgba(124,108,255,.2);border-top-color:var(--indigo)}
+  @keyframes s{to{transform:rotate(360deg)}}
+
+  .chips{display:flex;gap:8px;padding:0 24px 16px;overflow-x:auto}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;padding:9px 15px;background:var(--bg-2);border:1px solid var(--border);border-radius:99px;font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all var(--t)}
+  .chip:active{transform:scale(.95)}
+  .chip.active{background:var(--grad);border-color:transparent;color:#fff}
+
+  .search{margin:0 24px 20px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:500}
+
+  .empty{text-align:center;padding:56px 28px;color:var(--muted)}
+  .empty-i{font-size:36px;margin-bottom:14px;opacity:.5}
+  .empty-h{font-size:16px;color:var(--text);margin-bottom:6px;font-weight:600;letter-spacing:-.02em}
+
+  .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .tile{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 10px;text-align:center}
+  .tv{font-size:22px;font-weight:700;letter-spacing:-.025em;line-height:1}
+  .tv.s{color:var(--success)}
+  .tv.a{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .tv.m{color:var(--muted)}
+  .tl{font-size:11px;color:var(--muted);margin-top:6px;font-weight:500}
+
+  .pstats{display:flex;padding:18px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg)}
+  .pstat{flex:1;text-align:center}
+  .pstat .v{font-size:22px;font-weight:700;letter-spacing:-.025em;line-height:1}
+  .pstat .v.a{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .pstat .l{font-size:11.5px;color:var(--muted);margin-top:6px;font-weight:500}
+  .pdiv{width:1px;background:var(--border);margin:6px 0}
+
+  .set{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all var(--t)}
+  .set:active{background:var(--bg-2)}
+  .set-i{width:38px;height:38px;border-radius:11px;background:var(--bg-3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  .set-info{flex:1}
+  .set-t{font-size:14px;font-weight:600;letter-spacing:-.015em}
+  .set-s{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
+  .chev{color:var(--muted-2);font-size:18px}
+  .glow{box-shadow:0 0 0 1px rgba(124,108,255,.25),0 6px 20px rgba(124,108,255,.18)}
+
+  .ob{position:absolute;inset:0;background:var(--bg-0);z-index:200;display:flex;flex-direction:column;animation:fade 250ms var(--ease)}
+  .ob-c{flex:1;overflow-y:auto;padding:30px 28px 40px}
+  .ob-c::-webkit-scrollbar{display:none}
+  .ob-logo{width:64px;height:64px;border-radius:18px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:28px;margin:30px auto 18px;box-shadow:0 12px 32px rgba(124,108,255,.4)}
+  .ob-t{font-size:28px;font-weight:700;letter-spacing:-.035em;line-height:1.15;margin-bottom:8px;text-align:center}
+  .ob-s{font-size:14px;color:var(--text-2);line-height:1.55;text-align:center;padding:0 12px;margin-bottom:24px}
+  .gstep{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:12px;display:flex;gap:14px}
+  .gstep-n{width:32px;height:32px;border-radius:10px;background:var(--grad-soft);border:1px solid rgba(124,108,255,.18);color:var(--indigo-bright);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+  .gstep-i{flex:1}
+  .gstep-t{font-size:14.5px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px}
+  .gstep-b{font-size:13px;color:var(--text-2);line-height:1.5}
+  .gh{font-size:11px;font-weight:600;color:var(--indigo-bright);text-transform:uppercase;letter-spacing:.12em;margin:24px 0 12px}
+  .ob-foot{padding:16px 24px calc(20px + var(--safe-bot));background:var(--bg-0);border-top:1px solid var(--border);display:flex;gap:10px}
+
+  .key-warn{background:rgba(245,181,107,.08);border:1px solid rgba(245,181,107,.2);padding:12px 14px;border-radius:10px;font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:14px}
+  .key-warn strong{color:var(--warn);font-weight:600}
+</style>
+
+</head>
+<body>
+
+<div id="loading"><div class="ldr"></div><div>Loading Collabify...</div></div>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+const { createRoot } = ReactDOM;
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const PROJECTS = [
+  {id:1,title:"AI Research: LLM Hallucination Study",course:"CS 4890 · Advanced NLP",status:"active",progress:62,dueDate:"May 30",members:["Alex Chen","Priya Sharma","Marcus Lee","Yuki Tanaka"],
+    milestones:[{id:1,title:"Project Proposal",status:"done",due:"Apr 1",owner:"Alex Chen",submissions:2},{id:2,title:"Literature Review",status:"done",due:"Apr 14",owner:"Priya Sharma",submissions:3},{id:3,title:"Methodology Design",status:"active",due:"May 5",owner:"Marcus Lee",submissions:1},{id:4,title:"Experiments & Results",status:"pending",due:"May 20",owner:"Yuki Tanaka",submissions:0},{id:5,title:"Final Paper",status:"pending",due:"May 30",owner:"All",submissions:0}],
+    tasks:[{id:1,title:"Annotate hallucination dataset",done:false,assignee:"Alex Chen",priority:"high",due:"May 10"},{id:2,title:"Implement BERTScore evaluator",done:false,assignee:"Marcus Lee",priority:"high",due:"May 12"},{id:3,title:"Write methods section draft",done:false,assignee:"Priya Sharma",priority:"med",due:"May 15"},{id:4,title:"Create result visualizations",done:false,assignee:"Yuki Tanaka",priority:"med",due:"May 18"},{id:5,title:"Peer review pass",done:true,assignee:"Alex Chen",priority:"low",due:"Apr 28"},{id:6,title:"Citation cleanup",done:true,assignee:"Priya Sharma",priority:"low",due:"Apr 25"}],
+    contributions:[{name:"Alex Chen",pct:34},{name:"Priya Sharma",pct:28},{name:"Marcus Lee",pct:22},{name:"Yuki Tanaka",pct:16}],
+    activity:[{text:"<strong>Marcus Lee</strong> uploaded methodology_draft.docx",time:"2h ago"},{text:"<strong>Priya Sharma</strong> commented on Literature Review",time:"5h ago"},{text:"<strong>Alex Chen</strong> completed task: Citation cleanup",time:"1d ago"}],
+    insights:[{id:1,type:"review",title:"Contribution variance across team",body:"Yuki Tanaka shows fewer interactions during weeks 3–5. No direct uploads in 18 days.",evidence:["16% vs 25% expected","No uploads · 18 days"],confidence:4},{id:2,type:"note",title:"Compressed submission timeline",body:"Literature Review received 3 revisions within 4 hours of the deadline.",evidence:["3 revisions in 4 hrs","+2,400 words same day"],confidence:3},{id:3,type:"positive",title:"Strong early collaboration",body:"Project Proposal phase showed exemplary teamwork.",evidence:["100% participation week 1"],confidence:5}]},
+  {id:2,title:"E-Commerce UX Redesign",course:"DES 3210 · UX Design Studio",status:"active",progress:58,dueDate:"Jun 5",members:["Jordan Rivers","Sam Wu","Taylor Kim"],
+    milestones:[{id:1,title:"Competitive Analysis",status:"done",due:"Apr 5",owner:"Jordan Rivers",submissions:1},{id:2,title:"User Research & Personas",status:"done",due:"Apr 20",owner:"Sam Wu",submissions:2},{id:3,title:"Wireframes",status:"active",due:"May 10",owner:"Taylor Kim",submissions:1},{id:4,title:"Prototype & Testing",status:"pending",due:"May 25",owner:"All",submissions:0},{id:5,title:"Final Presentation",status:"pending",due:"Jun 5",owner:"All",submissions:0}],
+    tasks:[{id:1,title:"Mid-fi wireframes for checkout",done:false,assignee:"Taylor Kim",priority:"high",due:"May 10"},{id:2,title:"Usability test script",done:false,assignee:"Sam Wu",priority:"med",due:"May 14"},{id:3,title:"Synthesize research findings",done:true,assignee:"Jordan Rivers",priority:"med",due:"Apr 22"}],
+    contributions:[{name:"Jordan Rivers",pct:38},{name:"Sam Wu",pct:35},{name:"Taylor Kim",pct:27}],
+    activity:[{text:"<strong>Taylor Kim</strong> uploaded wireframes_v1.fig",time:"1d ago"}],
+    insights:[{id:1,type:"positive",title:"Balanced contribution pattern",body:"Each member contributing within 11 percentage points.",evidence:["σ = 4.2 (very low)","All members weekly active"],confidence:5}]},
+  {id:3,title:"Climate Data Visualization Dashboard",course:"STAT 3020 · Data Science",status:"at-risk",progress:22,dueDate:"May 18",members:["Riley Park","Diego Ortega","Aisha Khan"],
+    milestones:[{id:1,title:"Data Source Selection",status:"done",due:"Apr 8",owner:"Riley Park",submissions:1},{id:2,title:"Cleaning & ETL",status:"active",due:"Apr 25",owner:"Diego Ortega",submissions:0},{id:3,title:"Visualization Design",status:"pending",due:"May 5",owner:"Aisha Khan",submissions:0},{id:4,title:"Interactive Dashboard",status:"pending",due:"May 12",owner:"All",submissions:0},{id:5,title:"Final Report",status:"pending",due:"May 18",owner:"All",submissions:0}],
+    tasks:[{id:1,title:"Reconcile NOAA + NASA datasets",done:false,assignee:"Diego Ortega",priority:"high",due:"Apr 25"},{id:2,title:"Choose visualization library",done:false,assignee:"Aisha Khan",priority:"high",due:"May 1"},{id:3,title:"Data source proposal",done:true,assignee:"Riley Park",priority:"med",due:"Apr 8"}],
+    contributions:[{name:"Riley Park",pct:52},{name:"Diego Ortega",pct:31},{name:"Aisha Khan",pct:17}],
+    activity:[{text:"<strong>Riley Park</strong> uploaded data_sources.pdf",time:"4w ago"}],
+    insights:[{id:1,type:"review",title:"Project pace below trajectory",body:"Cleaning & ETL is past its deadline with no submissions.",evidence:["22% vs 50% expected","Milestone overdue · 13 days"],confidence:5},{id:2,type:"review",title:"Single-contributor reliance",body:"Riley Park accounts for 52% of contributions.",evidence:["52% / 31% / 17% split"],confidence:4}]},
+  {id:4,title:"Database Systems: Distributed Transactions",course:"CS 5510 · Advanced Databases",status:"active",progress:71,dueDate:"May 22",members:["Felix Bauer","Sara Martinez","Ravi Iyer","Emma Schultz"],
+    milestones:[{id:1,title:"Background Survey",status:"done",due:"Mar 28",owner:"Felix Bauer",submissions:2},{id:2,title:"System Design",status:"done",due:"Apr 12",owner:"Sara Martinez",submissions:1},{id:3,title:"Implementation",status:"done",due:"May 1",owner:"Ravi Iyer",submissions:3},{id:4,title:"Benchmarks & Testing",status:"active",due:"May 15",owner:"Emma Schultz",submissions:1},{id:5,title:"Final Report",status:"pending",due:"May 22",owner:"All",submissions:0}],
+    tasks:[{id:1,title:"Run latency benchmarks",done:false,assignee:"Emma Schultz",priority:"high",due:"May 12"},{id:2,title:"Failover stress test",done:false,assignee:"Ravi Iyer",priority:"high",due:"May 14"},{id:3,title:"Implementation core",done:true,assignee:"Ravi Iyer",priority:"high",due:"May 1"}],
+    contributions:[{name:"Ravi Iyer",pct:36},{name:"Sara Martinez",pct:25},{name:"Felix Bauer",pct:21},{name:"Emma Schultz",pct:18}],
+    activity:[{text:"<strong>Ravi Iyer</strong> uploaded impl_v3.zip",time:"7d ago"}],
+    insights:[{id:1,type:"note",title:"High textual similarity in Background Survey",body:"Section 2.3 shows phrasing similar to a public 2023 paper. Citation present but worth verifying scope.",evidence:["~71% phrase overlap","Cited source on p. 4"],confidence:3},{id:2,type:"review",title:"Concentrated implementation effort",body:"Ravi authored 36% of contributions, primarily Implementation phase.",evidence:["36% by Ravi alone","87% commits by 1 member"],confidence:4}]},
+  {id:5,title:"Renewable Energy Policy Analysis",course:"POL 3450 · Public Policy",status:"completed",progress:100,dueDate:"Apr 30 · Submitted",members:["Hannah Wright","Jamal Foster","Mei Lin"],
+    milestones:[{id:1,title:"Topic & Scope",status:"done",due:"Mar 10",owner:"Hannah Wright",submissions:1},{id:2,title:"Stakeholder Interviews",status:"done",due:"Mar 25",owner:"Jamal Foster",submissions:2},{id:3,title:"Policy Comparison Matrix",status:"done",due:"Apr 8",owner:"Mei Lin",submissions:1},{id:4,title:"Final Brief",status:"done",due:"Apr 22",owner:"All",submissions:1},{id:5,title:"Presentation",status:"done",due:"Apr 30",owner:"All",submissions:1}],
+    tasks:[{id:1,title:"Final formatting pass",done:true,assignee:"Hannah Wright",priority:"med",due:"Apr 28"},{id:2,title:"Slide deck",done:true,assignee:"Mei Lin",priority:"med",due:"Apr 27"}],
+    contributions:[{name:"Hannah Wright",pct:34},{name:"Jamal Foster",pct:33},{name:"Mei Lin",pct:33}],
+    activity:[{text:"<strong>Hannah Wright</strong> submitted final presentation",time:"8d ago"}],
+    insights:[{id:1,type:"positive",title:"Exemplary balanced workload",body:"All three members within 1 percentage point.",evidence:["34% / 33% / 33%","All milestones met early"],confidence:5}]},
+];
+
+const HEATMAP = Array.from({length:84},()=> Math.random() > .55 ? Math.floor(Math.random()*5)+1 : 0);
+const heatColor = (v) => v===0?"var(--bg-3)":v<=1?"rgba(124,108,255,.22)":v<=2?"rgba(124,108,255,.42)":v<=3?"rgba(124,108,255,.65)":"rgba(168,117,255,.95)";
+
+const avatarBg = (n) => {
+  const p=["linear-gradient(135deg,#7c6cff,#a875ff)","linear-gradient(135deg,#5848d6,#7c6cff)","linear-gradient(135deg,#a875ff,#c891ff)","linear-gradient(135deg,#6bb5f5,#7c6cff)","linear-gradient(135deg,#9d8eff,#a875ff)","linear-gradient(135deg,#7c6cff,#5848d6)"];
+  let h=0; for(let c of n) h=(h*31+c.charCodeAt(0))%p.length; return p[h];
+};
+const initials = (n) => n.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+
+// ─── CLAUDE AI INTEGRATION ──────────────────────────────────────────────────
+async function askClaude(apiKey, userMessage, projectContext, role) {
+  if (!apiKey) {
+    return "⚠️ Claude API key not set. Tap the gear icon in the top right to add yours. Get one free at console.anthropic.com.";
+  }
+
+  const systemPrompt = role === "professor"
+    ? `You are an experienced college professor reviewing student academic projects. Your job is to:
+
+1. Evaluate project workflows fairly using evidence-based observations
+2. Look for signs of academic dishonesty: plagiarism, copying, suspicious similarity to public sources, unusual contribution patterns, last-minute mass uploads, ghostwriting indicators
+3. Frame concerns as "review recommended" or "worth verifying" — NEVER directly accuse students
+4. Always provide concrete evidence (timestamps, percentages, specific patterns)
+5. Suggest balanced, professional feedback language
+6. Remind that final academic judgment is the human professor's, not yours
+
+Tone: calm, analytical, fair. Like a senior faculty mentor — never alarmist. Be concise (mobile-friendly, 2-4 short paragraphs max). Use **bold** for key findings.
+
+Project context:
+${projectContext}`
+    : `You are a calm, encouraging academic project assistant for a college student. Help them plan tasks, brainstorm ideas, and stay on track with milestones. Be concise and mobile-friendly.
+
+⚠️ Important: Never write essays, code, or content for submission. You help with planning and thinking, not producing graded work.
+
+Project context:
+${projectContext}`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      if (response.status === 401) return "⚠️ Invalid API key. Check it in settings.";
+      if (response.status === 429) return "⚠️ Rate limit hit. Wait a moment and try again.";
+      return `⚠️ API error (${response.status}). ${err.slice(0, 200)}`;
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || "No response received.";
+  } catch (err) {
+    return `⚠️ Connection error: ${err.message}`;
+  }
+}
+
+// ─── COMPONENTS ─────────────────────────────────────────────────────────────
+function Avatar({name, size=28}) {
+  return <div className="av" style={{width:size,height:size,fontSize:size*.36,background:avatarBg(name)}}>{initials(name)}</div>;
+}
+
+function ProgBar({value}) {
+  return <div className="pb"><div className="pb-fill" style={{width:`${value}%`}} /></div>;
+}
+
+function ProgCircle({value, size=48}) {
+  const r=(size-6)/2, circ=2*Math.PI*r, off=circ-(value/100)*circ;
+  const id=`g${value}_${Math.random().toString(36).slice(2,6)}`;
+  return (
+    <div className="pc" style={{width:size,height:size}}>
+      <svg width={size} height={size}>
+        <defs>
+          <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#7c6cff"/>
+            <stop offset="100%" stopColor="#a875ff"/>
+          </linearGradient>
+        </defs>
+        <circle cx={size/2} cy={size/2} r={r} stroke="var(--bg-3)" strokeWidth="3" fill="none"/>
+        <circle cx={size/2} cy={size/2} r={r} stroke={`url(#${id})`} strokeWidth="3" fill="none" strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round" style={{transition:"stroke-dashoffset 600ms cubic-bezier(.22,.61,.36,1)"}}/>
+      </svg>
+      <span className="pct">{value}</span>
+    </div>
+  );
+}
+
+function StatusBar() {
+  return (
+    <div className="status-bar">
+      <span>9:41</span>
+      <div className="status-icons">
+        <span style={{letterSpacing:2}}>●●●</span>
+        <span style={{marginLeft:4}}>📶</span>
+        <span style={{marginLeft:4}}>🔋</span>
+      </div>
+    </div>
+  );
+}
+
+function Confidence({level}) {
+  return (
+    <div className="conf">
+      <span>AI Confidence</span>
+      <div className="conf-d">
+        {[1,2,3,4,5].map(i => <span key={i} className={i<=level?"f":""}/>)}
+      </div>
+      <span style={{marginLeft:4}}>{level>=4?"High":level>=3?"Moderate":"Low"}</span>
+    </div>
+  );
+}
+
+function StatusTag({status}) {
+  const m={"active":{c:"tag-a",t:"Active"},"at-risk":{c:"tag-w",t:"At risk"},"completed":{c:"tag-s",t:"Completed"}};
+  const s=m[status]||m.active;
+  return <span className={`tag ${s.c}`}>{s.t}</span>;
+}
+
+const formatText = (text) => ({__html: text.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>")});
+
+// ─── ONBOARDING ─────────────────────────────────────────────────────────────
+function Onboarding({onComplete, role, setRole}) {
+  const [step, setStep] = useState(0);
+  const studentSteps = [
+    {eyebrow:"Welcome to Collabify", title:"Where academic projects come together", body:"A calm, structured space for student teams to plan, track, and ship projects."},
+    {eyebrow:"Step 1 · Navigate", title:"Four tabs, everything you need",
+      steps:[{n:"⌂",title:"Home",body:"Active projects, weekly milestones, activity heatmap."},{n:"▦",title:"Projects",body:"Every workspace with filters and search."},{n:"✦",title:"AI",body:"Context-aware Claude assistant for planning."},{n:"◉",title:"Profile",body:"Settings and your API key."}]}
+  ];
+  const profSteps = [
+    {eyebrow:"Welcome to Collabify", title:"AI-powered academic review", body:"Claude analyzes student workflows for plagiarism patterns and unusual contributions — you make the final call."},
+    {eyebrow:"Step 1 · How AI helps", title:"Calm, evidence-based review",
+      steps:[{n:"1",title:"Read insights",body:"Claude flags review-worthy patterns with evidence."},{n:"2",title:"Check confidence",body:"Higher dots = more reliable signal."},{n:"3",title:"Use AI tab",body:"Ask Claude to deep-review any project for plagiarism, ghostwriting, or balance issues."},{n:"4",title:"Decide",body:"Mark Reviewed, or Add to Follow-ups. You decide."}]}
+  ];
+  const steps = role==="professor" ? profSteps : studentSteps;
+  const cur = steps[step];
+
+  return (
+    <div className="ob">
+      <div className="ob-c">
+        <div style={{textAlign:"center"}}>
+          <div className="ob-logo">✦</div>
+          <div style={{fontSize:11,fontWeight:600,color:"var(--indigo-bright)",textTransform:"uppercase",letterSpacing:".12em",marginBottom:8}}>{cur.eyebrow}</div>
+          <div className="ob-t">{cur.title}</div>
+          {cur.body && <div className="ob-s">{cur.body}</div>}
+        </div>
+        {step===0 && (
+          <>
+            <div className="gh">Choose your role</div>
+            <div className="role-switch" style={{margin:0}}>
+              <div className={`role-opt ${role==="student"?"active":""}`} onClick={()=>setRole("student")}>I'm a student</div>
+              <div className={`role-opt ${role==="professor"?"active":""}`} onClick={()=>setRole("professor")}>I'm a professor</div>
+            </div>
+          </>
+        )}
+        {cur.steps && cur.steps.map((s,i) => (
+          <div key={i} className="gstep">
+            <div className="gstep-n">{s.n}</div>
+            <div className="gstep-i">
+              <div className="gstep-t">{s.title}</div>
+              <div className="gstep-b">{s.body}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="ob-foot">
+        {step>0 && <button className="btn btn-g" style={{flex:1}} onClick={()=>setStep(step-1)}>Back</button>}
+        <button className="btn btn-p" style={{flex:step>0?2:1}} onClick={()=>step<steps.length-1?setStep(step+1):onComplete()}>
+          {step<steps.length-1?`Continue (${step+1}/${steps.length})`:"Enter app"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── HOME ───────────────────────────────────────────────────────────────────
+function Home({role, projects, onOpenProject, setRole, openSettings}) {
+  const totalTasks = projects.flatMap(p=>p.tasks).length;
+  const doneTasks = projects.flatMap(p=>p.tasks).filter(t=>t.done).length;
+  const activeMs = projects.flatMap(p=>p.milestones).filter(m=>m.status==="active").length;
+  const totalInsights = projects.reduce((a,p)=>a+p.insights.filter(i=>i.type!=="positive").length,0);
+  const atRisk = projects.filter(p=>p.status==="at-risk").length;
+
+  const stats = role==="professor"
+    ? [{l:"Projects",v:projects.length,i:"⊞"},{l:"Students",v:[...new Set(projects.flatMap(p=>p.members))].length,i:"◐"},{l:"Insights",v:totalInsights,i:"✦"},{l:"At Risk",v:atRisk,i:"◇"}]
+    : [{l:"Active Projects",v:projects.filter(p=>p.status!=="completed").length,i:"⊞"},{l:"Tasks Done",v:`${doneTasks}/${totalTasks}`,i:"✓"},{l:"Active Milestones",v:activeMs,i:"◎"},{l:"Streak",v:"12d",i:"↗"}];
+
+  return (
+    <>
+      <div className="header">
+        <div>
+          <div className="greeting">Friday, May 8</div>
+          <div className="display">
+            {role==="professor" ? <>Welcome back, <span className="accent">Prof. Rivera</span></> : <>Hey <span className="accent">Alex</span></>}
+          </div>
+        </div>
+        <button className="icon-btn" onClick={openSettings}>⚙</button>
+      </div>
+
+      <div className="demo-banner">
+        <span style={{fontSize:13}}>✦</span>
+        <div><strong>Demo mode</strong> · sample data with real Claude AI</div>
+      </div>
+
+      <div className="role-switch">
+        <div className={`role-opt ${role==="student"?"active":""}`} onClick={()=>setRole("student")}>Student</div>
+        <div className={`role-opt ${role==="professor"?"active":""}`} onClick={()=>setRole("professor")}>Professor</div>
+      </div>
+
+      {role==="student" && (
+        <div className="welcome">
+          <div className="welcome-eye">This week</div>
+          <div className="welcome-t">{activeMs} active milestone{activeMs!==1?"s":""} · keep momentum</div>
+          <div className="welcome-s">You're contributing consistently. Strong work on the literature review.</div>
+        </div>
+      )}
+      {role==="professor" && totalInsights>0 && (
+        <div style={{margin:"0 24px 28px"}}>
+          <div className="welcome" style={{margin:0}}>
+            <div className="welcome-eye">For your review</div>
+            <div className="welcome-t">{totalInsights} workflow insight{totalInsights!==1?"s":""} surfaced</div>
+            <div className="welcome-s">Claude noticed patterns worth a brief look. Final judgment is always yours.</div>
+          </div>
+        </div>
+      )}
+
+      <div className="stats">
+        {stats.map((s,i) => (
+          <div key={i} className="stat">
+            <div className="stat-icon">{s.i}</div>
+            <div className="stat-v">{s.v}</div>
+            <div className="stat-l">{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="section">
+        <div className="section-head"><h3>{role==="professor"?"Supervised projects":"Your projects"}</h3></div>
+        {projects.map(p => (
+          <div key={p.id} className="card" onClick={()=>onOpenProject(p)}>
+            <div className="card-head">
+              <div style={{flex:1,minWidth:0}}>
+                <div className="card-title">{p.title}</div>
+                <div className="card-sub">{p.course}</div>
+              </div>
+              <ProgCircle value={p.progress}/>
+            </div>
+            <ProgBar value={p.progress}/>
+            <div className="card-meta">
+              <div className="av-s">
+                {p.members.slice(0,3).map(m => <Avatar key={m} name={m} size={24}/>)}
+                {p.members.length>3 && (
+                  <div className="av" style={{width:24,height:24,fontSize:9,background:"var(--bg-3)",color:"var(--muted)",border:"2px solid var(--bg-1)",marginLeft:-8,fontWeight:700}}>+{p.members.length-3}</div>
+                )}
+              </div>
+              <div style={{display:"flex",gap:7,alignItems:"center"}}>
+                {role==="professor" && p.insights.length>0 && <span className="tag tag-a">✦ {p.insights.length}</span>}
+                {p.status==="at-risk" && <span className="tag tag-w">At risk</span>}
+                <span style={{fontSize:12.5,color:"var(--muted)",fontWeight:500}}>Due {p.dueDate}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {role==="student" && (
+        <div className="section">
+          <div className="section-head"><h3>Your activity</h3></div>
+          <div className="card" style={{padding:18,cursor:"default"}}>
+            <div className="heat">
+              {HEATMAP.slice(0,70).map((v,i) => <div key={i} className="h-c" style={{background:heatColor(v)}}/>)}
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,fontSize:11.5,color:"var(--muted)",fontWeight:500}}>
+              <span>10 weeks</span>
+              <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                <span>Less</span>
+                {[0,1,2,3,4].map(v => <div key={v} style={{width:10,height:10,borderRadius:3,background:heatColor(v)}}/>)}
+                <span>More</span>
+              </div>
+              <span>Today</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── PROJECTS LIST ──────────────────────────────────────────────────────────
+function ProjectsList({role, projects, onOpenProject}) {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  let filtered = projects;
+  if (filter==="active") filtered = projects.filter(p=>p.status==="active");
+  if (filter==="at-risk") filtered = projects.filter(p=>p.status==="at-risk");
+  if (filter==="completed") filtered = projects.filter(p=>p.status==="completed");
+  if (filter==="insights") filtered = projects.filter(p=>p.insights.length>0);
+  filtered = filtered.filter(p=>p.title.toLowerCase().includes(search.toLowerCase())||p.course.toLowerCase().includes(search.toLowerCase()));
+
+  const filters = role==="professor"
+    ? [["all","All"],["active","Active"],["at-risk","At risk"],["insights","Insights"],["completed","Done"]]
+    : [["all","All"],["active","Active"],["at-risk","At risk"],["completed","Done"]];
+
+  return (
+    <>
+      <div className="header">
+        <div>
+          <div className="greeting">All workspaces · {projects.length} total</div>
+          <div className="display">Projects</div>
+        </div>
+      </div>
+      <div className="search">
+        <span style={{fontSize:16}}>⌕</span>
+        <input placeholder="Search projects, courses..." value={search} onChange={e=>setSearch(e.target.value)}/>
+      </div>
+      <div className="chips">
+        {filters.map(([k,t]) => (
+          <div key={k} className={`chip ${filter===k?"active":""}`} onClick={()=>setFilter(k)}>{t}</div>
+        ))}
+      </div>
+      <div className="section">
+        {filtered.map(p => (
+          <div key={p.id} className="card" onClick={()=>onOpenProject(p)}>
+            <div className="card-head">
+              <div style={{flex:1,minWidth:0}}>
+                <div className="card-title">{p.title}</div>
+                <div className="card-sub">{p.course}</div>
+              </div>
+              <ProgCircle value={p.progress}/>
+            </div>
+            <ProgBar value={p.progress}/>
+            <div className="card-meta">
+              <div className="av-s">{p.members.slice(0,3).map(m => <Avatar key={m} name={m} size={24}/>)}</div>
+              <div style={{display:"flex",gap:7,alignItems:"center"}}>
+                <StatusTag status={p.status}/>
+                {role==="professor" && p.insights.length>0 && <span className="tag tag-a">✦ {p.insights.length}</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length===0 && (
+          <div className="empty">
+            <div className="empty-i">⌕</div>
+            <div className="empty-h">No matches</div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── PROJECT DETAIL ─────────────────────────────────────────────────────────
+function ProjectDetail({project, role, onBack, apiKey}) {
+  const [tab, setTab] = useState("overview");
+  const tabs = role==="professor" ? ["overview","milestones","tasks","team","activity","insights","ai"] : ["overview","milestones","tasks","team","activity","ai"];
+  return (
+    <>
+      <div className="sh-head">
+        <button className="back" onClick={onBack}>←</button>
+        <div className="sh-title">{project.title}</div>
+        <button className="icon-btn" style={{width:36,height:36}}>···</button>
+      </div>
+      <div className="dtabs">
+        {tabs.map(t => (
+          <button key={t} className={`dtab ${tab===t?"active":""}`} onClick={()=>setTab(t)}>
+            {t==="insights"?"✦ Insights":t==="ai"?"✦ AI":t.charAt(0).toUpperCase()+t.slice(1)}
+          </button>
+        ))}
+      </div>
+      <div style={{padding:"20px 24px"}}>
+        {tab==="overview" && <Overview project={project} role={role}/>}
+        {tab==="milestones" && <Milestones project={project}/>}
+        {tab==="tasks" && <Tasks project={project}/>}
+        {tab==="team" && <Team project={project}/>}
+        {tab==="activity" && <Activity project={project}/>}
+        {tab==="insights" && role==="professor" && <Insights project={project}/>}
+        {tab==="ai" && <ProjectAI project={project} role={role} apiKey={apiKey}/>}
+      </div>
+    </>
+  );
+}
+
+function Overview({project, role}) {
+  return (
+    <>
+      <div className="card" style={{marginBottom:16,padding:20,cursor:"default"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{fontSize:11,fontWeight:600,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".1em"}}>Overall progress</div>
+          <StatusTag status={project.status}/>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:18,marginBottom:16}}>
+          <div style={{fontSize:40,fontWeight:700,lineHeight:1,letterSpacing:"-0.04em",background:"var(--grad)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{project.progress}%</div>
+          <div style={{flex:1}}>
+            <ProgBar value={project.progress}/>
+            <div style={{fontSize:12.5,color:"var(--muted)",marginTop:8,fontWeight:500}}>Due {project.dueDate}</div>
+          </div>
+        </div>
+        <div className="row3">
+          <div className="tile"><div className="tv s">{project.milestones.filter(m=>m.status==="done").length}</div><div className="tl">Done</div></div>
+          <div className="tile"><div className="tv a">{project.milestones.filter(m=>m.status==="active").length}</div><div className="tl">Active</div></div>
+          <div className="tile"><div className="tv m">{project.milestones.filter(m=>m.status==="pending").length}</div><div className="tl">Pending</div></div>
+        </div>
+      </div>
+      {role==="professor" && project.insights.length>0 && (
+        <div className="alert" style={{marginBottom:18}}>
+          <span style={{fontSize:16}}>✦</span>
+          <div>
+            <div><strong>{project.insights.length} insight{project.insights.length!==1?"s":""}</strong> from this workflow.</div>
+            <div style={{color:"var(--muted)",marginTop:2}}>Tap the Insights tab to review.</div>
+          </div>
+        </div>
+      )}
+      <div className="section-head" style={{marginBottom:12}}><h3 style={{fontSize:16}}>Milestones</h3></div>
+      {project.milestones.map((m,i) => (
+        <div key={m.id} className="ms">
+          <div className={`ms-n ${m.status}`}>{m.status==="done"?"✓":i+1}</div>
+          <div className="ms-info">
+            <div className="ms-name">{m.title}</div>
+            <div className="ms-meta">{m.owner} · Due {m.due}</div>
+          </div>
+          <span className={`tag ${m.status==="done"?"tag-s":m.status==="active"?"tag-a":"tag-m"}`}>{m.status}</span>
+        </div>
+      ))}
+      <div className="section-head" style={{marginTop:28,marginBottom:12}}><h3 style={{fontSize:16}}>Contributions</h3></div>
+      {project.contributions.map(c => (
+        <div key={c.name} className="ctb">
+          <Avatar name={c.name} size={34}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13.5,fontWeight:600,marginBottom:6}}>{c.name}</div>
+            <ProgBar value={c.pct}/>
+          </div>
+          <div style={{fontSize:12,color:"var(--muted)",fontWeight:600}}>{c.pct}%</div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function Milestones({project}) {
+  return (
+    <>
+      {project.milestones.map((m,i) => (
+        <div key={m.id} className={`card ${m.status==="active"?"glow":""}`} style={{marginBottom:12,cursor:"default"}}>
+          <div style={{display:"flex",gap:14}}>
+            <div className={`ms-n ${m.status}`}>{m.status==="done"?"✓":i+1}</div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                <div className="ms-name">{m.title}</div>
+                <span className={`tag ${m.status==="done"?"tag-s":m.status==="active"?"tag-a":"tag-m"}`}>{m.status}</span>
+              </div>
+              <div className="ms-meta" style={{marginTop:6}}>Owner · {m.owner}</div>
+              <div className="ms-meta">Due · {m.due}</div>
+              <div className="ms-meta">{m.submissions} submission{m.submissions!==1?"s":""}</div>
+              {m.status==="active" && <button className="btn btn-p btn-sm" style={{marginTop:14,width:"100%"}}>Submit work</button>}
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function Tasks({project}) {
+  const [tasks, setTasks] = useState(project.tasks);
+  const toggle = (id) => setTasks(tasks.map(t=>t.id===id?{...t,done:!t.done}:t));
+  const todo = tasks.filter(t=>!t.done);
+  const done = tasks.filter(t=>t.done);
+  return (
+    <>
+      <div style={{display:"flex",gap:10,marginBottom:22}}>
+        <div style={{flex:1,background:"var(--bg-1)",border:"1px solid var(--border)",borderRadius:"var(--r-md)",padding:14,textAlign:"center"}}>
+          <div className="tv a">{todo.length}</div><div className="tl">To do</div>
+        </div>
+        <div style={{flex:1,background:"var(--bg-1)",border:"1px solid var(--border)",borderRadius:"var(--r-md)",padding:14,textAlign:"center"}}>
+          <div className="tv s">{done.length}</div><div className="tl">Completed</div>
+        </div>
+      </div>
+      {todo.length>0 && (
+        <>
+          <div style={{fontSize:11,color:"var(--muted)",fontWeight:600,textTransform:"uppercase",letterSpacing:".1em",marginBottom:10}}>Active</div>
+          {todo.map(t => (
+            <div key={t.id} className="task">
+              <div className={`check ${t.done?"done":""}`} onClick={()=>toggle(t.id)}>{t.done?"✓":""}</div>
+              <div style={{flex:1}}>
+                <div className={`task-n ${t.done?"done":""}`}>{t.title}</div>
+                <div style={{display:"flex",gap:7,marginTop:6,alignItems:"center"}}>
+                  <Avatar name={t.assignee} size={18}/>
+                  <span style={{fontSize:12,color:"var(--muted)",fontWeight:500}}>{t.assignee.split(" ")[0]}</span>
+                  <span style={{fontSize:11.5,marginLeft:"auto",fontWeight:500,color:t.priority==="high"?"var(--indigo-bright)":"var(--muted)"}}>{t.due}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+      {done.length>0 && (
+        <>
+          <div style={{fontSize:11,color:"var(--muted)",fontWeight:600,textTransform:"uppercase",letterSpacing:".1em",margin:"22px 0 10px"}}>Completed</div>
+          {done.map(t => (
+            <div key={t.id} className="task" style={{opacity:.6}}>
+              <div className="check done" onClick={()=>toggle(t.id)}>✓</div>
+              <div className="task-n done">{t.title}</div>
+            </div>
+          ))}
+        </>
+      )}
+    </>
+  );
+}
+
+function Team({project}) {
+  return (
+    <>
+      <div style={{fontSize:11,color:"var(--muted)",fontWeight:600,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>{project.members.length} Members</div>
+      {project.members.map(m => {
+        const ctb = project.contributions.find(c=>c.name===m);
+        return (
+          <div key={m} className="card" style={{marginBottom:10,cursor:"default"}}>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <Avatar name={m} size={44}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:14.5,letterSpacing:"-0.015em"}}>{m}</div>
+                <div style={{fontSize:12.5,color:"var(--muted)",marginTop:3,fontWeight:500}}>{ctb?`${ctb.pct}% contribution`:"Member"}</div>
+              </div>
+            </div>
+            {ctb && <div style={{marginTop:14}}><ProgBar value={ctb.pct}/></div>}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function Activity({project}) {
+  if (!project.activity || project.activity.length===0) return <div className="empty"><div className="empty-i">◐</div><div className="empty-h">No activity yet</div></div>;
+  return (
+    <>
+      <div style={{fontSize:11,color:"var(--muted)",fontWeight:600,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>Recent activity</div>
+      {project.activity.map((a,i) => (
+        <div key={i} style={{display:"flex",gap:12,padding:"12px 0",borderBottom:"1px solid var(--border)"}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:"var(--indigo)",marginTop:6,flexShrink:0,boxShadow:"0 0 0 3px rgba(124,108,255,.15)"}}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,color:"var(--text-2)",lineHeight:1.5}} dangerouslySetInnerHTML={{__html:a.text}}/>
+            <div style={{fontSize:11.5,color:"var(--muted-2)",marginTop:3,fontWeight:500}}>{a.time}</div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function Insights({project}) {
+  const [decided, setDecided] = useState({});
+  if (project.insights.length===0) return <div className="empty"><div className="empty-i">✦</div><div className="empty-h">No insights surfaced</div></div>;
+  return (
+    <>
+      <div className="alert" style={{marginBottom:20}}>
+        <span style={{fontSize:15}}>✦</span>
+        <div>
+          <div><strong>Insights are observations, not judgments.</strong></div>
+          <div style={{color:"var(--muted)",marginTop:2}}>Final decisions remain yours.</div>
+        </div>
+      </div>
+      {project.insights.map(it => (
+        <div key={it.id} className={`ins ${it.type}`}>
+          <div className={`ins-b ${it.type}`}>
+            {it.type==="review"?"Review recommended":it.type==="positive"?"Positive pattern":"For your attention"}
+          </div>
+          <div className="ins-t">{it.title}</div>
+          <div className="ins-body">{it.body}</div>
+          <div className="ins-ev">{it.evidence.map((ev,i) => <span key={i} className="tag tag-m">{ev}</span>)}</div>
+          <Confidence level={it.confidence}/>
+          {it.type!=="positive" && !decided[it.id] ? (
+            <div className="ins-act">
+              <button className="btn btn-g btn-sm" style={{flex:1}} onClick={()=>setDecided({...decided,[it.id]:"ok"})}>Mark reviewed</button>
+              <button className="btn btn-p btn-sm" style={{flex:1}} onClick={()=>setDecided({...decided,[it.id]:"follow"})}>Add to follow-ups</button>
+            </div>
+          ) : decided[it.id] ? (
+            <div style={{marginTop:14}}>
+              <span className={`tag ${decided[it.id]==="ok"?"tag-s":"tag-a"}`}>{decided[it.id]==="ok"?"✓ Reviewed":"✦ Added to follow-ups"}</span>
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function ProjectAI({project, role, apiKey}) {
+  const [messages, setMessages] = useState([{
+    role: "ai",
+    text: role==="professor"
+      ? `Hello. I'm your Claude review assistant for **${project.title}**. I can analyze contribution patterns, flag potential plagiarism or copying concerns, evaluate workflow consistency, and draft balanced feedback. What would you like me to look at?`
+      : `Hi! I'm your Claude assistant for **${project.title}**. I can help you plan tasks, brainstorm approaches, or summarize where things stand. What's on your mind?`
+  }]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages, loading]);
+
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const u = input.trim(); setInput("");
+    setMessages(m => [...m, {role:"user", text:u}]);
+    setLoading(true);
+    const ctx = `Project: ${project.title}
+Course: ${project.course}
+Status: ${project.status} · ${project.progress}% complete
+Due: ${project.dueDate}
+Team contributions: ${project.contributions.map(c=>`${c.name}: ${c.pct}%`).join(", ")}
+Milestones:
+${project.milestones.map(m=>`- ${m.title} (${m.status}, owner: ${m.owner}, ${m.submissions} submissions)`).join("\n")}
+Recent activity: ${project.activity.map(a=>a.text.replace(/<[^>]+>/g,"")).join("; ")}
+Existing flagged insights: ${project.insights.map(i=>`[${i.type}] ${i.title}: ${i.body}`).join("; ") || "None"}`;
+    const reply = await askClaude(apiKey, u, ctx, role);
+    setMessages(m => [...m, {role:"ai", text:reply}]);
+    setLoading(false);
+  };
+
+  const profPrompts = ["Review for plagiarism signals", "Analyze contribution balance", "Draft feedback for the team", "Flag any unusual patterns"];
+  const studentPrompts = ["Plan my next task", "Summarize progress", "What's overdue?"];
+  const prompts = role==="professor" ? profPrompts : studentPrompts;
+
+  return (
+    <>
+      {!apiKey && (
+        <div className="key-warn">
+          <strong>API key required.</strong> Tap the gear icon on Home to add your Claude API key. Get one at console.anthropic.com.
+        </div>
+      )}
+      <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
+        {messages.map((m,i) => (
+          <div key={i} className={`msg ${m.role}`}>
+            {m.role==="ai" && <div className="ai-av">✦</div>}
+            <div className="bubble" style={{whiteSpace:"pre-wrap"}} dangerouslySetInnerHTML={formatText(m.text)}/>
+          </div>
+        ))}
+        {loading && (
+          <div className="msg ai">
+            <div className="ai-av">✦</div>
+            <div className="bubble"><div className="spin"/></div>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+        {prompts.map(q => <div key={q} className="chip" onClick={()=>setInput(q)}>{q}</div>)}
+      </div>
+      <div style={{display:"flex",gap:10}}>
+        <textarea className="ai-in" rows={2} value={input} placeholder="Ask Claude..." onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}/>
+        <button className="send" onClick={send} disabled={loading||!input.trim()}>{loading?<div className="spin"/>:"↑"}</button>
+      </div>
+    </>
+  );
+}
+
+// ─── AI SCREEN ──────────────────────────────────────────────────────────────
+function AIScreen({role, projects, apiKey}) {
+  const [selected, setSelected] = useState(projects[0]);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages, loading]);
+  useEffect(() => {
+    const greeting = role==="professor"
+      ? `I'm Claude, your review assistant for **${selected.title}**. I'll watch for plagiarism, unusual contributions, and workflow concerns. What would you like to investigate?`
+      : `Hi! I'm Claude, your assistant for **${selected.title}**. Ask about planning, deadlines, or brainstorming.`;
+    setMessages([{role:"ai", text:greeting}]);
+  }, [selected, role]);
+
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const u = input.trim(); setInput("");
+    setMessages(m => [...m, {role:"user", text:u}]);
+    setLoading(true);
+    const ctx = `Project: ${selected.title}
+Course: ${selected.course}
+Members: ${selected.contributions.map(c=>`${c.name}: ${c.pct}%`).join(", ")}
+Milestones: ${selected.milestones.map(m=>`${m.title} (${m.status}, owner: ${m.owner})`).join("; ")}
+Insights: ${selected.insights.map(i=>`[${i.type}] ${i.title}: ${i.body}`).join("; ") || "None"}`;
+    const reply = await askClaude(apiKey, u, ctx, role);
+    setMessages(m => [...m, {role:"ai", text:reply}]);
+    setLoading(false);
+  };
+
+  const prompts = role==="professor"
+    ? ["Review for plagiarism signals", "Analyze contribution balance", "Draft balanced feedback", "Flag suspicious patterns"]
+    : ["Plan my week", "What's most urgent?", "Brainstorm ideas", "Summarize progress"];
+
+  return (
+    <div className="chat">
+      <div className="header" style={{paddingBottom:12}}>
+        <div>
+          <div className="greeting">{role==="professor"?"Review assistant":"Project assistant"}</div>
+          <div className="display"><span className="accent">Claude</span> {role==="professor"?"Review":"Assistant"}</div>
+        </div>
+      </div>
+      {!apiKey && (
+        <div style={{padding:"0 24px 12px"}}>
+          <div className="key-warn">
+            <strong>API key required.</strong> Add yours from the Home screen settings (gear icon). Get one at console.anthropic.com.
+          </div>
+        </div>
+      )}
+      <div style={{padding:"0 24px 12px"}}>
+        <select className="select" value={selected.id} onChange={e=>setSelected(projects.find(p=>p.id===Number(e.target.value)))}>
+          {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+        </select>
+      </div>
+      <div className="chips">
+        {prompts.map(p => <div key={p} className="chip" onClick={()=>setInput(p)}>{p}</div>)}
+      </div>
+      <div className="msgs">
+        {messages.map((m,i) => (
+          <div key={i} className={`msg ${m.role}`}>
+            {m.role==="ai" && <div className="ai-av">✦</div>}
+            <div className="bubble" style={{whiteSpace:"pre-wrap"}} dangerouslySetInnerHTML={formatText(m.text)}/>
+          </div>
+        ))}
+        {loading && (
+          <div className="msg ai">
+            <div className="ai-av">✦</div>
+            <div className="bubble"><div className="spin"/></div>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+      <div className="ibar">
+        <textarea className="ai-in" rows={1} value={input} placeholder="Ask Claude..." onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}/>
+        <button className="send" onClick={send} disabled={loading||!input.trim()}>{loading?<div className="spin"/>:"↑"}</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROFILE ────────────────────────────────────────────────────────────────
+function Profile({role, projects, openSettings}) {
+  const me = role==="professor" ? "Prof. Rivera" : "Alex Chen";
+  return (
+    <>
+      <div className="header">
+        <div><div className="greeting">Settings & profile</div><div className="display">Profile</div></div>
+        <button className="icon-btn" onClick={openSettings}>⚙</button>
+      </div>
+      <div style={{textAlign:"center",padding:"12px 24px 28px"}}>
+        <div style={{display:"inline-block",position:"relative",marginBottom:16}}>
+          <Avatar name={me} size={92}/>
+          <div style={{position:"absolute",bottom:2,right:2,width:28,height:28,background:"var(--grad)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,border:"3px solid var(--bg-0)",boxShadow:"0 4px 12px rgba(124,108,255,.35)"}}>✓</div>
+        </div>
+        <div style={{fontSize:22,fontWeight:700,letterSpacing:"-0.025em"}}>{me}</div>
+        <div style={{fontSize:13.5,color:"var(--muted)",marginTop:5,fontWeight:500}}>{role==="professor"?"Computer Science · Tenured":"CS Junior · 3.8 GPA"}</div>
+      </div>
+      <div className="section">
+        <div className="pstats">
+          <div className="pstat"><div className="v a">{projects.length}</div><div className="l">Projects</div></div>
+          <div className="pdiv"/>
+          <div className="pstat"><div className="v">{role==="professor"?"23":"12"}</div><div className="l">{role==="professor"?"Reviews":"Streak"}</div></div>
+          <div className="pdiv"/>
+          <div className="pstat"><div className="v">{role==="professor"?"12":"4/9"}</div><div className="l">{role==="professor"?"Students":"Achievements"}</div></div>
+        </div>
+      </div>
+      <div className="section">
+        <div className="section-head"><h3>Settings</h3></div>
+        <div className="set" onClick={openSettings}>
+          <div className="set-i">🔑</div>
+          <div className="set-info">
+            <div className="set-t">Claude API key</div>
+            <div className="set-s">Set up Claude AI integration</div>
+          </div>
+          <span className="chev">›</span>
+        </div>
+        {[
+          {i:"🔔",t:"Notifications",s:"Manage alerts"},
+          {i:"🌙",t:"Appearance",s:"Dark theme"},
+          {i:"🔒",t:"Privacy & security",s:"Account and data"},
+          {i:"💬",t:"Help & support",s:"Documentation"}
+        ].map((it,i) => (
+          <div key={i} className="set">
+            <div className="set-i">{it.i}</div>
+            <div className="set-info"><div className="set-t">{it.t}</div><div className="set-s">{it.s}</div></div>
+            <span className="chev">›</span>
+          </div>
+        ))}
+        <button className="btn btn-bl btn-g" style={{marginTop:16}}>Sign out</button>
+      </div>
+    </>
+  );
+}
+
+// ─── SETTINGS SHEET (API KEY) ───────────────────────────────────────────────
+function SettingsSheet({onClose, apiKey, setApiKey}) {
+  const [draft, setDraft] = useState(apiKey || "");
+  const save = () => {
+    setApiKey(draft.trim());
+    localStorage.setItem("collabify_api_key", draft.trim());
+    onClose();
+  };
+  const clear = () => {
+    setApiKey("");
+    localStorage.removeItem("collabify_api_key");
+    setDraft("");
+  };
+  return (
+    <div className="ovl" onClick={onClose}>
+      <div className="sheet" onClick={e=>e.stopPropagation()}>
+        <div className="handle"/>
+        <div className="sh-h2">Claude AI Setup</div>
+        <div className="key-warn">
+          <strong>Your key stays in your browser.</strong> Stored only in localStorage on this device. Never sent anywhere except api.anthropic.com.
+        </div>
+        <div className="field">
+          <label>Anthropic API Key</label>
+          <input className="input" type="password" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="sk-ant-..." autoComplete="off"/>
+        </div>
+        <div style={{fontSize:12.5,color:"var(--text-2)",lineHeight:1.6,marginBottom:18}}>
+          Don't have one? Visit <strong style={{color:"var(--indigo-bright)"}}>console.anthropic.com</strong> → API Keys → Create Key. Free tier available.
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          {apiKey && <button className="btn btn-g" style={{flex:1}} onClick={clear}>Clear</button>}
+          <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" style={{flex:2}} onClick={save} disabled={!draft.trim()}>Save key</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ROOT APP ───────────────────────────────────────────────────────────────
+function App() {
+  const [showOnboard, setShowOnboard] = useState(true);
+  const [role, setRole] = useState("student");
+  const [tab, setTab] = useState("home");
+  const [openProject, setOpenProject] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const projects = PROJECTS;
+
+  useEffect(() => {
+    const saved = localStorage.getItem("collabify_api_key");
+    if (saved) setApiKey(saved);
+  }, []);
+
+  const totalInsights = projects.reduce((a,p)=>a+p.insights.filter(i=>i.type!=="positive").length,0);
+  const tabs = [
+    {id:"home",icon:"⌂",label:"Home"},
+    {id:"projects",icon:"▦",label:"Projects"},
+    {id:"ai",icon:"✦",label:"AI",badge:role==="professor"?totalInsights:0},
+    {id:"profile",icon:"◉",label:"Profile"}
+  ];
+
+  return (
+    <div className="phone">
+      <div className="island"/>
+      <StatusBar/>
+      {showOnboard && <Onboarding role={role} setRole={setRole} onComplete={()=>setShowOnboard(false)}/>}
+      {!showOnboard && (
+        openProject
+          ? <div className="screen"><ProjectDetail project={openProject} role={role} apiKey={apiKey} onBack={()=>setOpenProject(null)}/></div>
+          : tab==="ai"
+            ? <AIScreen role={role} projects={projects} apiKey={apiKey}/>
+            : <div className="screen">
+                {tab==="home" && <Home role={role} projects={projects} onOpenProject={p=>setOpenProject(p)} setRole={setRole} openSettings={()=>setShowSettings(true)}/>}
+                {tab==="projects" && <ProjectsList role={role} projects={projects} onOpenProject={p=>setOpenProject(p)}/>}
+                {tab==="profile" && <Profile role={role} projects={projects} openSettings={()=>setShowSettings(true)}/>}
+              </div>
+      )}
+      {!showOnboard && !openProject && (
+        <div className="bnav">
+          {tabs.map(t => (
+            <button key={t.id} className={`nav ${tab===t.id?"active":""}`} onClick={()=>setTab(t.id)}>
+              <span className="nav-i">{t.icon}</span>
+              <span className="nav-l">{t.label}</span>
+              {t.badge>0 && <span className="nav-b">{t.badge}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+      {showSettings && <SettingsSheet onClose={()=>setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey}/>}
+    </div>
+  );
+}
+
+// Hide loading screen and mount
+document.getElementById("loading").style.display = "none";
+createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
 </html>
