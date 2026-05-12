@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 import StatusTag from '../components/StatusTag.jsx';
 
-export default function Projects({role, projects, onOpenProject}) {
+export default function Projects({role, projects}) {
+  const navigate = useNavigate();
+  const onOpenProject = (p) => navigate(`/projects/${p.id}`);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   let filtered = projects;

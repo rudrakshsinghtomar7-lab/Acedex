@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Onboarding({onComplete, role, setRole}) {
+export default function Onboarding({role, setRole}) {
+  const navigate = useNavigate();
+  const onComplete = () => navigate('/home');
   const [step, setStep] = useState(0);
   const studentSteps = [
     {eyebrow:"Welcome to Acedex", title:"Where academic projects come together", body:"A calm, structured space for student teams to plan, track, and ship projects."},

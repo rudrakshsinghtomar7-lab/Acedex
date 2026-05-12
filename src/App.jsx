@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate } from 'react-router-dom';
 import { PROJECTS } from './data/projects.js';
 import PhoneFrame from './components/PhoneFrame.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
+import BottomNav from './components/BottomNav.jsx';
 import { useApiKey } from './hooks/useApiKey.js';
 import Onboarding from './screens/Onboarding.jsx';
 import Home from './screens/Home.jsx';
@@ -10,51 +12,63 @@ import AIScreen from './screens/AIScreen.jsx';
 import Profile from './screens/Profile.jsx';
 import ProjectDetail from './screens/ProjectDetail/index.jsx';
 
-function App() {
-  const [showOnboard, setShowOnboard] = useState(true);
+function ScreenLayout() {
+  return <div className="screen"><Outlet/></div>;
+}
+
+function BottomNavLayout({role, insightBadgeCount}) {
+  return (
+    <>
+      <Outlet/>
+      <BottomNav role={role} insightBadgeCount={insightBadgeCount}/>
+    </>
+  );
+}
+
+function ProjectDetailRoute({role, apiKey}) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const project = PROJECTS.find(p => String(p.id) === id);
+  if (!project) return <Navigate to="/home" replace/>;
+  return <ProjectDetail project={project} role={role} apiKey={apiKey} onBack={() => navigate(-1)}/>;
+}
+
+function AppShell() {
   const [role, setRole] = useState("student");
-  const [tab, setTab] = useState("home");
-  const [openProject, setOpenProject] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useApiKey();
   const projects = PROJECTS;
+  const openSettings = () => setShowSettings(true);
 
-  const totalInsights = projects.reduce((a,p)=>a+p.insights.filter(i=>i.type!=="positive").length,0);
-  const tabs = [
-    {id:"home",icon:"⌂",label:"Home"},
-    {id:"projects",icon:"▦",label:"Projects"},
-    {id:"ai",icon:"✦",label:"AI",badge:role==="professor"?totalInsights:0},
-    {id:"profile",icon:"◉",label:"Profile"}
-  ];
+  const totalInsights = projects.reduce((a, p) => a + p.insights.filter(i => i.type !== "positive").length, 0);
 
   return (
     <PhoneFrame>
-      {showOnboard && <Onboarding role={role} setRole={setRole} onComplete={()=>setShowOnboard(false)}/>}
-      {!showOnboard && (
-        openProject
-          ? <div className="screen"><ProjectDetail project={openProject} role={role} apiKey={apiKey} onBack={()=>setOpenProject(null)}/></div>
-          : tab==="ai"
-            ? <AIScreen role={role} projects={projects} apiKey={apiKey}/>
-            : <div className="screen">
-                {tab==="home" && <Home role={role} projects={projects} onOpenProject={p=>setOpenProject(p)} setRole={setRole} openSettings={()=>setShowSettings(true)}/>}
-                {tab==="projects" && <Projects role={role} projects={projects} onOpenProject={p=>setOpenProject(p)}/>}
-                {tab==="profile" && <Profile role={role} projects={projects} openSettings={()=>setShowSettings(true)}/>}
-              </div>
-      )}
-      {!showOnboard && !openProject && (
-        <div className="bnav">
-          {tabs.map(t => (
-            <button key={t.id} className={`nav ${tab===t.id?"active":""}`} onClick={()=>setTab(t.id)}>
-              <span className="nav-i">{t.icon}</span>
-              <span className="nav-l">{t.label}</span>
-              {t.badge>0 && <span className="nav-b">{t.badge}</span>}
-            </button>
-          ))}
-        </div>
-      )}
-      {showSettings && <SettingsSheet onClose={()=>setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey}/>}
+      <Routes>
+        <Route path="/" element={<Navigate to="/onboard" replace/>}/>
+        <Route path="/onboard" element={<Onboarding role={role} setRole={setRole}/>}/>
+        <Route path="/projects/:id" element={
+          <div className="screen"><ProjectDetailRoute role={role} apiKey={apiKey}/></div>
+        }/>
+        <Route element={<BottomNavLayout role={role} insightBadgeCount={totalInsights}/>}>
+          <Route path="/ai" element={<AIScreen role={role} projects={projects} apiKey={apiKey}/>}/>
+          <Route element={<ScreenLayout/>}>
+            <Route path="/home" element={<Home role={role} projects={projects} setRole={setRole} openSettings={openSettings}/>}/>
+            <Route path="/projects" element={<Projects role={role} projects={projects}/>}/>
+            <Route path="/profile" element={<Profile role={role} projects={projects} openSettings={openSettings}/>}/>
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to="/home" replace/>}/>
+      </Routes>
+      {showSettings && <SettingsSheet onClose={() => setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey}/>}
     </PhoneFrame>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter basename="/Acedex">
+      <AppShell/>
+    </BrowserRouter>
+  );
+}

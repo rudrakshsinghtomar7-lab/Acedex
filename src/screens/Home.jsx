@@ -1,9 +1,12 @@
+import { useNavigate } from 'react-router-dom';
 import { HEATMAP, heatColor } from '../data/projects.js';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 
-export default function Home({role, projects, onOpenProject, setRole, openSettings}) {
+export default function Home({role, projects, setRole, openSettings}) {
+  const navigate = useNavigate();
+  const onOpenProject = (p) => navigate(`/projects/${p.id}`);
   const totalTasks = projects.flatMap(p=>p.tasks).length;
   const doneTasks = projects.flatMap(p=>p.tasks).filter(t=>t.done).length;
   const activeMs = projects.flatMap(p=>p.milestones).filter(m=>m.status==="active").length;
