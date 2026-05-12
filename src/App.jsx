@@ -9,6 +9,8 @@ import ProgCircle from './components/ProgCircle.jsx';
 import Confidence from './components/Confidence.jsx';
 import StatusTag from './components/StatusTag.jsx';
 import PhoneFrame from './components/PhoneFrame.jsx';
+import SettingsSheet from './components/SettingsSheet.jsx';
+import { useApiKey } from './hooks/useApiKey.js';
 
 // ─── ONBOARDING ─────────────────────────────────────────────────────────────
 function Onboarding({onComplete, role, setRole}) {
@@ -681,44 +683,6 @@ function Profile({role, projects, openSettings}) {
   );
 }
 
-// ─── SETTINGS SHEET (API KEY) ───────────────────────────────────────────────
-function SettingsSheet({onClose, apiKey, setApiKey}) {
-  const [draft, setDraft] = useState(apiKey || "");
-  const save = () => {
-    setApiKey(draft.trim());
-    localStorage.setItem("Acedex_api_key", draft.trim());
-    onClose();
-  };
-  const clear = () => {
-    setApiKey("");
-    localStorage.removeItem("Acedex_api_key");
-    setDraft("");
-  };
-  return (
-    <div className="ovl" onClick={onClose}>
-      <div className="sheet" onClick={e=>e.stopPropagation()}>
-        <div className="handle"/>
-        <div className="sh-h2">Claude AI Setup</div>
-        <div className="key-warn">
-          <strong>Your key stays in your browser.</strong> Stored only in localStorage on this device. Never sent anywhere except api.anthropic.com.
-        </div>
-        <div className="field">
-          <label>Anthropic API Key</label>
-          <input className="input" type="password" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="sk-ant-..." autoComplete="off"/>
-        </div>
-        <div style={{fontSize:12.5,color:"var(--text-2)",lineHeight:1.6,marginBottom:18}}>
-          Don't have one? Visit <strong style={{color:"var(--indigo-bright)"}}>console.anthropic.com</strong> → API Keys → Create Key. Free tier available.
-        </div>
-        <div style={{display:"flex",gap:10}}>
-          {apiKey && <button className="btn btn-g" style={{flex:1}} onClick={clear}>Clear</button>}
-          <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Cancel</button>
-          <button className="btn btn-p" style={{flex:2}} onClick={save} disabled={!draft.trim()}>Save key</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── ROOT APP ───────────────────────────────────────────────────────────────
 function App() {
   const [showOnboard, setShowOnboard] = useState(true);
@@ -726,13 +690,8 @@ function App() {
   const [tab, setTab] = useState("home");
   const [openProject, setOpenProject] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useApiKey();
   const projects = PROJECTS;
-
-  useEffect(() => {
-    const saved = localStorage.getItem("Acedex_api_key");
-    if (saved) setApiKey(saved);
-  }, []);
 
   const totalInsights = projects.reduce((a,p)=>a+p.insights.filter(i=>i.type!=="positive").length,0);
   const tabs = [
