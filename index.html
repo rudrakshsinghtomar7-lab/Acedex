@@ -41,8 +41,9 @@
   .phone{width:390px;height:844px;background:var(--bg-0);border-radius:50px;border:11px solid #14151c;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);overflow:hidden;position:relative;display:flex;flex-direction:column}
   @media(max-width:480px){body{padding:0}.phone{width:100vw;height:100vh;border-radius:0;border:none;box-shadow:none}}
 
-  .status-bar{height:50px;padding:18px 28px 0;display:flex;justify-content:space-between;font-size:14px;font-weight:600;flex-shrink:0;z-index:10;background:var(--bg-0)}
+  .status-bar{height:50px;padding:14px 28px 0;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;flex-shrink:0;z-index:10;background:var(--bg-0)}
   .status-icons{display:flex;gap:6px;align-items:center;font-size:12px;opacity:.85}
+  .status-logo{height:28px;width:28px;border-radius:8px;object-fit:cover;display:block;box-shadow:0 1px 4px rgba(124,108,255,.35)}
   .island{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:116px;height:30px;background:#000;border-radius:22px;z-index:20}
   .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:100px}
   .screen::-webkit-scrollbar{display:none}
@@ -410,11 +411,7 @@ function StatusBar() {
   return (
     <div className="status-bar">
       <span>9:41</span>
-      <div className="status-icons">
-        <span style={{letterSpacing:2}}>●●●</span>
-        <span style={{marginLeft:4}}>📶</span>
-        <span style={{marginLeft:4}}>🔋</span>
-      </div>
+      <img src="assets/logo.png" alt="Acedex" className="status-logo"/>
     </div>
   );
 }
