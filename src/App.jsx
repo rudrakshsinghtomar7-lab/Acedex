@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { PROJECTS, HEATMAP, heatColor } from './data/projects.js';
 import { avatarBg, initials } from './utils/helpers.js';
 import { askClaude } from './lib/claude.js';
+import { sanitize } from './utils/sanitize.js';
 
 // ─── COMPONENTS ─────────────────────────────────────────────────────────────
 function Avatar({name, size=28}) {
@@ -58,8 +59,6 @@ function StatusTag({status}) {
   const s=m[status]||m.active;
   return <span className={`tag ${s.c}`}>{s.t}</span>;
 }
-
-const formatText = (text) => ({__html: text.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>")});
 
 // ─── ONBOARDING ─────────────────────────────────────────────────────────────
 function Onboarding({onComplete, role, setRole}) {
@@ -482,7 +481,7 @@ function Activity({project}) {
         <div key={i} style={{display:"flex",gap:12,padding:"12px 0",borderBottom:"1px solid var(--border)"}}>
           <div style={{width:8,height:8,borderRadius:"50%",background:"var(--indigo)",marginTop:6,flexShrink:0,boxShadow:"0 0 0 3px rgba(124,108,255,.15)"}}/>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:13,color:"var(--text-2)",lineHeight:1.5}} dangerouslySetInnerHTML={{__html:a.text}}/>
+            <div style={{fontSize:13,color:"var(--text-2)",lineHeight:1.5}} dangerouslySetInnerHTML={sanitize(a.text)}/>
             <div style={{fontSize:11.5,color:"var(--muted-2)",marginTop:3,fontWeight:500}}>{a.time}</div>
           </div>
         </div>
@@ -575,7 +574,7 @@ Existing flagged insights: ${project.insights.map(i=>`[${i.type}] ${i.title}: ${
         {messages.map((m,i) => (
           <div key={i} className={`msg ${m.role}`}>
             {m.role==="ai" && <div className="ai-av">✦</div>}
-            <div className="bubble" style={{whiteSpace:"pre-wrap"}} dangerouslySetInnerHTML={formatText(m.text)}/>
+            <div className="bubble" style={{whiteSpace:"pre-wrap"}} dangerouslySetInnerHTML={sanitize(m.text)}/>
           </div>
         ))}
         {loading && (
@@ -659,7 +658,7 @@ Insights: ${selected.insights.map(i=>`[${i.type}] ${i.title}: ${i.body}`).join("
         {messages.map((m,i) => (
           <div key={i} className={`msg ${m.role}`}>
             {m.role==="ai" && <div className="ai-av">✦</div>}
-            <div className="bubble" style={{whiteSpace:"pre-wrap"}} dangerouslySetInnerHTML={formatText(m.text)}/>
+            <div className="bubble" style={{whiteSpace:"pre-wrap"}} dangerouslySetInnerHTML={sanitize(m.text)}/>
           </div>
         ))}
         {loading && (
