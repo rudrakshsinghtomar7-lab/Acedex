@@ -11,6 +11,10 @@ import Projects from './screens/Projects.jsx';
 import AIScreen from './screens/AIScreen.jsx';
 import Profile from './screens/Profile.jsx';
 import ProjectDetail from './screens/ProjectDetail/index.jsx';
+import Login from './screens/auth/Login.jsx';
+import Signup from './screens/auth/Signup.jsx';
+import Reset from './screens/auth/Reset.jsx';
+import { SessionProvider } from './providers/SessionProvider.jsx';
 
 function ScreenLayout() {
   return <div className="screen"><Outlet/></div>;
@@ -47,6 +51,9 @@ function AppShell() {
       <Routes>
         <Route path="/" element={<Navigate to="/onboard" replace/>}/>
         <Route path="/onboard" element={<Onboarding role={role} setRole={setRole}/>}/>
+        <Route path="/login"  element={<div className="screen"><Login/></div>}/>
+        <Route path="/signup" element={<div className="screen"><Signup/></div>}/>
+        <Route path="/reset"  element={<div className="screen"><Reset/></div>}/>
         <Route path="/projects/:id" element={
           <div className="screen"><ProjectDetailRoute role={role} apiKey={apiKey}/></div>
         }/>
@@ -67,8 +74,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/Acedex">
-      <AppShell/>
-    </BrowserRouter>
+    <SessionProvider>
+      <BrowserRouter basename="/Acedex">
+        <AppShell/>
+      </BrowserRouter>
+    </SessionProvider>
   );
 }
