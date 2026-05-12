@@ -3,62 +3,12 @@ import { PROJECTS, HEATMAP, heatColor } from './data/projects.js';
 import { avatarBg, initials } from './utils/helpers.js';
 import { askClaude } from './lib/claude.js';
 import { sanitize } from './utils/sanitize.js';
-
-// ─── COMPONENTS ─────────────────────────────────────────────────────────────
-function Avatar({name, size=28}) {
-  return <div className="av" style={{width:size,height:size,fontSize:size*.36,background:avatarBg(name)}}>{initials(name)}</div>;
-}
-
-function ProgBar({value}) {
-  return <div className="pb"><div className="pb-fill" style={{width:`${value}%`}} /></div>;
-}
-
-function ProgCircle({value, size=48}) {
-  const r=(size-6)/2, circ=2*Math.PI*r, off=circ-(value/100)*circ;
-  const id=`g${value}_${Math.random().toString(36).slice(2,6)}`;
-  return (
-    <div className="pc" style={{width:size,height:size}}>
-      <svg width={size} height={size}>
-        <defs>
-          <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#7c6cff"/>
-            <stop offset="100%" stopColor="#a875ff"/>
-          </linearGradient>
-        </defs>
-        <circle cx={size/2} cy={size/2} r={r} stroke="var(--bg-3)" strokeWidth="3" fill="none"/>
-        <circle cx={size/2} cy={size/2} r={r} stroke={`url(#${id})`} strokeWidth="3" fill="none" strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round" style={{transition:"stroke-dashoffset 600ms cubic-bezier(.22,.61,.36,1)"}}/>
-      </svg>
-      <span className="pct">{value}</span>
-    </div>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="status-bar">
-      <span>9:41</span>
-      <img src="assets/logo.png" alt="Acedex" className="status-logo"/>
-    </div>
-  );
-}
-
-function Confidence({level}) {
-  return (
-    <div className="conf">
-      <span>AI Confidence</span>
-      <div className="conf-d">
-        {[1,2,3,4,5].map(i => <span key={i} className={i<=level?"f":""}/>)}
-      </div>
-      <span style={{marginLeft:4}}>{level>=4?"High":level>=3?"Moderate":"Low"}</span>
-    </div>
-  );
-}
-
-function StatusTag({status}) {
-  const m={"active":{c:"tag-a",t:"Active"},"at-risk":{c:"tag-w",t:"At risk"},"completed":{c:"tag-s",t:"Completed"}};
-  const s=m[status]||m.active;
-  return <span className={`tag ${s.c}`}>{s.t}</span>;
-}
+import Avatar from './components/Avatar.jsx';
+import ProgBar from './components/ProgBar.jsx';
+import ProgCircle from './components/ProgCircle.jsx';
+import Confidence from './components/Confidence.jsx';
+import StatusTag from './components/StatusTag.jsx';
+import PhoneFrame from './components/PhoneFrame.jsx';
 
 // ─── ONBOARDING ─────────────────────────────────────────────────────────────
 function Onboarding({onComplete, role, setRole}) {
@@ -793,9 +743,7 @@ function App() {
   ];
 
   return (
-    <div className="phone">
-      <div className="island"/>
-      <StatusBar/>
+    <PhoneFrame>
       {showOnboard && <Onboarding role={role} setRole={setRole} onComplete={()=>setShowOnboard(false)}/>}
       {!showOnboard && (
         openProject
@@ -820,7 +768,7 @@ function App() {
         </div>
       )}
       {showSettings && <SettingsSheet onClose={()=>setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey}/>}
-    </div>
+    </PhoneFrame>
   );
 }
 
