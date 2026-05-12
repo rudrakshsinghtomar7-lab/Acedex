@@ -1,6 +1,7 @@
-import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
-import './styles.css';
+import App from './App.jsx';
+import './styles/index.css';
 
+const loading = document.getElementById('loading');
+if (loading) loading.style.display = 'none';
 createRoot(document.getElementById('root')).render(<App />);
