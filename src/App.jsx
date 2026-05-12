@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PROJECTS } from './data/projects.js';
 import PhoneFrame from './components/PhoneFrame.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
@@ -32,9 +32,14 @@ function BottomNavLayout({role, insightBadgeCount}) {
 function ProjectDetailRoute({role, apiKey}) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const project = PROJECTS.find(p => String(p.id) === id);
   if (!project) return <Navigate to="/home" replace/>;
-  return <ProjectDetail project={project} role={role} apiKey={apiKey} onBack={() => navigate(-1)}/>;
+  const onBack = () => {
+    if (location.key === 'default') navigate('/projects', {replace: true});
+    else navigate(-1);
+  };
+  return <ProjectDetail project={project} role={role} apiKey={apiKey} onBack={onBack}/>;
 }
 
 function AppShell() {
