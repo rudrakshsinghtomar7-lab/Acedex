@@ -4,7 +4,7 @@ import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 
-export default function Home({role, projects, setRole, openSettings}) {
+export default function Home({role, projects, openSettings}) {
   const navigate = useNavigate();
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
   const totalTasks = projects.flatMap(p=>p.tasks).length;
@@ -32,11 +32,6 @@ export default function Home({role, projects, setRole, openSettings}) {
       <div className="demo-banner">
         <span style={{fontSize:13}}>✦</span>
         <div><strong>Demo mode</strong> · sample data with real Claude AI</div>
-      </div>
-
-      <div className="role-switch">
-        <div className={`role-opt ${role==="student"?"active":""}`} onClick={()=>setRole("student")}>Student</div>
-        <div className={`role-opt ${role==="professor"?"active":""}`} onClick={()=>setRole("professor")}>Professor</div>
       </div>
 
       {role==="student" && (
