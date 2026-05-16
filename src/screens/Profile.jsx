@@ -1,7 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
+import { useAuth } from '../providers/SessionProvider.jsx';
 
 export default function Profile({role, projects, openSettings}) {
-  const me = role==="professor" ? "Prof. Rivera" : "Alex Chen";
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const me = profile?.full_name || (role==="professor" ? "Prof. Rivera" : "Alex Chen");
+  async function onSignOut() {
+    await signOut();
+    navigate('/login', { replace: true });
+  }
   return (
     <>
       <div className="header">
@@ -47,7 +55,7 @@ export default function Profile({role, projects, openSettings}) {
             <span className="chev">›</span>
           </div>
         ))}
-        <button className="btn btn-bl btn-g" style={{marginTop:16}}>Sign out</button>
+        <button className="btn btn-bl btn-g" style={{marginTop:16}} onClick={onSignOut}>Sign out</button>
       </div>
     </>
   );

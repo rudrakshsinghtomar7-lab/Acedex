@@ -4,8 +4,8 @@ import { PROJECTS } from './data/projects.js';
 import PhoneFrame from './components/PhoneFrame.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
 import BottomNav from './components/BottomNav.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useApiKey } from './hooks/useApiKey.js';
-import Onboarding from './screens/Onboarding.jsx';
 import Home from './screens/Home.jsx';
 import Projects from './screens/Projects.jsx';
 import AIScreen from './screens/AIScreen.jsx';
@@ -14,7 +14,8 @@ import ProjectDetail from './screens/ProjectDetail/index.jsx';
 import Login from './screens/auth/Login.jsx';
 import Signup from './screens/auth/Signup.jsx';
 import Reset from './screens/auth/Reset.jsx';
-import { SessionProvider } from './providers/SessionProvider.jsx';
+import UpdatePassword from './screens/auth/UpdatePassword.jsx';
+import { SessionProvider, useAuth } from './providers/SessionProvider.jsx';
 
 function ScreenLayout() {
   return <div className="screen"><Outlet/></div>;
@@ -42,8 +43,17 @@ function ProjectDetailRoute({role, apiKey}) {
   return <ProjectDetail project={project} role={role} apiKey={apiKey} onBack={onBack}/>;
 }
 
+function RootRedirect() {
+  const { session, loading } = useAuth();
+  if (loading) {
+    return <div className="empty"><div className="spin" style={{margin:'0 auto 12px'}}/><p className="empty-h">Loading…</p></div>;
+  }
+  return <Navigate to={session ? '/home' : '/login'} replace/>;
+}
+
 function AppShell() {
-  const [role, setRole] = useState("student");
+  const { role } = useAuth();
+  const effectiveRole = role || 'student';
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useApiKey();
   const projects = PROJECTS;
@@ -54,23 +64,27 @@ function AppShell() {
   return (
     <PhoneFrame>
       <Routes>
-        <Route path="/" element={<Navigate to="/onboard" replace/>}/>
-        <Route path="/onboard" element={<Onboarding role={role} setRole={setRole}/>}/>
-        <Route path="/login"  element={<div className="screen"><Login/></div>}/>
-        <Route path="/signup" element={<div className="screen"><Signup/></div>}/>
-        <Route path="/reset"  element={<div className="screen"><Reset/></div>}/>
-        <Route path="/projects/:id" element={
-          <div className="screen"><ProjectDetailRoute role={role} apiKey={apiKey}/></div>
-        }/>
-        <Route element={<BottomNavLayout role={role} insightBadgeCount={totalInsights}/>}>
-          <Route path="/ai" element={<AIScreen role={role} projects={projects} apiKey={apiKey}/>}/>
-          <Route element={<ScreenLayout/>}>
-            <Route path="/home" element={<Home role={role} projects={projects} setRole={setRole} openSettings={openSettings}/>}/>
-            <Route path="/projects" element={<Projects role={role} projects={projects}/>}/>
-            <Route path="/profile" element={<Profile role={role} projects={projects} openSettings={openSettings}/>}/>
+        <Route path="/" element={<RootRedirect/>}/>
+        <Route path="/login"           element={<div className="screen"><Login/></div>}/>
+        <Route path="/signup"          element={<div className="screen"><Signup/></div>}/>
+        <Route path="/reset"           element={<div className="screen"><Reset/></div>}/>
+        <Route path="/update-password" element={<div className="screen"><UpdatePassword/></div>}/>
+
+        <Route element={<ProtectedRoute><Outlet/></ProtectedRoute>}>
+          <Route path="/projects/:id" element={
+            <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey}/></div>
+          }/>
+          <Route element={<BottomNavLayout role={effectiveRole} insightBadgeCount={totalInsights}/>}>
+            <Route path="/ai" element={<AIScreen role={effectiveRole} projects={projects} apiKey={apiKey}/>}/>
+            <Route element={<ScreenLayout/>}>
+              <Route path="/home" element={<Home role={effectiveRole} projects={projects} openSettings={openSettings}/>}/>
+              <Route path="/projects" element={<Projects role={effectiveRole} projects={projects}/>}/>
+              <Route path="/profile" element={<Profile role={effectiveRole} projects={projects} openSettings={openSettings}/>}/>
+            </Route>
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/home" replace/>}/>
+
+        <Route path="*" element={<Navigate to="/" replace/>}/>
       </Routes>
       {showSettings && <SettingsSheet onClose={() => setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey}/>}
     </PhoneFrame>
