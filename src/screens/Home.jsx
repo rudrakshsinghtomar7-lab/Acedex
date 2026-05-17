@@ -3,8 +3,13 @@ import { HEATMAP, heatColor } from '../data/projects.js';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
+import { useAuth } from '../providers/SessionProvider.jsx';
 
 export default function Home({role, projects, openSettings}) {
+  const { profile } = useAuth();
+  const fullName = profile?.full_name ?? '';
+  const firstName = fullName.split(' ')[0];
+  const lastName = fullName.split(' ').slice(1).join(' ') || fullName;
   const navigate = useNavigate();
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
   const totalTasks = projects.flatMap(p=>p.tasks).length;
@@ -23,7 +28,7 @@ export default function Home({role, projects, openSettings}) {
         <div>
           <div className="greeting">Friday, May 8</div>
           <div className="display">
-            {role==="professor" ? <>Welcome back, <span className="accent">Prof. Rivera</span></> : <>Hey <span className="accent">Alex</span></>}
+            {role==="professor" ? <>Welcome back, <span className="accent">Prof. {lastName}</span></> : <>Hey <span className="accent">{firstName}</span></>}
           </div>
         </div>
         <button className="icon-btn" onClick={openSettings}>⚙</button>
