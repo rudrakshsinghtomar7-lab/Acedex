@@ -12,6 +12,7 @@ import AIScreen from './screens/AIScreen.jsx';
 import Profile from './screens/Profile.jsx';
 import ProfileEdit from './screens/ProfileEdit.jsx';
 import ProfileView from './screens/ProfileView.jsx';
+import ProjectCreate from './screens/ProjectCreate.jsx';
 import ProjectDetail from './screens/ProjectDetail/index.jsx';
 import Login from './screens/auth/Login.jsx';
 import Signup from './screens/auth/Signup.jsx';
@@ -36,13 +37,11 @@ function ProjectDetailRoute({role, apiKey}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const project = PROJECTS.find(p => String(p.id) === id);
-  if (!project) return <Navigate to="/home" replace/>;
   const onBack = () => {
     if (location.key === 'default') navigate('/projects', {replace: true});
     else navigate(-1);
   };
-  return <ProjectDetail project={project} role={role} apiKey={apiKey} onBack={onBack}/>;
+  return <ProjectDetail id={id} role={role} apiKey={apiKey} onBack={onBack}/>;
 }
 
 function RootRedirect() {
@@ -73,7 +72,8 @@ function AppShell() {
         <Route path="/update-password" element={<div className="screen"><UpdatePassword/></div>}/>
 
         <Route element={<ProtectedRoute><Outlet/></ProtectedRoute>}>
-          <Route path="/projects/:id" element={
+          <Route path="/projects/create" element={<div className="screen"><ProjectCreate/></div>}/>
+          <Route path="/projects/:id"    element={
             <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey}/></div>
           }/>
           <Route path="/profile/edit" element={<div className="screen"><ProfileEdit/></div>}/>
@@ -82,7 +82,7 @@ function AppShell() {
             <Route path="/ai" element={<AIScreen role={effectiveRole} projects={projects} apiKey={apiKey}/>}/>
             <Route element={<ScreenLayout/>}>
               <Route path="/home" element={<Home role={effectiveRole} projects={projects} openSettings={openSettings}/>}/>
-              <Route path="/projects" element={<Projects role={effectiveRole} projects={projects}/>}/>
+              <Route path="/projects" element={<Projects role={effectiveRole}/>}/>
               <Route path="/profile" element={<Profile role={effectiveRole} projects={projects} openSettings={openSettings}/>}/>
             </Route>
           </Route>

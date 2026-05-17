@@ -5,6 +5,16 @@ import StatusTag from '../../components/StatusTag.jsx';
 export default function Overview({project, role}) {
   return (
     <>
+      {(project.course || project.description) && (
+        <div className="card" style={{marginBottom:16,padding:18,cursor:"default"}}>
+          {project.course && project.course !== '—' && (
+            <div style={{fontSize:11,fontWeight:600,color:"var(--indigo-bright)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:6}}>{project.course}</div>
+          )}
+          {project.description && (
+            <div style={{fontSize:13.5,lineHeight:1.55,color:"var(--text-1)"}}>{project.description}</div>
+          )}
+        </div>
+      )}
       <div className="card" style={{marginBottom:16,padding:20,cursor:"default"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontSize:11,fontWeight:600,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".1em"}}>Overall progress</div>
