@@ -1,12 +1,26 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HEATMAP, heatColor } from '../data/projects.js';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
+import StatusTag from '../components/StatusTag.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
+import {
+  adaptTeam, listTeamsForUser,
+  loadHomeStatsForProfessor, loadHomeStatsForStudent,
+} from '../lib/teams.js';
 
-export default function Home({role, projects, openSettings}) {
-  const { profile } = useAuth();
+function statSoonStyle(soon) {
+  return soon ? { opacity: 0.55 } : undefined;
+}
+
+export default function Home({role, projects: fakeProjects = [], openSettings}) {
+  const { user, profile, supabase } = useAuth();
+  const [demoMode] = useDemoMode();
+  const navigate = useNavigate();
+
   const tokens = (profile?.full_name ?? '').split(/\s+/).filter(Boolean);
   const firstName = tokens[0] ?? '';
   const lastName = tokens[tokens.length - 1] ?? '';
@@ -16,17 +30,63 @@ export default function Home({role, projects, openSettings}) {
     : isProf
       ? <>Welcome back, <span className="accent">Prof. {lastName}</span></>
       : <>Hey <span className="accent">{firstName}</span></>;
-  const navigate = useNavigate();
-  const onOpenProject = (p) => navigate(`/projects/${p.id}`);
-  const totalTasks = projects.flatMap(p=>p.tasks).length;
-  const doneTasks = projects.flatMap(p=>p.tasks).filter(t=>t.done).length;
-  const activeMs = projects.flatMap(p=>p.milestones).filter(m=>m.status==="active").length;
-  const totalInsights = projects.reduce((a,p)=>a+p.insights.filter(i=>i.type!=="positive").length,0);
-  const atRisk = projects.filter(p=>p.status==="at-risk").length;
 
-  const stats = role==="professor"
-    ? [{l:"Projects",v:projects.length,i:"⊞"},{l:"Students",v:[...new Set(projects.flatMap(p=>p.members))].length,i:"◐"},{l:"Insights",v:totalInsights,i:"✦"},{l:"At Risk",v:atRisk,i:"◇"}]
-    : [{l:"Active Projects",v:projects.filter(p=>p.status!=="completed").length,i:"⊞"},{l:"Tasks Done",v:`${doneTasks}/${totalTasks}`,i:"✓"},{l:"Active Milestones",v:activeMs,i:"◎"},{l:"Streak",v:"12d",i:"↗"}];
+  const [stats, setStats] = useState(null);
+  const [realProjects, setRealProjects] = useState([]);
+  const [dataError, setDataError] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id || !role) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [s, teams] = await Promise.all([
+          role === 'professor'
+            ? loadHomeStatsForProfessor(supabase, user.id)
+            : loadHomeStatsForStudent(supabase, user.id),
+          listTeamsForUser(supabase, { role, userId: user.id }),
+        ]);
+        if (cancelled) return;
+        setStats(s);
+        setRealProjects(teams.map(t => adaptTeam(t, t.members)));
+      } catch (e) {
+        if (!cancelled) setDataError(e.message || String(e));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, role, supabase]);
+
+  const onOpenProject = (p) => navigate(`/projects/${p.id}`);
+
+  // Fake-derived numbers for demo mode (only computed if demoMode is on)
+  const demoFakeTotalTasks = demoMode ? fakeProjects.flatMap(p => p.tasks ?? []).length : 0;
+  const demoFakeDoneTasks  = demoMode ? fakeProjects.flatMap(p => p.tasks ?? []).filter(t => t.done).length : 0;
+  const demoFakeActiveMs   = demoMode ? fakeProjects.flatMap(p => p.milestones ?? []).filter(m => m.status === 'active').length : 0;
+  const demoFakeInsights   = demoMode ? fakeProjects.reduce((a, p) => a + (p.insights ?? []).filter(i => i.type !== 'positive').length, 0) : 0;
+
+  const realValOrSoon = (v) => (stats ? v : '—');
+
+  const statTiles = isProf
+    ? [
+        { i: '⊞', v: realValOrSoon(stats?.projects), l: 'Projects' },
+        { i: '◐', v: realValOrSoon(stats?.students), l: 'Students' },
+        demoMode
+          ? { i: '✦', v: demoFakeInsights, l: 'Insights' }
+          : { i: '✦', v: '—', l: 'Insights (soon)', soon: true },
+        { i: '◇', v: realValOrSoon(stats?.atRisk), l: 'At Risk' },
+      ]
+    : [
+        { i: '⊞', v: realValOrSoon(stats?.projects), l: 'Active Projects' },
+        demoMode
+          ? { i: '✓', v: `${demoFakeDoneTasks}/${demoFakeTotalTasks}`, l: 'Tasks Done' }
+          : { i: '✓', v: '—', l: 'Tasks Done (soon)', soon: true },
+        demoMode
+          ? { i: '◎', v: demoFakeActiveMs, l: 'Active Milestones' }
+          : { i: '◎', v: '—', l: 'Active Milestones (soon)', soon: true },
+        demoMode
+          ? { i: '↗', v: '12d', l: 'Streak' }
+          : { i: '↗', v: '—', l: 'Streak (soon)', soon: true },
+      ];
 
   return (
     <>
@@ -38,31 +98,33 @@ export default function Home({role, projects, openSettings}) {
         <button className="icon-btn" onClick={openSettings}>⚙</button>
       </div>
 
-      <div className="demo-banner">
-        <span style={{fontSize:13}}>✦</span>
-        <div><strong>Demo mode</strong> · sample data with real Claude AI</div>
-      </div>
+      {demoMode && (
+        <div className="demo-banner">
+          <span style={{fontSize:13}}>✦</span>
+          <div><strong>Demo mode</strong> · placeholders mixed with real data</div>
+        </div>
+      )}
 
-      {role==="student" && (
+      {demoMode && !isProf && (
         <div className="welcome">
           <div className="welcome-eye">This week</div>
-          <div className="welcome-t">{activeMs} active milestone{activeMs!==1?"s":""} · keep momentum</div>
+          <div className="welcome-t">{demoFakeActiveMs} active milestone{demoFakeActiveMs !== 1 ? 's' : ''} · keep momentum</div>
           <div className="welcome-s">You're contributing consistently. Strong work on the literature review.</div>
         </div>
       )}
-      {role==="professor" && totalInsights>0 && (
-        <div style={{margin:"0 24px 28px"}}>
+      {demoMode && isProf && demoFakeInsights > 0 && (
+        <div style={{margin:'0 24px 28px'}}>
           <div className="welcome" style={{margin:0}}>
             <div className="welcome-eye">For your review</div>
-            <div className="welcome-t">{totalInsights} workflow insight{totalInsights!==1?"s":""} surfaced</div>
+            <div className="welcome-t">{demoFakeInsights} workflow insight{demoFakeInsights !== 1 ? 's' : ''} surfaced</div>
             <div className="welcome-s">Claude noticed patterns worth a brief look. Final judgment is always yours.</div>
           </div>
         </div>
       )}
 
       <div className="stats">
-        {stats.map((s,i) => (
-          <div key={i} className="stat">
+        {statTiles.map((s, i) => (
+          <div key={i} className="stat" style={statSoonStyle(s.soon)}>
             <div className="stat-icon">{s.i}</div>
             <div className="stat-v">{s.v}</div>
             <div className="stat-l">{s.l}</div>
@@ -71,9 +133,19 @@ export default function Home({role, projects, openSettings}) {
       </div>
 
       <div className="section">
-        <div className="section-head"><h3>{role==="professor"?"Supervised projects":"Your projects"}</h3></div>
-        {projects.map(p => (
-          <div key={p.id} className="card" onClick={()=>onOpenProject(p)}>
+        <div className="section-head"><h3>{isProf ? 'Supervised projects' : 'Your projects'}</h3></div>
+        {dataError ? (
+          <div className="empty"><div className="empty-h">Couldn't load projects</div><p style={{fontSize:13,color:'var(--muted)'}}>{dataError}</p></div>
+        ) : realProjects.length === 0 ? (
+          <div className="empty">
+            <div className="empty-i">⊞</div>
+            <div className="empty-h">No projects yet</div>
+            <p style={{fontSize:13,color:'var(--muted)'}}>
+              {isProf ? 'Create your first project from the Projects tab.' : 'You haven\'t been added to any projects yet.'}
+            </p>
+          </div>
+        ) : realProjects.map(p => (
+          <div key={p.id} className="card" onClick={() => onOpenProject(p)}>
             <div className="card-head">
               <div style={{flex:1,minWidth:0}}>
                 <div className="card-title">{p.title}</div>
@@ -85,30 +157,29 @@ export default function Home({role, projects, openSettings}) {
             <div className="card-meta">
               <div className="av-s">
                 {p.members.slice(0,3).map(m => <Avatar key={m} name={m} size={24}/>)}
-                {p.members.length>3 && (
-                  <div className="av" style={{width:24,height:24,fontSize:9,background:"var(--bg-3)",color:"var(--muted)",border:"2px solid var(--bg-1)",marginLeft:-8,fontWeight:700}}>+{p.members.length-3}</div>
+                {p.members.length > 3 && (
+                  <div className="av" style={{width:24,height:24,fontSize:9,background:'var(--bg-3)',color:'var(--muted)',border:'2px solid var(--bg-1)',marginLeft:-8,fontWeight:700}}>+{p.members.length - 3}</div>
                 )}
               </div>
-              <div style={{display:"flex",gap:7,alignItems:"center"}}>
-                {role==="professor" && p.insights.length>0 && <span className="tag tag-a">✦ {p.insights.length}</span>}
-                {p.status==="at-risk" && <span className="tag tag-w">At risk</span>}
-                <span style={{fontSize:12.5,color:"var(--muted)",fontWeight:500}}>Due {p.dueDate}</span>
+              <div style={{display:'flex',gap:7,alignItems:'center'}}>
+                <StatusTag status={p.status}/>
+                {p.dueDate && <span style={{fontSize:12.5,color:'var(--muted)',fontWeight:500}}>Due {p.dueDate}</span>}
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {role==="student" && (
+      {!isProf && demoMode && (
         <div className="section">
           <div className="section-head"><h3>Your activity</h3></div>
-          <div className="card" style={{padding:18,cursor:"default"}}>
+          <div className="card" style={{padding:18,cursor:'default'}}>
             <div className="heat">
               {HEATMAP.slice(0,70).map((v,i) => <div key={i} className="h-c" style={{background:heatColor(v)}}/>)}
             </div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,fontSize:11.5,color:"var(--muted)",fontWeight:500}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:14,fontSize:11.5,color:'var(--muted)',fontWeight:500}}>
               <span>10 weeks</span>
-              <div style={{display:"flex",gap:5,alignItems:"center"}}>
+              <div style={{display:'flex',gap:5,alignItems:'center'}}>
                 <span>Less</span>
                 {[0,1,2,3,4].map(v => <div key={v} style={{width:10,height:10,borderRadius:3,background:heatColor(v)}}/>)}
                 <span>More</span>

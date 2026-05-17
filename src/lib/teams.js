@@ -84,6 +84,38 @@ function fmtDate(iso) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+export async function loadHomeStatsForProfessor(supabase, professorId) {
+  const { data: courses, error: cErr } = await supabase
+    .from('courses').select('id').eq('professor_id', professorId);
+  if (cErr) throw cErr;
+  const courseIds = (courses ?? []).map(c => c.id);
+  if (courseIds.length === 0) return { projects: 0, students: 0, atRisk: 0 };
+
+  const { data: teams, error: tErr } = await supabase
+    .from('teams').select('id, status').in('course_id', courseIds);
+  if (tErr) throw tErr;
+  const teamRows = teams ?? [];
+  const atRisk = teamRows.filter(t => t.status === 'at_risk').length;
+  if (teamRows.length === 0) return { projects: 0, students: 0, atRisk: 0 };
+
+  const teamIds = teamRows.map(t => t.id);
+  const { data: members, error: mErr } = await supabase
+    .from('team_members').select('profile_id').in('team_id', teamIds);
+  if (mErr) throw mErr;
+  const distinct = new Set((members ?? []).map(m => m.profile_id));
+
+  return { projects: teamRows.length, students: distinct.size, atRisk };
+}
+
+export async function loadHomeStatsForStudent(supabase, studentId) {
+  const { count, error } = await supabase
+    .from('team_members')
+    .select('team_id', { count: 'exact', head: true })
+    .eq('profile_id', studentId);
+  if (error) throw error;
+  return { projects: count ?? 0 };
+}
+
 export function adaptTeam(team, members) {
   const course = team.course;
   const memberList = members ?? team.members ?? [];
