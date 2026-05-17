@@ -76,7 +76,10 @@ export async function createTeam(supabase, fields) {
 
 function fmtDate(iso) {
   if (!iso) return null;
-  const d = new Date(iso);
+  // Plain YYYY-MM-DD parses as UTC midnight, which can shift to the previous day
+  // in negative-UTC zones when rendered via toLocaleDateString. Force local midnight.
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+  const d = new Date(isDateOnly ? `${iso}T00:00:00` : iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
