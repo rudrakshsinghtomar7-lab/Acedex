@@ -7,10 +7,12 @@ import Activity from './Activity.jsx';
 import Insights from './Insights.jsx';
 import ProjectAI from './ProjectAI.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
+import { useDemoMode } from '../../hooks/useDemoMode.jsx';
 import { adaptTeam, getTeamDetail } from '../../lib/teams.js';
 
 export default function ProjectDetail({id, role, onBack, apiKey}) {
   const { supabase } = useAuth();
+  const { demoMode, demoData } = useDemoMode();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +24,21 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
     setLoading(true);
     setError(null);
     setProject(null);
+
+    // Demo projects use string ids like 'demo-proj-1'. Bypass the DB fetch.
+    if (id.startsWith('demo-')) {
+      if (!demoMode || !demoData) {
+        setError('This project is part of demo mode. Enable "Show demo data" in Settings → Developer to view it.');
+        setLoading(false);
+        return;
+      }
+      const p = demoData.DEMO_PROJECTS.find(x => x.id === id);
+      if (!p) setError('Demo project not found.');
+      else setProject(p);
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         const detail = await getTeamDetail(supabase, id);
@@ -38,7 +55,7 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, supabase]);
+  }, [id, supabase, demoMode, demoData]);
 
   if (loading) {
     return (
