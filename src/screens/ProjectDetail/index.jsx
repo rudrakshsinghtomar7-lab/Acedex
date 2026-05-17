@@ -20,6 +20,8 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
     if (!id) return;
     let cancelled = false;
     setLoading(true);
+    setError(null);
+    setProject(null);
     (async () => {
       try {
         const detail = await getTeamDetail(supabase, id);

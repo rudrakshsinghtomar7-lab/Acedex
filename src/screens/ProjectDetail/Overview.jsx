@@ -24,7 +24,7 @@ export default function Overview({project, role}) {
           <div style={{fontSize:40,fontWeight:700,lineHeight:1,letterSpacing:"-0.04em",background:"var(--grad)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{project.progress}%</div>
           <div style={{flex:1}}>
             <ProgBar value={project.progress}/>
-            <div style={{fontSize:12.5,color:"var(--muted)",marginTop:8,fontWeight:500}}>Due {project.dueDate}</div>
+            <div style={{fontSize:12.5,color:"var(--muted)",marginTop:8,fontWeight:500}}>{project.dueDate ? `Due ${project.dueDate}` : 'No due date'}</div>
           </div>
         </div>
         <div className="row3">

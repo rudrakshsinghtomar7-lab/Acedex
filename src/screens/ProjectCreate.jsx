@@ -43,7 +43,11 @@ export default function ProjectCreate() {
         if (list.length === 0) setMode('new');
         else setSelectedCourseId(list[0].id);
       } catch (e) {
-        if (!cancelled) setError(e.message || String(e));
+        if (cancelled) return;
+        setError(e.message || String(e));
+        // If we couldn't list courses, the dropdown is useless — fall back to
+        // the inline-create form so the professor can still proceed.
+        setMode('new');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -67,11 +71,16 @@ export default function ProjectCreate() {
       return;
     }
     setSaving(true);
+    let createdCourseId = null;
     try {
       let courseId = selectedCourseId;
       if (mode === 'new') {
         if (!ncCode.trim() || !ncName.trim()) {
           throw new Error('Course code and name are required.');
+        }
+        const yearNum = parseInt(String(ncYear).trim(), 10);
+        if (!Number.isInteger(yearNum) || yearNum < 2020 || yearNum > 2099) {
+          throw new Error('Course year must be a number between 2020 and 2099.');
         }
         const created = await createCourse(supabase, {
           university_id: profile.university_id,
@@ -79,9 +88,10 @@ export default function ProjectCreate() {
           code: ncCode.trim(),
           name: ncName.trim(),
           term: ncTerm,
-          year: Number(ncYear),
+          year: yearNum,
         });
         courseId = created.id;
+        createdCourseId = created.id;
       }
       if (!courseId) throw new Error('Pick a course.');
 
@@ -93,6 +103,16 @@ export default function ProjectCreate() {
       });
       navigate(`/projects/${team.id}`, { replace: true });
     } catch (e2) {
+      // Best-effort rollback: if we just created a course but the team insert
+      // failed, delete the orphan course so it doesn't pollute the dropdown.
+      // Not a true transaction — proper atomicity needs an RPC (migration 003).
+      if (createdCourseId) {
+        try {
+          await supabase.from('courses').delete().eq('id', createdCourseId);
+        } catch (rollbackErr) {
+          console.error('Course rollback failed:', rollbackErr);
+        }
+      }
       setError(e2.message || String(e2));
     } finally {
       setSaving(false);
