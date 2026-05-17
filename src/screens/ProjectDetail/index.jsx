@@ -17,6 +17,8 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('overview');
+  const [refreshTick, setRefreshTick] = useState(0);
+  const refetch = () => setRefreshTick(n => n + 1);
 
   useEffect(() => {
     if (!id) return;
@@ -55,7 +57,7 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, supabase, demoMode, demoData]);
+  }, [id, supabase, demoMode, demoData, refreshTick]);
 
   if (loading) {
     return (
@@ -106,7 +108,7 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
         {tab==='overview' && <Overview project={project} role={role}/>}
         {tab==='milestones' && <Milestones project={project}/>}
         {tab==='tasks' && <Tasks project={project}/>}
-        {tab==='team' && <Team project={project}/>}
+        {tab==='team' && <Team project={project} role={role} onMembersChanged={refetch}/>}
         {tab==='activity' && <Activity project={project}/>}
         {tab==='insights' && role==='professor' && <Insights project={project}/>}
         {tab==='ai' && <ProjectAI project={project} role={role} apiKey={apiKey}/>}

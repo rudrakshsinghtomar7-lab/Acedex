@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PROJECTS } from './data/projects.js';
 import PhoneFrame from './components/PhoneFrame.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
+import NotificationsPanel from './components/NotificationsPanel.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useApiKey } from './hooks/useApiKey.js';
+import { getUnreadCount } from './lib/notifications.js';
 import Home from './screens/Home.jsx';
 import Projects from './screens/Projects.jsx';
 import AIScreen from './screens/AIScreen.jsx';
@@ -54,12 +56,24 @@ function RootRedirect() {
 }
 
 function AppShell() {
-  const { role } = useAuth();
+  const { role, user, supabase } = useAuth();
   const effectiveRole = role || 'student';
   const [showSettings, setShowSettings] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+  const [notifUnread, setNotifUnread] = useState(0);
   const [apiKey, setApiKey] = useApiKey();
   const projects = PROJECTS;
+  const refreshUnread = useCallback(async () => {
+    if (!user?.id) return;
+    try { setNotifUnread(await getUnreadCount(supabase, user.id)); }
+    catch { /* badge is non-critical */ }
+  }, [supabase, user?.id]);
+
+  useEffect(() => { refreshUnread(); }, [refreshUnread]);
+
   const openSettings = () => setShowSettings(true);
+  const openNotif = () => { setShowNotif(true); refreshUnread(); };
+  const closeNotif = () => { setShowNotif(false); refreshUnread(); };
 
   const totalInsights = projects.reduce((a, p) => a + p.insights.filter(i => i.type !== "positive").length, 0);
 
@@ -82,7 +96,7 @@ function AppShell() {
           <Route element={<BottomNavLayout role={effectiveRole} insightBadgeCount={totalInsights}/>}>
             <Route path="/ai" element={<AIScreen role={effectiveRole} projects={projects} apiKey={apiKey}/>}/>
             <Route element={<ScreenLayout/>}>
-              <Route path="/home" element={<Home role={effectiveRole} projects={projects} openSettings={openSettings}/>}/>
+              <Route path="/home" element={<Home role={effectiveRole} projects={projects} openSettings={openSettings} openNotif={openNotif} notifUnread={notifUnread}/>}/>
               <Route path="/projects" element={<Projects role={effectiveRole}/>}/>
               <Route path="/profile" element={<Profile role={effectiveRole} projects={projects} openSettings={openSettings}/>}/>
             </Route>
@@ -92,6 +106,7 @@ function AppShell() {
         <Route path="*" element={<Navigate to="/" replace/>}/>
       </Routes>
       {showSettings && <SettingsSheet onClose={() => setShowSettings(false)} apiKey={apiKey} setApiKey={setApiKey}/>}
+      {showNotif && <NotificationsPanel onClose={closeNotif} onChanged={refreshUnread}/>}
     </PhoneFrame>
   );
 }

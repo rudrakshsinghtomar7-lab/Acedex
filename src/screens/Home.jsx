@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { heatColor } from '../data/projects.js';
 import Avatar from '../components/Avatar.jsx';
+import Bell from '../components/Bell.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 import StatusTag from '../components/StatusTag.jsx';
@@ -16,7 +17,7 @@ function statSoonStyle(soon) {
   return soon ? { opacity: 0.55 } : undefined;
 }
 
-export default function Home({role, openSettings}) {
+export default function Home({role, openSettings, openNotif, notifUnread}) {
   const { user, profile, supabase } = useAuth();
   const { demoMode, demoData } = useDemoMode();
   const navigate = useNavigate();
@@ -108,7 +109,10 @@ export default function Home({role, openSettings}) {
           <div className="greeting">Friday, May 8</div>
           <div className="display">{greeting}</div>
         </div>
-        <button className="icon-btn" onClick={openSettings}>⚙</button>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <Bell count={notifUnread ?? 0} onClick={openNotif}/>
+          <button className="icon-btn" onClick={openSettings}>⚙</button>
+        </div>
       </div>
 
       {demoMode && (
