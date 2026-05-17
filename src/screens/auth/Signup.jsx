@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../providers/SessionProvider.jsx';
 
-const DEV = import.meta.env.DEV;
-
 export default function Signup() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -52,16 +50,14 @@ export default function Signup() {
           <input className="input" type="password" placeholder="At least 8 characters" autoComplete="new-password"
             value={password} onChange={(e)=>setPassword(e.target.value)} minLength={8} required/>
         </div>
-        {DEV && (
-          <div className="field">
-            <label>Role (dev only)</label>
-            <select className="select" value={role} onChange={(e)=>setRole(e.target.value)}>
-              <option value="student">student</option>
-              <option value="professor">professor</option>
-              <option value="admin">admin</option>
-            </select>
-          </div>
-        )}
+        <div className="field">
+          <label>Role</label>
+          <select className="select" value={role} onChange={(e)=>setRole(e.target.value)}>
+            <option value="student">student</option>
+            <option value="professor">professor</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
         {error && <div className="alert" style={{marginBottom:14}}><span>{error}</span></div>}
         <button type="submit" className="btn btn-p btn-bl" style={{marginTop:8}} disabled={submitting}>
           {submitting ? <span className="spin"/> : 'Create account'}
