@@ -10,6 +10,8 @@ import Home from './screens/Home.jsx';
 import Projects from './screens/Projects.jsx';
 import AIScreen from './screens/AIScreen.jsx';
 import Profile from './screens/Profile.jsx';
+import ProfileEdit from './screens/ProfileEdit.jsx';
+import ProfileView from './screens/ProfileView.jsx';
 import ProjectDetail from './screens/ProjectDetail/index.jsx';
 import Login from './screens/auth/Login.jsx';
 import Signup from './screens/auth/Signup.jsx';
@@ -74,6 +76,8 @@ function AppShell() {
           <Route path="/projects/:id" element={
             <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey}/></div>
           }/>
+          <Route path="/profile/edit" element={<div className="screen"><ProfileEdit/></div>}/>
+          <Route path="/profile/:id"  element={<div className="screen"><ProfileView/></div>}/>
           <Route element={<BottomNavLayout role={effectiveRole} insightBadgeCount={totalInsights}/>}>
             <Route path="/ai" element={<AIScreen role={effectiveRole} projects={projects} apiKey={apiKey}/>}/>
             <Route element={<ScreenLayout/>}>
