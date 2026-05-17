@@ -5,10 +5,12 @@ import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 import StatusTag from '../components/StatusTag.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import { adaptTeam, listTeamsForUser } from '../lib/teams.js';
 
 export default function Projects({role}) {
   const { supabase, user } = useAuth();
+  const { demoMode, demoData } = useDemoMode();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,10 +37,13 @@ export default function Projects({role}) {
 
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
 
-  let filtered = projects;
-  if (filter === 'active') filtered = projects.filter(p => p.status === 'active');
-  if (filter === 'at_risk') filtered = projects.filter(p => p.status === 'at_risk');
-  if (filter === 'completed') filtered = projects.filter(p => p.status === 'completed');
+  const demoOn = demoMode && demoData;
+  const allProjects = demoOn ? [...projects, ...demoData.DEMO_PROJECTS] : projects;
+
+  let filtered = allProjects;
+  if (filter === 'active') filtered = allProjects.filter(p => p.status === 'active');
+  if (filter === 'at_risk') filtered = allProjects.filter(p => p.status === 'at_risk');
+  if (filter === 'completed') filtered = allProjects.filter(p => p.status === 'completed');
   filtered = filtered.filter(p =>
     p.title.toLowerCase().includes(search.toLowerCase())
     || (p.course ?? '').toLowerCase().includes(search.toLowerCase())
@@ -50,7 +55,7 @@ export default function Projects({role}) {
     <>
       <div className="header">
         <div>
-          <div className="greeting">All workspaces · {projects.length} total</div>
+          <div className="greeting">All workspaces · {allProjects.length} total</div>
           <div className="display">Projects</div>
         </div>
         {role === 'professor' && (
@@ -71,7 +76,7 @@ export default function Projects({role}) {
         <div className="empty"><div className="spin" style={{margin:'0 auto 12px'}}/><p className="empty-h">Loading…</p></div>
       ) : error ? (
         <div className="empty"><div className="empty-h">Couldn't load projects</div><p style={{fontSize:13,color:'var(--muted)'}}>{error}</p></div>
-      ) : projects.length === 0 ? (
+      ) : allProjects.length === 0 ? (
         <div className="empty">
           <div className="empty-i">⊞</div>
           <div className="empty-h">No projects yet</div>

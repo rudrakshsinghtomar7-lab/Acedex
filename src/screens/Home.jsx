@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HEATMAP, heatColor } from '../data/projects.js';
+import { heatColor } from '../data/projects.js';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
@@ -16,10 +16,11 @@ function statSoonStyle(soon) {
   return soon ? { opacity: 0.55 } : undefined;
 }
 
-export default function Home({role, projects: fakeProjects = [], openSettings}) {
+export default function Home({role, openSettings}) {
   const { user, profile, supabase } = useAuth();
-  const [demoMode] = useDemoMode();
+  const { demoMode, demoData } = useDemoMode();
   const navigate = useNavigate();
+  const demoOn = demoMode && demoData;
 
   const tokens = (profile?.full_name ?? '').split(/\s+/).filter(Boolean);
   const firstName = tokens[0] ?? '';
@@ -58,32 +59,44 @@ export default function Home({role, projects: fakeProjects = [], openSettings}) 
 
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
 
-  // Fake-derived numbers for demo mode (only computed if demoMode is on)
-  const demoFakeTotalTasks = demoMode ? fakeProjects.flatMap(p => p.tasks ?? []).length : 0;
-  const demoFakeDoneTasks  = demoMode ? fakeProjects.flatMap(p => p.tasks ?? []).filter(t => t.done).length : 0;
-  const demoFakeActiveMs   = demoMode ? fakeProjects.flatMap(p => p.milestones ?? []).filter(m => m.status === 'active').length : 0;
-  const demoFakeInsights   = demoMode ? fakeProjects.reduce((a, p) => a + (p.insights ?? []).filter(i => i.type !== 'positive').length, 0) : 0;
+  // Combined view for display: real + (when demo on) demo projects
+  const allProjects = demoOn ? [...realProjects, ...demoData.DEMO_PROJECTS] : realProjects;
 
-  const realValOrSoon = (v) => (stats ? v : '—');
+  // Demo-derived numbers from demoData.DEMO_PROJECTS (only when demo on)
+  const dProj = demoOn ? demoData.DEMO_PROJECTS : [];
+  const demoFakeTotalTasks = demoOn ? dProj.flatMap(p => p.tasks ?? []).length : 0;
+  const demoFakeDoneTasks  = demoOn ? dProj.flatMap(p => p.tasks ?? []).filter(t => t.done).length : 0;
+  const demoFakeActiveMs   = demoOn ? dProj.flatMap(p => p.milestones ?? []).filter(m => m.status === 'active').length : 0;
+  const demoFakeInsights   = demoOn ? dProj.reduce((a, p) => a + (p.insights ?? []).filter(i => i.type !== 'positive').length, 0) : 0;
+
+  // Stats: real + (when demo on) demoData.DEMO_STATS
+  const dStats = demoOn ? (isProf ? demoData.DEMO_STATS.professor : demoData.DEMO_STATS.student) : null;
+  const combinedStats = stats ? {
+    projects: stats.projects + (dStats?.projects ?? 0),
+    students: (stats.students ?? 0) + (dStats?.students ?? 0),
+    atRisk:   (stats.atRisk ?? 0)   + (dStats?.atRisk ?? 0),
+  } : null;
+
+  const realValOrSoon = (v) => (combinedStats ? v : '—');
 
   const statTiles = isProf
     ? [
-        { i: '⊞', v: realValOrSoon(stats?.projects), l: 'Projects' },
-        { i: '◐', v: realValOrSoon(stats?.students), l: 'Students' },
-        demoMode
+        { i: '⊞', v: realValOrSoon(combinedStats?.projects), l: 'Projects' },
+        { i: '◐', v: realValOrSoon(combinedStats?.students), l: 'Students' },
+        demoOn
           ? { i: '✦', v: demoFakeInsights, l: 'Insights' }
           : { i: '✦', v: '—', l: 'Insights (soon)', soon: true },
-        { i: '◇', v: realValOrSoon(stats?.atRisk), l: 'At Risk' },
+        { i: '◇', v: realValOrSoon(combinedStats?.atRisk), l: 'At Risk' },
       ]
     : [
-        { i: '⊞', v: realValOrSoon(stats?.projects), l: 'Active Projects' },
-        demoMode
+        { i: '⊞', v: realValOrSoon(combinedStats?.projects), l: 'Active Projects' },
+        demoOn
           ? { i: '✓', v: `${demoFakeDoneTasks}/${demoFakeTotalTasks}`, l: 'Tasks Done' }
           : { i: '✓', v: '—', l: 'Tasks Done (soon)', soon: true },
-        demoMode
+        demoOn
           ? { i: '◎', v: demoFakeActiveMs, l: 'Active Milestones' }
           : { i: '◎', v: '—', l: 'Active Milestones (soon)', soon: true },
-        demoMode
+        demoOn
           ? { i: '↗', v: '12d', l: 'Streak' }
           : { i: '↗', v: '—', l: 'Streak (soon)', soon: true },
       ];
@@ -105,14 +118,14 @@ export default function Home({role, projects: fakeProjects = [], openSettings}) 
         </div>
       )}
 
-      {demoMode && !isProf && (
+      {demoOn && !isProf && (
         <div className="welcome">
           <div className="welcome-eye">This week</div>
           <div className="welcome-t">{demoFakeActiveMs} active milestone{demoFakeActiveMs !== 1 ? 's' : ''} · keep momentum</div>
           <div className="welcome-s">You're contributing consistently. Strong work on the literature review.</div>
         </div>
       )}
-      {demoMode && isProf && demoFakeInsights > 0 && (
+      {demoOn && isProf && demoFakeInsights > 0 && (
         <div style={{margin:'0 24px 28px'}}>
           <div className="welcome" style={{margin:0}}>
             <div className="welcome-eye">For your review</div>
@@ -136,7 +149,7 @@ export default function Home({role, projects: fakeProjects = [], openSettings}) 
         <div className="section-head"><h3>{isProf ? 'Supervised projects' : 'Your projects'}</h3></div>
         {dataError ? (
           <div className="empty"><div className="empty-h">Couldn't load projects</div><p style={{fontSize:13,color:'var(--muted)'}}>{dataError}</p></div>
-        ) : realProjects.length === 0 ? (
+        ) : allProjects.length === 0 ? (
           <div className="empty">
             <div className="empty-i">⊞</div>
             <div className="empty-h">No projects yet</div>
@@ -144,7 +157,7 @@ export default function Home({role, projects: fakeProjects = [], openSettings}) 
               {isProf ? 'Create your first project from the Projects tab.' : 'You haven\'t been added to any projects yet.'}
             </p>
           </div>
-        ) : realProjects.map(p => (
+        ) : allProjects.map(p => (
           <div key={p.id} className="card" onClick={() => onOpenProject(p)}>
             <div className="card-head">
               <div style={{flex:1,minWidth:0}}>
@@ -170,12 +183,12 @@ export default function Home({role, projects: fakeProjects = [], openSettings}) 
         ))}
       </div>
 
-      {!isProf && demoMode && (
+      {!isProf && demoOn && (
         <div className="section">
           <div className="section-head"><h3>Your activity</h3></div>
           <div className="card" style={{padding:18,cursor:'default'}}>
             <div className="heat">
-              {HEATMAP.slice(0,70).map((v,i) => <div key={i} className="h-c" style={{background:heatColor(v)}}/>)}
+              {demoData.DEMO_HEATMAP.slice(0,70).map((v,i) => <div key={i} className="h-c" style={{background:heatColor(v)}}/>)}
             </div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:14,fontSize:11.5,color:'var(--muted)',fontWeight:500}}>
               <span>10 weeks</span>

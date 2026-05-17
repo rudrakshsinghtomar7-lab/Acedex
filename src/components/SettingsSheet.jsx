@@ -3,7 +3,7 @@ import { DEMO_MODE_AVAILABLE, useDemoMode } from '../hooks/useDemoMode.jsx';
 
 export default function SettingsSheet({onClose, apiKey, setApiKey}) {
   const [draft, setDraft] = useState(apiKey || '');
-  const [demoMode, setDemoMode] = useDemoMode();
+  const { demoMode, setDemoMode } = useDemoMode();
 
   const save = () => {
     setApiKey(draft.trim());
