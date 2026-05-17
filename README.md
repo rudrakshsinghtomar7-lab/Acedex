@@ -1,41 +1,30 @@
 # Acedex
 
-**AI-powered academic collaboration platform.** Built for professors who are tired of chasing students, and students who are tired of carrying group projects without credit.
+AI-powered academic collaboration platform for professors and students.
 
-🔗 **Live:** https://rudrakshsinghtomar7-lab.github.io/Acedex/
+## Features (In Progress: 4/14)
 
----
+- ✅ Authentication & Access Control
+- ✅ Student/Professor Profile System
+- ✅ Team & Workspace System (create projects, invite students)
+- ⬜ PDF Upload & Collaboration (next)
+- ⬜ Assignment & Submission System
+- ⬜ AI Submission Intelligence Engine
+- ⬜ Contribution Tracking
+- ⬜ Notifications
+- ⬜ Resource Hub
+- ⬜ Personalized Dashboard
+- ⬜ Bookmarks
+- ⬜ Admin Control Panel
 
-## What it does
+## Tech Stack
 
-Acedex is where professors and students run academic projects together — with Claude handling the integrity checks inside the workflow, not on a separate platform.
+- React 18 + Vite
+- Supabase (Database, Auth, Storage)
+- Claude API (AI Analysis)
+- GitHub Pages (Hosting)
 
-### For professors
-- **Stop chasing students.** A live dashboard shows every project and task: who's done, who's pending, what's overdue.
-- **See who actually contributed.** Tasks completed, submissions made, deadlines hit — tracked per student. No more "we all worked equally" claims in group projects.
-- **Integrity built in.** Every PDF submission is checked by Claude for relevance to the task, internal similarity against other submissions, and web plagiarism. Verdict comes back as **Clean / Review / Needs Attention**.
-
-### For students
-- Clear view of assigned tasks and deadlines
-- Fast feedback on submissions, with the option to resubmit when flagged
-- Individual contribution tracked — fair credit, not just a shared group grade
-
----
-
-## How it works
-
-1. **Professor creates a Project** and breaks it into Tasks (title, description, assignees, deadline)
-2. **Students submit PDFs** for their assigned tasks
-3. **Claude analyzes each submission:**
-   - Relevance to the task description
-   - Internal similarity against other submissions in the project
-   - Web plagiarism check
-4. **Professor reviews** with one click — approve, reject, or request resubmission
-5. **Dashboard updates in real time** so everyone knows where things stand
-
----
-
-## Why Acedex
+## Competitive Positioning
 
 | Tool | Workflow | Integrity Checks | Contribution Tracking |
 |------|----------|------------------|----------------------|
@@ -43,20 +32,15 @@ Acedex is where professors and students run academic projects together — with 
 | Google Classroom | ✅ | ❌ | ❌ |
 | **Acedex** | ✅ | ✅ | ✅ |
 
----
+## Current Status
 
-## Tech
+MVP in active development. Core team management system complete. Building PDF upload + AI analysis next.
 
-Single-file React app (`index.html`) using React UMD + Babel. Indigo/violet theme. Hosted on GitHub Pages.
+## Development
 
-Claude integration via the Anthropic API — configurable through the in-app gear icon.
+```bash
+npm install
+npm run dev
+```
 
----
-
-## Status
-
-Early MVP. Core workflow live, layering on Projects → Tasks → Submissions → AccessGrants schema, role-based views, and review actions.
-
----
-
-© 2026 Acedex. All rights reserved.
+Live demo: https://rudrakshsinghtomar7-lab.github.io/Acedex/
