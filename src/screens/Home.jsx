@@ -7,9 +7,15 @@ import { useAuth } from '../providers/SessionProvider.jsx';
 
 export default function Home({role, projects, openSettings}) {
   const { profile } = useAuth();
-  const fullName = profile?.full_name ?? '';
-  const firstName = fullName.split(' ')[0];
-  const lastName = fullName.split(' ').slice(1).join(' ') || fullName;
+  const tokens = (profile?.full_name ?? '').split(/\s+/).filter(Boolean);
+  const firstName = tokens[0] ?? '';
+  const lastName = tokens[tokens.length - 1] ?? '';
+  const isProf = role === 'professor';
+  const greeting = !firstName
+    ? (isProf ? 'Welcome back' : 'Hi there')
+    : isProf
+      ? <>Welcome back, <span className="accent">Prof. {lastName}</span></>
+      : <>Hey <span className="accent">{firstName}</span></>;
   const navigate = useNavigate();
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
   const totalTasks = projects.flatMap(p=>p.tasks).length;
@@ -27,9 +33,7 @@ export default function Home({role, projects, openSettings}) {
       <div className="header">
         <div>
           <div className="greeting">Friday, May 8</div>
-          <div className="display">
-            {role==="professor" ? <>Welcome back, <span className="accent">Prof. {lastName}</span></> : <>Hey <span className="accent">{firstName}</span></>}
-          </div>
+          <div className="display">{greeting}</div>
         </div>
         <button className="icon-btn" onClick={openSettings}>⚙</button>
       </div>
