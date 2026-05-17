@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
@@ -79,6 +79,17 @@ export function SessionProvider({ children }) {
     return () => { cancelled = true; };
   }, [session?.user?.id]);
 
+  const refreshProfile = useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    try {
+      const p = await fetchProfile(userId);
+      if (p) setProfile(p);
+    } catch (e) {
+      console.error('refreshProfile failed:', e);
+    }
+  }, [session?.user?.id]);
+
   const value = useMemo(() => ({
     supabase,
     session,
@@ -86,6 +97,7 @@ export function SessionProvider({ children }) {
     profile,
     role: profile?.role ?? null,
     loading,
+    refreshProfile,
     signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     signUp: (email, password, meta = {}) =>
       supabase.auth.signUp({ email, password, options: { data: meta } }),
@@ -93,7 +105,7 @@ export function SessionProvider({ children }) {
     requestPasswordReset: (email, redirectTo) =>
       supabase.auth.resetPasswordForEmail(email, { redirectTo }),
     updatePassword: (password) => supabase.auth.updateUser({ password }),
-  }), [session, profile, loading]);
+  }), [session, profile, loading, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
