@@ -5,7 +5,7 @@ import { useAuth } from '../providers/SessionProvider.jsx';
 export default function Profile({role, projects, openSettings}) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const me = profile?.full_name || (role==="professor" ? "Prof. Rivera" : "Alex Chen");
+  const me = profile?.full_name ?? '';
   async function onSignOut() {
     await signOut();
     navigate('/login', { replace: true });
