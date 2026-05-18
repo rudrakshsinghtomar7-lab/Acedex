@@ -3,7 +3,7 @@ import { Navigate, useParams } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
-import { loadExtension, loadProfileById } from '../lib/profile.js';
+import { loadExtension, loadProfileById, sanitizeUrl } from '../lib/profile.js';
 
 export default function ProfileView() {
   const { id } = useParams();
@@ -120,7 +120,12 @@ export default function ProfileView() {
             )}
             {ext.office_location && <div><span style={{color:'var(--muted)'}}>Office:</span> {ext.office_location}</div>}
             {ext.office_hours && <div><span style={{color:'var(--muted)'}}>Hours:</span> {ext.office_hours}</div>}
-            {ext.homepage_url && <div><a href={ext.homepage_url} target="_blank" rel="noreferrer" style={{color:'var(--indigo-bright)',textDecoration:'none'}}>{ext.homepage_url}</a></div>}
+            {ext.homepage_url && (() => {
+              const safe = sanitizeUrl(ext.homepage_url);
+              return safe
+                ? <div><a href={safe} target="_blank" rel="noreferrer noopener" style={{color:'var(--indigo-bright)',textDecoration:'none'}}>{safe}</a></div>
+                : <div style={{color:'var(--muted)',fontSize:12.5}}>{ext.homepage_url}</div>;
+            })()}
           </div>
         </div>
       )}

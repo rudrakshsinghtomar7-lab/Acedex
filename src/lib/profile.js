@@ -45,6 +45,15 @@ export function isHttpUrl(value) {
   return HTTP_URL_REGEX.test(value.trim());
 }
 
+// Returns the trimmed URL only when it is http(s); otherwise null. Use this
+// before passing user-supplied URLs to anchor href — rows stored before the
+// server-side check existed may still contain javascript:/data:/file: payloads.
+export function sanitizeUrl(value) {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+  return HTTP_URL_REGEX.test(trimmed) ? trimmed : null;
+}
+
 function percent(checks) {
   const filled = checks.filter(Boolean).length;
   return Math.round((filled / checks.length) * 100);
