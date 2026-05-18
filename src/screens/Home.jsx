@@ -36,12 +36,15 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
   const [stats, setStats] = useState(null);
   const [realProjects, setRealProjects] = useState([]);
   const [dataError, setDataError] = useState(null);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id || !role) return;
     let cancelled = false;
+    setDataLoading(true);
     (async () => {
       try {
+        setDataError(null);
         const [s, teams] = await Promise.all([
           role === 'professor'
             ? loadHomeStatsForProfessor(supabase, user.id)
@@ -53,6 +56,8 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
         setRealProjects(teams.map(t => adaptTeam(t, t.members)));
       } catch (e) {
         if (!cancelled) setDataError(e.message || String(e));
+      } finally {
+        if (!cancelled) setDataLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -153,6 +158,8 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
         <div className="section-head"><h3>{isProf ? 'Supervised projects' : 'Your projects'}</h3></div>
         {dataError ? (
           <div className="empty"><div className="empty-h">Couldn't load projects</div><p style={{fontSize:13,color:'var(--muted)'}}>{dataError}</p></div>
+        ) : dataLoading && realProjects.length === 0 ? (
+          <div className="empty"><div className="spin" style={{margin:'0 auto'}}/></div>
         ) : allProjects.length === 0 ? (
           <div className="empty">
             <div className="empty-i">⊞</div>

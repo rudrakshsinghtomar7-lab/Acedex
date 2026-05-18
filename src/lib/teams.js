@@ -110,8 +110,9 @@ export async function loadHomeStatsForProfessor(supabase, professorId) {
 export async function loadHomeStatsForStudent(supabase, studentId) {
   const { count, error } = await supabase
     .from('team_members')
-    .select('team_id', { count: 'exact', head: true })
-    .eq('profile_id', studentId);
+    .select('team_id, teams!inner(status)', { count: 'exact', head: true })
+    .eq('profile_id', studentId)
+    .eq('teams.status', 'active');
   if (error) throw error;
   return { projects: count ?? 0 };
 }
