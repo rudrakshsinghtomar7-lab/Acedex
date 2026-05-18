@@ -65,22 +65,33 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
 
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
 
-  // Combined view for display: real + (when demo on) demo projects
-  const allProjects = demoOn ? [...realProjects, ...demoData.DEMO_PROJECTS] : realProjects;
+  // Demo projects visible to this user: pros see everything, students see only
+  // projects where the demo persona is a member.
+  const demoProjects = demoOn
+    ? (isProf
+        ? demoData.DEMO_PROJECTS
+        : demoData.getDemoProjectsForStudent(demoData.DEMO_CURRENT_STUDENT_ID))
+    : [];
 
-  // Demo-derived numbers from demoData.DEMO_PROJECTS (only when demo on)
-  const dProj = demoOn ? demoData.DEMO_PROJECTS : [];
+  // Combined view: real (when available) + demo. If the real fetch errored
+  // and demo is on, surface demo only and render the error as a soft banner.
+  const allProjects = demoOn ? [...realProjects, ...demoProjects] : realProjects;
+
+  // Numbers feeding the stat tiles use the same filtered list so a student's
+  // tiles match what they actually see in the projects section.
+  const dProj = demoOn ? demoProjects : [];
   const demoFakeTotalTasks = demoOn ? dProj.flatMap(p => p.tasks ?? []).length : 0;
   const demoFakeDoneTasks  = demoOn ? dProj.flatMap(p => p.tasks ?? []).filter(t => t.done).length : 0;
   const demoFakeActiveMs   = demoOn ? dProj.flatMap(p => p.milestones ?? []).filter(m => m.status === 'active').length : 0;
   const demoFakeInsights   = demoOn ? dProj.reduce((a, p) => a + (p.insights ?? []).filter(i => i.type !== 'positive').length, 0) : 0;
 
-  // Stats: real + (when demo on) demoData.DEMO_STATS
+  // Stats: real + (when demo on) demoData.DEMO_STATS. Falls back to demo-only
+  // when the real fetch errored so tiles aren't stuck on '—'.
   const dStats = demoOn ? (isProf ? demoData.DEMO_STATS.professor : demoData.DEMO_STATS.student) : null;
-  const combinedStats = stats ? {
-    projects: stats.projects + (dStats?.projects ?? 0),
-    students: (stats.students ?? 0) + (dStats?.students ?? 0),
-    atRisk:   (stats.atRisk ?? 0)   + (dStats?.atRisk ?? 0),
+  const combinedStats = (stats || demoOn) ? {
+    projects: (stats?.projects ?? 0) + (dStats?.projects ?? 0),
+    students: (stats?.students ?? 0) + (dStats?.students ?? 0),
+    atRisk:   (stats?.atRisk   ?? 0) + (dStats?.atRisk   ?? 0),
   } : null;
 
   const realValOrSoon = (v) => (combinedStats ? v : '—');
@@ -156,9 +167,17 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
 
       <div className="section">
         <div className="section-head"><h3>{isProf ? 'Supervised projects' : 'Your projects'}</h3></div>
-        {dataError ? (
+        {dataError && demoOn && allProjects.length > 0 && (
+          <div className="alert" style={{marginBottom:14,background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)'}}>
+            <span style={{fontSize:13}}>◇</span>
+            <div style={{fontSize:12.5,color:'var(--text-2)',lineHeight:1.5}}>
+              <strong>Showing demo data only.</strong> Couldn't load real projects: {dataError}
+            </div>
+          </div>
+        )}
+        {dataError && !demoOn ? (
           <div className="empty"><div className="empty-h">Couldn't load projects</div><p style={{fontSize:13,color:'var(--muted)'}}>{dataError}</p></div>
-        ) : dataLoading && realProjects.length === 0 ? (
+        ) : dataLoading && realProjects.length === 0 && !demoOn ? (
           <div className="empty"><div className="spin" style={{margin:'0 auto'}}/></div>
         ) : allProjects.length === 0 ? (
           <div className="empty">

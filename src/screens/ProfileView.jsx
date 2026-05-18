@@ -2,20 +2,40 @@ import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import { loadExtension, loadProfileById } from '../lib/profile.js';
 
 export default function ProfileView() {
   const { id } = useParams();
   const { supabase, user } = useAuth();
+  const { demoData } = useDemoMode();
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [ext, setExt] = useState(null);
   const [error, setError] = useState(null);
 
+  const isDemoId = !!id && id.startsWith('demo-');
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
+    setProfile(null);
+    setExt(null);
+
+    // Demo profile: resolve from in-memory demo data; no Supabase query.
+    // Wait if demoData hasn't finished its dynamic import yet.
+    if (isDemoId) {
+      if (!demoData) return;
+      const p = demoData.findDemoProfileById(id);
+      if (cancelled) return;
+      setProfile(p);
+      setExt(p); // demo records carry year/major/interests/etc. inline
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         const p = await loadProfileById(supabase, id);
@@ -32,7 +52,7 @@ export default function ProfileView() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, supabase]);
+  }, [id, supabase, isDemoId, demoData]);
 
   if (user?.id === id) return <Navigate to="/profile" replace/>;
 

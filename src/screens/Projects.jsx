@@ -38,7 +38,13 @@ export default function Projects({role}) {
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
 
   const demoOn = demoMode && demoData;
-  const allProjects = demoOn ? [...projects, ...demoData.DEMO_PROJECTS] : projects;
+  const isProf = role === 'professor';
+  const demoProjects = demoOn
+    ? (isProf
+        ? demoData.DEMO_PROJECTS
+        : demoData.getDemoProjectsForStudent(demoData.DEMO_CURRENT_STUDENT_ID))
+    : [];
+  const allProjects = demoOn ? [...projects, ...demoProjects] : projects;
 
   let filtered = allProjects;
   if (filter === 'active') filtered = allProjects.filter(p => p.status === 'active');
@@ -72,9 +78,18 @@ export default function Projects({role}) {
         ))}
       </div>
 
-      {loading ? (
+      {error && demoOn && allProjects.length > 0 && (
+        <div className="alert" style={{margin:'0 24px 14px',background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)'}}>
+          <span style={{fontSize:13}}>◇</span>
+          <div style={{fontSize:12.5,color:'var(--text-2)',lineHeight:1.5}}>
+            <strong>Showing demo data only.</strong> Couldn't load real projects: {error}
+          </div>
+        </div>
+      )}
+
+      {loading && !demoOn ? (
         <div className="empty"><div className="spin" style={{margin:'0 auto 12px'}}/><p className="empty-h">Loading…</p></div>
-      ) : error ? (
+      ) : error && !demoOn ? (
         <div className="empty"><div className="empty-h">Couldn't load projects</div><p style={{fontSize:13,color:'var(--muted)'}}>{error}</p></div>
       ) : allProjects.length === 0 ? (
         <div className="empty">

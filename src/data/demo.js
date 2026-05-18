@@ -314,7 +314,27 @@ function buildDemoHeatmap() {
 
 export const DEMO_HEATMAP = buildDemoHeatmap();
 
+// The signed-in student is treated as this demo persona for filtering purposes.
+// Demo data isn't tied to a real auth account, so we pick a fixed persona
+// (Alex Chen) and surface only the demo projects that include her as a member.
+export const DEMO_CURRENT_STUDENT_ID = 'demo-student-1';
+
+export function getDemoProjectsForStudent(studentId, projects = DEMO_PROJECTS) {
+  return projects.filter(p =>
+    (p.memberRecords ?? []).some(m => m.profile?.id === studentId)
+  );
+}
+
+export function findDemoProfileById(id) {
+  if (!id || !id.startsWith('demo-')) return null;
+  if (id.startsWith('demo-prof'))    return DEMO_PROFESSORS.find(p => p.id === id) ?? null;
+  if (id.startsWith('demo-student')) return DEMO_STUDENTS.find(s => s.id === id) ?? null;
+  return null;
+}
+
+const STUDENT_DEMO_PROJECT_COUNT = getDemoProjectsForStudent(DEMO_CURRENT_STUDENT_ID).length;
+
 export const DEMO_STATS = {
   professor: { projects: DEMO_PROJECTS.length, students: DEMO_STUDENTS.length, atRisk: DEMO_PROJECTS.filter(p => p.status === 'at_risk').length },
-  student:   { projects: 3 },
+  student:   { projects: STUDENT_DEMO_PROJECT_COUNT },
 };
