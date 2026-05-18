@@ -28,12 +28,21 @@ export async function loadUniversities(supabase) {
   return data ?? [];
 }
 
-export async function saveProfile(supabase, { profileId, role, profileUpdate, extUpdate }) {
-  const { error: pErr } = await supabase.from('profiles').update(profileUpdate).eq('id', profileId);
-  if (pErr) throw pErr;
-  const table = role === 'professor' ? 'professor_profiles' : 'student_profiles';
-  const { error: eErr } = await supabase.from(table).update(extUpdate).eq('profile_id', profileId);
-  if (eErr) throw eErr;
+// Atomic update via SECURITY DEFINER RPC (migration 004). Both updates run in
+// one transaction — if the extension update fails, the profile update rolls
+// back too. Server-side also validates homepage_url scheme.
+export async function saveProfile(supabase, { profileUpdate, extUpdate }) {
+  const { error } = await supabase.rpc('update_profile_atomic', {
+    _profile_data: profileUpdate,
+    _ext_data: extUpdate,
+  });
+  if (error) throw error;
+}
+
+export const HTTP_URL_REGEX = /^https?:\/\//i;
+export function isHttpUrl(value) {
+  if (!value) return true; // empty is allowed
+  return HTTP_URL_REGEX.test(value.trim());
 }
 
 function percent(checks) {

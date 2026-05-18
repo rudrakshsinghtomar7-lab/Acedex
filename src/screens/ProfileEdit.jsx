@@ -4,7 +4,7 @@ import { useAuth } from '../providers/SessionProvider.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import TagInput from '../components/TagInput.jsx';
 import {
-  loadExtension, loadUniversities, saveProfile, completenessFor,
+  loadExtension, loadUniversities, saveProfile, completenessFor, isHttpUrl,
 } from '../lib/profile.js';
 
 const YEAR_OPTIONS    = ['freshman','sophomore','junior','senior','graduate'];
@@ -17,6 +17,7 @@ export default function ProfileEdit() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [error, setError] = useState(null);
   const [savedAt, setSavedAt] = useState(null);
 
@@ -44,6 +45,7 @@ export default function ProfileEdit() {
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
+    setLoadError(null);
     (async () => {
       try {
         const [extRow, unis] = await Promise.all([
@@ -70,7 +72,7 @@ export default function ProfileEdit() {
           setHomepageUrl(extRow?.homepage_url ?? '');
         }
       } catch (e) {
-        if (!cancelled) setError(e.message || String(e));
+        if (!cancelled) setLoadError(e.message || String(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -94,6 +96,15 @@ export default function ProfileEdit() {
     e.preventDefault();
     setError(null);
     setSavedAt(null);
+
+    if (profile.role === 'professor' && !isHttpUrl(homepageUrl)) {
+      setError('Only http/https URLs allowed');
+      return;
+    }
+    if (avatarUrl.trim() && !isHttpUrl(avatarUrl)) {
+      setError('Only http/https URLs allowed');
+      return;
+    }
 
     if (universityId !== profile.university_id && !window.confirm(INST_WARN)) {
       setUniversityId(profile.university_id);
@@ -122,7 +133,7 @@ export default function ProfileEdit() {
             year: year || null,
             interests,
           };
-      await saveProfile(supabase, { profileId: profile.id, role: profile.role, profileUpdate, extUpdate });
+      await saveProfile(supabase, { profileUpdate, extUpdate });
       await refreshProfile();
       setSavedAt(new Date());
     } catch (e2) {
@@ -224,6 +235,14 @@ export default function ProfileEdit() {
           </>
         )}
 
+        {loadError && (
+          <div className="alert" style={{marginBottom:14,background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)'}}>
+            <span style={{fontSize:13}}>◇</span>
+            <div style={{fontSize:12.5,color:'var(--text-2)',lineHeight:1.5}}>
+              <strong>Couldn't load your profile.</strong> Saving is disabled. {loadError}
+            </div>
+          </div>
+        )}
         {error && <div className="alert" style={{marginBottom:14}}><span>{error}</span></div>}
         {savedAt && !error && (
           <div className="alert" style={{marginBottom:14,background:'rgba(124,108,255,.08)',borderColor:'rgba(124,108,255,.35)'}}>
@@ -231,7 +250,7 @@ export default function ProfileEdit() {
           </div>
         )}
 
-        <button type="submit" className="btn btn-p btn-bl" disabled={saving} style={{marginTop:8}}>
+        <button type="submit" className="btn btn-p btn-bl" disabled={saving || !!loadError} style={{marginTop:8}}>
           {saving ? <span className="spin"/> : 'Save changes'}
         </button>
         <button type="button" className="btn btn-g" disabled={saving} style={{marginTop:10}}
