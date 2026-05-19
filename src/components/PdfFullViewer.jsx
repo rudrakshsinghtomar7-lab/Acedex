@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Avatar from './Avatar.jsx';
 import PdfViewer from './PdfViewer.jsx';
 import {
@@ -196,6 +196,33 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
     if (activeHighlightId != null) setActiveHighlightId(null);
   }
 
+  // Swipe-left/right to flip pages. We track the starting touch point and
+  // only fire when the gesture is dominantly horizontal — vertical scrolls
+  // and pinches are left alone. Disabled while the user is in highlight
+  // mode so dragging across text to select doesn't accidentally page.
+  const touchStartRef = useRef(null);
+  function onTouchStart(e) {
+    if (highlightMode) return;
+    if (e.touches.length !== 1) { touchStartRef.current = null; return; }
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+  function onTouchEnd(e) {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 60) return;
+    if (Math.abs(dy) > Math.abs(dx) * 0.7) return;
+    if (dx < 0 && (pageCount ? pageNumber < pageCount : true)) {
+      setPageNumber(n => n + 1);
+    } else if (dx > 0 && pageNumber > 1) {
+      setPageNumber(n => Math.max(1, n - 1));
+    }
+  }
+
   const colorPickerReady = isDemo ? pendingMockLine != null : true;
   const colorPickerHint = isDemo
     ? (pendingMockLine == null ? 'Tap a line on the page, then pick a color.' : 'Pick a color.')
@@ -265,7 +292,11 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
         )}
 
         <div className="pdf-fullviewer-body">
-          <div className="pdf-fullviewer-doc">
+          <div
+            className="pdf-fullviewer-doc"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
             <div className="pdf-viewer-controls">
               <button className="btn btn-g btn-sm" disabled={pageNumber <= 1} onClick={() => setPageNumber(n => Math.max(1, n - 1))}>Prev</button>
               <span>Page {pageNumber}{pageCount ? ` / ${pageCount}` : ''}</span>
