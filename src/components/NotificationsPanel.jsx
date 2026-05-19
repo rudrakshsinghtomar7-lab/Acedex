@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/SessionProvider.jsx';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import {
   listNotifications, markAsRead, markAllAsRead, dismissNotification,
   relativeTime, TYPE_GLYPH,
@@ -10,19 +12,28 @@ import {
 
 export default function NotificationsPanel({ onClose, onChanged }) {
   const { supabase, user } = useAuth();
+  const { demoMode, demoData } = useDemoMode();
+  const navigate = useNavigate();
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);
 
   useEffect(() => {
+    setError(null);
+    if (demoMode) {
+      // In demo mode the panel sources from the in-memory fixture; the
+      // mark-read / dismiss / accept-invite mutations all become local no-ops
+      // (or local-state toggles) so demo state stays self-contained.
+      setRows(demoData?.DEMO_NOTIFICATIONS ?? []);
+      return;
+    }
     if (!user?.id) return;
     let cancelled = false;
-    setError(null);
     listNotifications(supabase, user.id)
       .then(d => { if (!cancelled) setRows(d); })
       .catch(e => { if (!cancelled) setError(e.message || String(e)); });
     return () => { cancelled = true; };
-  }, [supabase, user?.id]);
+  }, [supabase, user?.id, demoMode, demoData]);
 
   const updateRow = (id, patch) =>
     setRows(rs => rs ? rs.map(r => r.id === id ? { ...r, ...patch } : r) : rs);
@@ -33,6 +44,7 @@ export default function NotificationsPanel({ onClose, onChanged }) {
   const onMarkRead = async (n) => {
     if (n.read) return;
     updateRow(n.id, { read: true });
+    if (demoMode) return;
     try { await markAsRead(supabase, n.id); onChanged?.(); }
     catch (e) { setError(e.message); updateRow(n.id, { read: false }); }
   };
@@ -42,6 +54,7 @@ export default function NotificationsPanel({ onClose, onChanged }) {
     setBusy('all');
     const prev = rows;
     setRows(rs => rs.map(r => ({ ...r, read: true })));
+    if (demoMode) { setBusy(null); return; }
     try { await markAllAsRead(supabase, user.id); onChanged?.(); }
     catch (e) { setError(e.message); setRows(prev); }
     finally { setBusy(null); }
@@ -51,9 +64,21 @@ export default function NotificationsPanel({ onClose, onChanged }) {
     setBusy(n.id);
     const prev = rows;
     removeRow(n.id);
+    if (demoMode) { setBusy(null); return; }
     try { await dismissNotification(supabase, n.id); onChanged?.(); }
     catch (e) { setError(e.message); setRows(prev); }
     finally { setBusy(null); }
+  };
+
+  // Tap → navigate to the link (if any), close the panel, then mark read.
+  // The accept/decline/dismiss buttons stopPropagation so they don't trigger
+  // navigation through the row click.
+  const onActivate = (n) => {
+    if (n.link) {
+      onClose?.();
+      navigate(n.link);
+    }
+    onMarkRead(n);
   };
 
   const resolveInvitation = async (n) => {
@@ -130,7 +155,7 @@ export default function NotificationsPanel({ onClose, onChanged }) {
                 key={n.id}
                 n={n}
                 busy={busy === n.id}
-                onMarkRead={() => onMarkRead(n)}
+                onActivate={() => onActivate(n)}
                 onDismiss={() => onDismiss(n)}
                 onAccept={() => onAccept(n)}
                 onDecline={() => onDecline(n)}
@@ -143,12 +168,19 @@ export default function NotificationsPanel({ onClose, onChanged }) {
   );
 }
 
-function NotificationRow({ n, busy, onMarkRead, onDismiss, onAccept, onDecline }) {
+function NotificationRow({ n, busy, onActivate, onDismiss, onAccept, onDecline }) {
   const glyph = TYPE_GLYPH[n.type] ?? '◉';
   const isInvite = n.type === 'team_invite' && !!n.related_team_id;
+  const clickable = !!n.link;
   const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
   return (
-    <div className={`notif ${n.read ? '' : 'notif-unread'}`} onClick={onMarkRead}>
+    <div
+      className={`notif ${n.read ? '' : 'notif-unread'} ${clickable ? 'notif-clickable' : ''}`}
+      onClick={onActivate}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); } } : undefined}
+    >
       <div className="notif-icon">{glyph}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="notif-title">{n.title}</div>

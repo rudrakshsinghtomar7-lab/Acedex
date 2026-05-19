@@ -15,6 +15,7 @@
     "marked": "^14.1.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-pdf": "^10.4.1",
     "react-router-dom": "^6.30.3"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { PROJECTS } from './data/projects.js';
 import PhoneFrame from './components/PhoneFrame.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
@@ -36,15 +36,27 @@ function BottomNavLayout({role, insightBadgeCount}) {
   );
 }
 
-function ProjectDetailRoute({role, apiKey}) {
-  const { id } = useParams();
+function ProjectDetailRoute({role, apiKey, initialTab}) {
+  const { id, pdfId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const onBack = () => {
     if (location.key === 'default') navigate('/projects', {replace: true});
     else navigate(-1);
   };
-  return <ProjectDetail id={id} role={role} apiKey={apiKey} onBack={onBack}/>;
+  const initialPage = Number(searchParams.get('page')) || 1;
+  return (
+    <ProjectDetail
+      id={id}
+      role={role}
+      apiKey={apiKey}
+      onBack={onBack}
+      initialTab={initialTab}
+      initialPdfId={pdfId}
+      initialPage={initialPage}
+    />
+  );
 }
 
 function RootRedirect() {
@@ -90,6 +102,12 @@ function AppShell() {
           <Route path="/projects/create" element={<div className="screen"><ProjectCreate/></div>}/>
           <Route path="/projects/:id"    element={
             <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey}/></div>
+          }/>
+          <Route path="/projects/:id/pdfs" element={
+            <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey} initialTab="pdfs"/></div>
+          }/>
+          <Route path="/projects/:id/pdfs/:pdfId" element={
+            <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey} initialTab="pdfs"/></div>
           }/>
           <Route path="/profile/edit" element={<div className="screen"><ProfileEdit/></div>}/>
           <Route path="/profile/:id"  element={<div className="screen"><ProfileView/></div>}/>

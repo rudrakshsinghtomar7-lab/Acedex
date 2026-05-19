@@ -71,4 +71,6 @@ export const TYPE_GLYPH = {
   ai_insight: '✦',
   decision_required: '◇',
   system: '◉',
+  pdf_uploaded: '▦',
+  pdf_comment: '◗',
 };

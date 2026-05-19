@@ -91,9 +91,9 @@ export const DEMO_PROJECTS = [
       { id: 3, type: 'positive',   title: 'Exemplary balanced workload',                    body: 'All four members within 18 percentage points of each other.', evidence: ['34% / 28% / 22% / 16%', 'No member below 15%', 'All on track with personal milestones'], confidence: 5 },
     ],
     pdfs: [
-      { id: 'demo-pdf-1', title: 'Project Proposal v2',  uploaded_by: 'Alex Chen',    uploaded_at: 'Apr 1',  pages: 5,  annotations: 7,  status: 'reviewed' },
-      { id: 'demo-pdf-2', title: 'Literature Review',    uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 14', pages: 12, annotations: 14, status: 'reviewed' },
-      { id: 'demo-pdf-3', title: 'Methodology v1',       uploaded_by: 'Marcus Lee',   uploaded_at: 'May 1',  pages: 8,  annotations: 3,  status: 'pending'  },
+      { id: 'demo-pdf-1', title: 'Project Proposal v2',  uploaded_by: 'Alex Chen',    uploaded_at: 'Apr 1',  pages: 5,  annotations: 7,  status: 'reviewed', file_size_bytes: 612400  },
+      { id: 'demo-pdf-2', title: 'Literature Review',    uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 14', pages: 12, annotations: 14, status: 'reviewed', file_size_bytes: 1432800 },
+      { id: 'demo-pdf-3', title: 'Methodology v1',       uploaded_by: 'Marcus Lee',   uploaded_at: 'May 1',  pages: 8,  annotations: 3,  status: 'pending',  file_size_bytes: 945200  },
     ],
     aiVerdict: { kind: 'review', label: 'Review', confidence: 3, relevance: 92 },
     isDemo: true,
@@ -142,8 +142,8 @@ export const DEMO_PROJECTS = [
       { id: 2, type: 'positive', title: 'Jordan Kim ramping fast',     body: 'Newest member is contributing at 23% by week 6 — typical for week 10.', evidence: ['Joined Apr 1', '5 PRs merged', 'Active on every milestone discussion'], confidence: 4 },
     ],
     pdfs: [
-      { id: 'demo-pdf-4', title: 'Architecture Plan v3', uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 5', pages: 9, annotations: 11, status: 'reviewed' },
-      { id: 'demo-pdf-5', title: 'Consensus Prototype',  uploaded_by: 'Marcus Lee',   uploaded_at: 'May 1', pages: 6, annotations: 4,  status: 'pending'  },
+      { id: 'demo-pdf-4', title: 'Architecture Plan v3', uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 5', pages: 9, annotations: 11, status: 'reviewed', file_size_bytes: 1108400 },
+      { id: 'demo-pdf-5', title: 'Consensus Prototype',  uploaded_by: 'Marcus Lee',   uploaded_at: 'May 1', pages: 6, annotations: 4,  status: 'pending',  file_size_bytes: 728300  },
     ],
     aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 96 },
     isDemo: true,
@@ -192,8 +192,8 @@ export const DEMO_PROJECTS = [
       { id: 2, type: 'timing_anomaly',         title: 'Milestone 2 likely to miss deadline',                  body: 'Current cleaning pipeline progress projects May 14 completion vs. May 8 deadline.', evidence: ['43% of expected commits by date', 'No PR opened for milestone 2 yet'], confidence: 3 },
     ],
     pdfs: [
-      { id: 'demo-pdf-6', title: 'Data Source Audit',      uploaded_by: 'Yuki Tanaka', uploaded_at: 'Apr 20', pages: 4, annotations: 6, status: 'reviewed' },
-      { id: 'demo-pdf-7', title: 'Cleaning Pipeline Spec', uploaded_by: 'Alex Chen',   uploaded_at: 'May 2',  pages: 7, annotations: 9, status: 'pending'  },
+      { id: 'demo-pdf-6', title: 'Data Source Audit',      uploaded_by: 'Yuki Tanaka', uploaded_at: 'Apr 20', pages: 4, annotations: 6, status: 'reviewed', file_size_bytes: 487200 },
+      { id: 'demo-pdf-7', title: 'Cleaning Pipeline Spec', uploaded_by: 'Alex Chen',   uploaded_at: 'May 2',  pages: 7, annotations: 9, status: 'pending',  file_size_bytes: 836000 },
     ],
     aiVerdict: { kind: 'flagged', label: 'Needs attention', confidence: 4, relevance: 88 },
     isDemo: true,
@@ -235,8 +235,8 @@ export const DEMO_PROJECTS = [
       { id: 1, type: 'positive', title: 'Exceptional balance and timing throughout', body: 'Three members within 1pp of each other; every milestone on or ahead of schedule.', evidence: ['Contribution stddev: 0.6', 'All milestones met early', 'Zero late submissions'], confidence: 5 },
     ],
     pdfs: [
-      { id: 'demo-pdf-8', title: 'Final Report',           uploaded_by: 'Marcus Lee',   uploaded_at: 'Apr 30', pages: 18, annotations: 22, status: 'reviewed' },
-      { id: 'demo-pdf-9', title: 'Usability Test Results', uploaded_by: 'Yuki Tanaka', uploaded_at: 'Apr 15', pages: 10, annotations: 15, status: 'reviewed' },
+      { id: 'demo-pdf-8', title: 'Final Report',           uploaded_by: 'Marcus Lee',   uploaded_at: 'Apr 30', pages: 18, annotations: 22, status: 'reviewed', file_size_bytes: 2256000 },
+      { id: 'demo-pdf-9', title: 'Usability Test Results', uploaded_by: 'Yuki Tanaka', uploaded_at: 'Apr 15', pages: 10, annotations: 15, status: 'reviewed', file_size_bytes: 1232000 },
     ],
     aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 98 },
     isDemo: true,
@@ -275,23 +275,134 @@ export const DEMO_PROJECTS = [
     ],
     insights: [],
     pdfs: [
-      { id: 'demo-pdf-10', title: 'Chapters 1–4 writeup', uploaded_by: 'Marcus Lee', uploaded_at: 'Mar 30', pages: 6, annotations: 4, status: 'reviewed' },
-      { id: 'demo-pdf-11', title: 'Chapters 5–7 writeup', uploaded_by: 'Marcus Lee', uploaded_at: 'Apr 30', pages: 7, annotations: 5, status: 'reviewed' },
+      { id: 'demo-pdf-10', title: 'Chapters 1–4 writeup', uploaded_by: 'Marcus Lee', uploaded_at: 'Mar 30', pages: 6, annotations: 4, status: 'reviewed', file_size_bytes: 712800 },
+      { id: 'demo-pdf-11', title: 'Chapters 5–7 writeup', uploaded_by: 'Marcus Lee', uploaded_at: 'Apr 30', pages: 7, annotations: 5, status: 'reviewed', file_size_bytes: 824400 },
     ],
     aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 94 },
     isDemo: true,
   },
 ];
 
+// Flat view of all demo PDFs across projects, shaped like pdf_documents rows.
+// PDFs.jsx adapts directly from project.pdfs, but consumers that need a flat
+// lookup (notifications, search) can use this.
+export const DEMO_PDFS = DEMO_PROJECTS.flatMap(p =>
+  (p.pdfs || []).map(pdf => ({
+    id: pdf.id,
+    team_id: p.id,
+    title: pdf.title,
+    uploaded_by: pdf.uploaded_by,
+    uploaded_at: pdf.uploaded_at,
+    page_count: pdf.pages,
+    file_size_bytes: pdf.file_size_bytes,
+    status: pdf.status,
+  }))
+);
+
+// Demo annotations shaped like pdf_annotations rows so PDFs.jsx can render
+// them without further adaptation. Keyed by document_id; author is a demo
+// student or the professor so Avatar resolves a name and the preview can
+// surface a professor badge.
+function demoAuthor(student) {
+  return { id: student.id, full_name: student.full_name, avatar_url: null, role: 'student' };
+}
+function demoAuthorProf() {
+  return { id: PROF.id, full_name: PROF.full_name, avatar_url: null, role: 'professor' };
+}
+
+// Anchor a handful of preview comments to "now" so the list shows live
+// relative timestamps ("2h ago", "1d ago") regardless of when the demo is
+// opened. The remaining static dates give the impression of historical
+// review threads behind the freshest activity.
+function hoursAgo(h) {
+  const d = new Date();
+  d.setHours(d.getHours() - h);
+  return d.toISOString();
+}
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString();
+}
+
+export const DEMO_PDF_COMMENTS = [
+  // demo-pdf-1: Project Proposal v2 — preview pulls the prof comment + a fresh student reply.
+  { id: 'demo-c-1',  document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 1, content: 'Strong framing — consider moving the research question above the dataset description.', resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-02T14:12:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+  { id: 'demo-c-2',  document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 2, content: 'Can we tighten the scope? Three eval domains feels ambitious for the timeline.',         resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-03T09:40:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
+  { id: 'demo-c-3',  document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 3, content: 'Add a sentence about ethical review — Dr. Rivera will ask.',                              resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-04T16:05:00Z', author: demoAuthor(DEMO_STUDENTS[3]) },
+  { id: 'demo-c-13', document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 1, content: 'Great work on the methodology section — your evaluation framing is the strongest part.', resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(3),          author: demoAuthorProf() },
+  { id: 'demo-c-14', document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 2, content: 'Should we add more citations for the §2 claims? A couple feel under-supported.',         resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(1),          author: demoAuthor(DEMO_STUDENTS[2]) },
+
+  // demo-pdf-2: Literature Review
+  { id: 'demo-c-4',  document_id: 'demo-pdf-2', annotation_type: 'comment', page_number: 4, content: 'Smith et al. 2023 belongs in §3, not §2 — different evaluation regime.',                 resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-15T11:20:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
+  { id: 'demo-c-5',  document_id: 'demo-pdf-2', annotation_type: 'comment', page_number: 7, content: 'Nice synthesis of the retrieval-vs-parametric debate.',                                   resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-16T13:55:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
+  { id: 'demo-c-15', document_id: 'demo-pdf-2', annotation_type: 'comment', page_number: 9, content: 'Could you expand the section on calibration failure modes? It\'s the most novel angle.', resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(7),          author: demoAuthorProf() },
+
+  // demo-pdf-3: Methodology v1
+  { id: 'demo-c-6',  document_id: 'demo-pdf-3', annotation_type: 'comment', page_number: 2, content: 'BERTScore alone won\'t catch factual errors — pair with NLI-based check?',                resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-05-02T10:10:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
+  { id: 'demo-c-7',  document_id: 'demo-pdf-3', annotation_type: 'comment', page_number: 5, content: 'Sample size justification needs a power calc.',                                           resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(28),         author: demoAuthor(DEMO_STUDENTS[1]) },
+
+  // demo-pdf-4: Architecture Plan v3
+  { id: 'demo-c-8',  document_id: 'demo-pdf-4', annotation_type: 'comment', page_number: 3, content: 'Are we committing to Raft over Multi-Paxos? Worth a paragraph on the trade-off.',         resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-06T15:00:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
+  { id: 'demo-c-9',  document_id: 'demo-pdf-4', annotation_type: 'comment', page_number: 6, content: 'Storage layer diagram is clean — keep it.',                                               resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: daysAgo(2),           author: demoAuthor(DEMO_STUDENTS[4]) },
+
+  // demo-pdf-6: Data Source Audit
+  { id: 'demo-c-10', document_id: 'demo-pdf-6', annotation_type: 'comment', page_number: 1, content: 'NOAA license terms — link to the actual page, not the landing site.',                     resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-21T12:00:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
+  { id: 'demo-c-11', document_id: 'demo-pdf-6', annotation_type: 'comment', page_number: 3, content: 'Missing-station coverage map would help the reader.',                                     resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: daysAgo(1),           author: demoAuthor(DEMO_STUDENTS[4]) },
+
+  // demo-pdf-8: Final Report
+  { id: 'demo-c-12', document_id: 'demo-pdf-8', annotation_type: 'comment', page_number: 9, content: 'Usability section reads great — promote two of the quotes to the abstract.',              resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-30T18:00:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+];
+
+export const DEMO_PDF_HIGHLIGHTS = [
+  // demo-pdf-1
+  { id: 'demo-h-1',  document_id: 'demo-pdf-1', annotation_type: 'highlight', page_number: 1, content: 'detect and mitigate factual errors in large language models', resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'detect and mitigate factual errors in large language models' }, created_at: '2026-04-02T14:13:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+  { id: 'demo-h-2',  document_id: 'demo-pdf-1', annotation_type: 'highlight', page_number: 3, content: 'curated dataset of common-knowledge questions',                resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'curated dataset of common-knowledge questions' },                created_at: '2026-04-04T16:06:00Z', author: demoAuthor(DEMO_STUDENTS[3]) },
+
+  // demo-pdf-2
+  { id: 'demo-h-3',  document_id: 'demo-pdf-2', annotation_type: 'highlight', page_number: 4, content: 'retrieval-augmented generation reduces fabrication by 38%',     resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'retrieval-augmented generation reduces fabrication by 38%' }, created_at: '2026-04-15T11:21:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
+
+  // demo-pdf-3
+  { id: 'demo-h-4',  document_id: 'demo-pdf-3', annotation_type: 'highlight', page_number: 2, content: 'BERTScore evaluator',                                          resolved: false, color: '#fda4af', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'BERTScore evaluator' },                                          created_at: '2026-05-02T10:11:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
+  { id: 'demo-h-5',  document_id: 'demo-pdf-3', annotation_type: 'highlight', page_number: 5, content: 'n = 1000 questions across three domains',                       resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'n = 1000 questions across three domains' },                       created_at: '2026-05-03T08:31:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+
+  // demo-pdf-4
+  { id: 'demo-h-6',  document_id: 'demo-pdf-4', annotation_type: 'highlight', page_number: 3, content: 'Raft consensus with single-leader election',                    resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'Raft consensus with single-leader election' },                    created_at: '2026-04-06T15:01:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
+
+  // demo-pdf-6
+  { id: 'demo-h-7',  document_id: 'demo-pdf-6', annotation_type: 'highlight', page_number: 1, content: 'NOAA Global Historical Climatology Network',                    resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'NOAA Global Historical Climatology Network' },                    created_at: '2026-04-21T12:01:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
+
+  // demo-pdf-8
+  { id: 'demo-h-8',  document_id: 'demo-pdf-8', annotation_type: 'highlight', page_number: 9, content: 'all five participants completed the core task unaided',         resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'all five participants completed the core task unaided' },         created_at: '2026-04-30T18:01:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+];
+
+// Shaped to match the NOTIFICATION_SELECT projection the panel reads against
+// the live DB: created_at (ISO) drives relativeTime; link is what tapping a
+// row navigates to; related_team_id + team.name surface the team in the meta
+// line. Sorted newest-first.
+const _PROJ1 = { id: 'demo-proj-1', name: 'LLM Hallucination Study' };
+const _PROJ2 = { id: 'demo-proj-2', name: 'Distributed Systems Capstone' };
+const _PROJ3 = { id: 'demo-proj-3', name: 'Climate Data Visualization' };
+const _PROJ5 = { id: 'demo-proj-5', name: 'Causal Inference Reading Group' };
+
 export const DEMO_NOTIFICATIONS = [
-  { id: 'demo-n-1',  type: 'team_invite',        title: 'Dr. Sarah Rivera invited you to LLM Hallucination Study', body: 'You\'ve been invited to join a 4-person project for CS 4890.', time: '3h ago',  read: false },
-  { id: 'demo-n-2',  type: 'submission_received', title: 'Priya Sharma submitted Literature Review v3',             body: '12 pages, 3 sources flagged for review.',                       time: '5h ago',  read: false },
-  { id: 'demo-n-3',  type: 'ai_insight',         title: 'AI flagged contribution imbalance on Climate Data Viz',    body: 'Jordan Kim is 14% by week 6 — peers average 25–30%.',           time: '1d ago',  read: false },
-  { id: 'demo-n-4',  type: 'decision_required',  title: 'Review needed: 14% similarity in LLM Study §2.1',          body: 'Closest match: Smith et al. 2023. Likely common phrasing.',     time: '1d ago',  read: false },
-  { id: 'demo-n-5',  type: 'mention',            title: 'Marcus Lee mentioned you in a comment',                    body: '"@alex — should we drop the GPT-4 column from Table 3?"',       time: '2d ago',  read: true  },
-  { id: 'demo-n-6',  type: 'assignment_due',     title: 'Annotate hallucination dataset due in 2 days',             body: 'Milestone 3 of LLM Hallucination Study.',                        time: '2d ago',  read: true  },
-  { id: 'demo-n-7',  type: 'submission_received', title: 'Yuki Tanaka submitted Visualization Designs draft',        body: '5 design options for stakeholder review.',                       time: '4d ago',  read: true  },
-  { id: 'demo-n-8',  type: 'team_invite',        title: 'Marcus Lee invited you to Causal Inference Reading Group', body: 'Independent study, weekly writeups.',                            time: '6d ago',  read: true  },
+  // PDF activity — drives the tap-to-open-viewer demo.
+  { id: 'demo-n-9',  type: 'pdf_comment',  title: 'New PDF comment',    body: 'Marcus Lee commented on Project Proposal v2: Should we add more citations for the §2 claims? A couple fee…', link: '/projects/demo-proj-1/pdfs/demo-pdf-1?page=2', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(1)   },
+  { id: 'demo-n-10', type: 'pdf_comment',  title: 'New PDF comment',    body: 'Dr. Sarah Rivera commented on Project Proposal v2: Great work on the methodology section — your evalu…',      link: '/projects/demo-proj-1/pdfs/demo-pdf-1?page=1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(3)   },
+  { id: 'demo-n-11', type: 'pdf_uploaded', title: 'New PDF uploaded',   body: 'Marcus Lee uploaded Methodology v1 to LLM Hallucination Study.',                                            link: '/projects/demo-proj-1/pdfs/demo-pdf-3',       related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(6)   },
+  { id: 'demo-n-12', type: 'pdf_comment',  title: 'New PDF comment',    body: 'Dr. Sarah Rivera commented on Literature Review: Could you expand the section on calibration failure mod…', link: '/projects/demo-proj-1/pdfs/demo-pdf-2?page=9', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(7)   },
+  { id: 'demo-n-13', type: 'pdf_uploaded', title: 'New PDF uploaded',   body: 'Priya Sharma uploaded Architecture Plan v3 to Distributed Systems Capstone.',                              link: '/projects/demo-proj-2/pdfs/demo-pdf-4',       related_team_id: _PROJ2.id, team: _PROJ2, read: true,  created_at: daysAgo(1)    },
+  { id: 'demo-n-14', type: 'pdf_uploaded', title: 'New PDF uploaded',   body: 'Yuki Tanaka uploaded Cleaning Pipeline Spec to Climate Data Visualization.',                              link: '/projects/demo-proj-3/pdfs/demo-pdf-7',       related_team_id: _PROJ3.id, team: _PROJ3, read: true,  created_at: daysAgo(3)    },
+
+  // Existing non-PDF activity — converted to the canonical shape.
+  { id: 'demo-n-1',  type: 'team_invite',         title: 'Dr. Sarah Rivera invited you to LLM Hallucination Study', body: 'You\'ve been invited to join a 4-person project for CS 4890.',  link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(3.5) },
+  { id: 'demo-n-2',  type: 'submission_received', title: 'Priya Sharma submitted Literature Review v3',             body: '12 pages, 3 sources flagged for review.',                        link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(5)   },
+  { id: 'demo-n-3',  type: 'ai_insight',          title: 'AI flagged contribution imbalance on Climate Data Viz',   body: 'Jordan Kim is 14% by week 6 — peers average 25–30%.',            link: null,                                          related_team_id: _PROJ3.id, team: _PROJ3, read: false, created_at: daysAgo(1)    },
+  { id: 'demo-n-4',  type: 'decision_required',   title: 'Review needed: 14% similarity in LLM Study §2.1',         body: 'Closest match: Smith et al. 2023. Likely common phrasing.',      link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: daysAgo(1)    },
+  { id: 'demo-n-5',  type: 'mention',             title: 'Marcus Lee mentioned you in a comment',                   body: '"@alex — should we drop the GPT-4 column from Table 3?"',        link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: true,  created_at: daysAgo(2)    },
+  { id: 'demo-n-6',  type: 'assignment_due',      title: 'Annotate hallucination dataset due in 2 days',            body: 'Milestone 3 of LLM Hallucination Study.',                        link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: true,  created_at: daysAgo(2)    },
+  { id: 'demo-n-7',  type: 'submission_received', title: 'Yuki Tanaka submitted Visualization Designs draft',       body: '5 design options for stakeholder review.',                       link: null,                                          related_team_id: _PROJ3.id, team: _PROJ3, read: true,  created_at: daysAgo(4)    },
+  { id: 'demo-n-8',  type: 'team_invite',         title: 'Marcus Lee invited you to Causal Inference Reading Group',body: 'Independent study, weekly writeups.',                            link: null,                                          related_team_id: _PROJ5.id, team: _PROJ5, read: true,  created_at: daysAgo(6)    },
 ];
 
 // Realistic contribution heatmap pattern — weekday-weighted, slight Tue/Wed peak,

@@ -1,22 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Overview from './Overview.jsx';
 import Milestones from './Milestones.jsx';
 import Tasks from './Tasks.jsx';
 import Team from './Team.jsx';
 import Activity from './Activity.jsx';
 import Insights from './Insights.jsx';
+import PDFs from './PDFs.jsx';
 import ProjectAI from './ProjectAI.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
 import { useDemoMode } from '../../hooks/useDemoMode.jsx';
 import { adaptTeam, getTeamDetail } from '../../lib/teams.js';
 
-export default function ProjectDetail({id, role, onBack, apiKey}) {
+export default function ProjectDetail({id, role, onBack, apiKey, initialTab, initialPdfId, initialPage}) {
   const { supabase } = useAuth();
   const { demoMode, demoData } = useDemoMode();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(initialTab || 'overview');
   const [refreshTick, setRefreshTick] = useState(0);
   const refetch = () => setRefreshTick(n => n + 1);
 
@@ -87,8 +88,8 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
   }
 
   const tabs = role === 'professor'
-    ? ['overview','milestones','tasks','team','activity','insights','ai']
-    : ['overview','milestones','tasks','team','activity','ai'];
+    ? ['overview','milestones','tasks','team','pdfs','activity','insights','ai']
+    : ['overview','milestones','tasks','team','pdfs','activity','ai'];
 
   return (
     <>
@@ -97,22 +98,74 @@ export default function ProjectDetail({id, role, onBack, apiKey}) {
         <div className="sh-title">{project.title}</div>
         <button className="icon-btn" style={{width:36,height:36}}>···</button>
       </div>
-      <div className="dtabs">
-        {tabs.map(t => (
-          <button key={t} className={`dtab ${tab===t?'active':''}`} onClick={()=>setTab(t)}>
-            {t==='insights'?'✦ Insights':t==='ai'?'✦ AI':t.charAt(0).toUpperCase()+t.slice(1)}
-          </button>
-        ))}
-      </div>
+      <DTabs tabs={tabs} active={tab} onChange={setTab} />
       <div style={{padding:'20px 24px'}}>
         {tab==='overview' && <Overview project={project} role={role}/>}
         {tab==='milestones' && <Milestones project={project}/>}
         {tab==='tasks' && <Tasks project={project}/>}
         {tab==='team' && <Team project={project} role={role} onMembersChanged={refetch}/>}
+        {tab==='pdfs' && <PDFs project={project} initialPdfId={initialPdfId} initialPage={initialPage}/>}
         {tab==='activity' && <Activity project={project}/>}
         {tab==='insights' && role==='professor' && <Insights project={project}/>}
         {tab==='ai' && <ProjectAI project={project} role={role} apiKey={apiKey}/>}
       </div>
     </>
+  );
+}
+
+function tabLabel(t) {
+  if (t === 'insights') return '✦ Insights';
+  if (t === 'ai')       return '✦ AI';
+  if (t === 'pdfs')     return 'PDFs';
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+// Variable-width sliding pill behind the active tab. We measure each button's
+// offsetLeft / offsetWidth / offsetTop / offsetHeight after layout and write
+// them into a single absolutely-positioned .dtab-pill. left + width transition
+// together so the pill morphs between tabs the same way the bottom-nav pill
+// slides. Because the pill is positioned inside the overflow-x:auto scroll
+// container, its offset coordinates already live in content space — when the
+// user scrolls horizontally the pill stays glued to its tab.
+function DTabs({ tabs, active, onChange }) {
+  const refs = useRef({});
+  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
+
+  useLayoutEffect(() => {
+    const el = refs.current[active];
+    if (!el) { setPill(p => ({ ...p, ready: false })); return; }
+    setPill({
+      left: el.offsetLeft,
+      top: el.offsetTop,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      ready: true,
+    });
+  }, [active, tabs.join('|')]);
+
+  return (
+    <div className="dtabs">
+      <span
+        className="dtab-pill"
+        aria-hidden
+        style={{
+          left: pill.left,
+          top: pill.top,
+          width: pill.width,
+          height: pill.height,
+          opacity: pill.ready ? 1 : 0,
+        }}
+      />
+      {tabs.map(t => (
+        <button
+          key={t}
+          ref={el => { refs.current[t] = el; }}
+          className={`dtab ${active === t ? 'active' : ''}`}
+          onClick={() => onChange(t)}
+        >
+          {tabLabel(t)}
+        </button>
+      ))}
+    </div>
   );
 }
