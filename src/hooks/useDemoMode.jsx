@@ -1,36 +1,44 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from '../providers/SessionProvider.jsx';
 
 const STORAGE_KEY = 'acedex.demoMode';
-const DEV = import.meta.env.DEV;
 
-// Static ternary so Vite resolves at build time: in prod, loadDemo is a function
-// that returns Promise.resolve(null) and the demo.js import literal never appears
-// in the bundle. In dev, this is a dynamic import that Vite code-splits into a
-// separate chunk loaded only when demoMode is on.
-const loadDemo = DEV
-  ? () => import('../data/demo.js')
-  : () => Promise.resolve(null);
+// Demo mode is gated on profile.role === 'admin' at the live-DB level. The
+// dynamic import below is code-split by Vite — the demo chunk only loads
+// after demoMode flips true, which itself only happens for admins, so a
+// non-admin's bundle never pulls the demo data even though the import isn't
+// statically dead.
+const loadDemo = () => import('../data/demo.js');
 
 const DemoModeContext = createContext({
   demoMode: false,
   setDemoMode: () => {},
   demoData: null,
+  available: false,
 });
 
 export function DemoModeProvider({ children }) {
+  const { role } = useAuth() ?? {};
+  const isAdmin = role === 'admin';
   const [demoMode, setState] = useState(false);
   const [demoData, setDemoData] = useState(null);
 
+  // Honor the saved preference, but only for admins. If the user isn't admin
+  // (logged-out, regular user, or stale role) wipe any tampered "true" flag
+  // so it can't auto-enable later when they switch accounts.
   useEffect(() => {
-    if (!DEV) return;
-    if (localStorage.getItem(STORAGE_KEY) === 'true') setState(true);
-  }, []);
-
-  useEffect(() => {
-    if (!demoMode) {
-      setDemoData(null);
+    if (!isAdmin) {
+      setState(false);
+      try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
       return;
     }
+    try {
+      if (localStorage.getItem(STORAGE_KEY) === 'true') setState(true);
+    } catch { /* ignore */ }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!demoMode) { setDemoData(null); return; }
     let cancelled = false;
     loadDemo().then(m => {
       if (!cancelled && m) setDemoData(m);
@@ -38,19 +46,22 @@ export function DemoModeProvider({ children }) {
     return () => { cancelled = true; };
   }, [demoMode]);
 
-  // Hard prod guarantee: in non-dev builds, setDemoMode is a no-op. Even with
-  // a tampered localStorage entry, the read in the first effect is gated by
-  // DEV and never fires.
+  // setDemoMode is a hard no-op for non-admins. The UI hides the toggle too,
+  // but enforcing in the hook is the load-bearing security check — a non-
+  // admin who manually flips localStorage or evaluates a setter in DevTools
+  // still gets nothing.
   const setDemoMode = (value) => {
-    if (!DEV) return;
+    if (!isAdmin) return;
     const v = !!value;
     setState(v);
-    if (v) localStorage.setItem(STORAGE_KEY, 'true');
-    else localStorage.removeItem(STORAGE_KEY);
+    try {
+      if (v) localStorage.setItem(STORAGE_KEY, 'true');
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch { /* ignore */ }
   };
 
   return (
-    <DemoModeContext.Provider value={{ demoMode, setDemoMode, demoData }}>
+    <DemoModeContext.Provider value={{ demoMode, setDemoMode, demoData, available: isAdmin }}>
       {children}
     </DemoModeContext.Provider>
   );
@@ -60,4 +71,7 @@ export function useDemoMode() {
   return useContext(DemoModeContext);
 }
 
-export const DEMO_MODE_AVAILABLE = DEV;
+// Legacy export kept for any callers that still import it; resolves to false
+// at module load because the admin check runs per-user. Prefer the context
+// value `available` from useDemoMode().
+export const DEMO_MODE_AVAILABLE = false;

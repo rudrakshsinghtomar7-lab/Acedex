@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { DEMO_MODE_AVAILABLE, useDemoMode } from '../hooks/useDemoMode.jsx';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
 
 export default function SettingsSheet({onClose, apiKey, setApiKey}) {
   const [draft, setDraft] = useState(apiKey || '');
-  const { demoMode, setDemoMode } = useDemoMode();
+  const { demoMode, setDemoMode, available: demoAvailable } = useDemoMode();
 
   const save = () => {
     setApiKey(draft.trim());
@@ -29,13 +29,13 @@ export default function SettingsSheet({onClose, apiKey, setApiKey}) {
           Don't have one? Visit <strong style={{color:'var(--indigo-bright)'}}>console.anthropic.com</strong> → API Keys → Create Key. Free tier available.
         </div>
 
-        {DEMO_MODE_AVAILABLE && (
+        {demoAvailable && (
           <>
             <div className="sh-h2" style={{fontSize:14,marginTop:8,marginBottom:10}}>Developer</div>
             <label style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,marginBottom:18,cursor:'pointer'}}>
               <div>
                 <div style={{fontSize:13.5,fontWeight:600}}>Show demo data</div>
-                <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5,marginTop:2}}>Welcome banner, heatmap, and placeholder counts. Dev builds only.</div>
+                <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5,marginTop:2}}>Populated fake projects, comments, and notifications for pitches and testing. Admin-only.</div>
               </div>
               <input type="checkbox" checked={demoMode} onChange={(e)=>setDemoMode(e.target.checked)} style={{width:18,height:18,cursor:'pointer'}}/>
             </label>
