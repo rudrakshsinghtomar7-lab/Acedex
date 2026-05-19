@@ -9,25 +9,41 @@
     --shadow-1:0 1px 2px rgba(0,0,0,.2);
     --shadow-2:0 4px 16px rgba(0,0,0,.25);
     --r-md:14px; --r-lg:18px; --r-xl:22px; --r-2xl:28px;
-    --safe-bot:env(safe-area-inset-bottom,0px);
     --ease:cubic-bezier(.22,.61,.36,1);
     --t:160ms var(--ease);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
   html,body{overscroll-behavior:none}
-  body{background:#0a0b10;color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{background:#0a0b10;color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
   #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--muted);font-size:14px;z-index:9999;background:#0a0b10}
   .ldr{width:32px;height:32px;border:3px solid var(--bg-3);border-top-color:var(--indigo);border-radius:50%;animation:s 700ms linear infinite}
 
-  .phone{width:390px;height:844px;background:var(--bg-0);border-radius:50px;border:11px solid #14151c;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);overflow:hidden;position:relative;display:flex;flex-direction:column}
-  @media(max-width:480px){body{padding:0}.phone{width:100vw;height:100vh;border-radius:0;border:none;box-shadow:none}}
+  /* padding-top respects the iPhone notch when launched as a PWA (Add to
+     Home Screen) — content slides below the dynamic island instead of
+     sitting under it. env(safe-area-inset-top) is 0 on non-notched devices
+     and inside browser tabs, so the desktop preview is unaffected. */
+  .phone{width:390px;height:844px;background:var(--bg-0);border-radius:50px;border:11px solid #14151c;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);overflow:hidden;position:relative;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+  /* On phone/tablet sizes, the .phone container fills the screen and is the
+     fixed frame — .screen inside it is the single scroll container. Setting
+     .phone to overflow:auto here would create a competing scroll context and
+     pull the absolutely-positioned bnav along with it on screens whose
+     content height varies (Home, Profile). overflow:hidden keeps the bnav
+     pinned and lets .screen do all the scrolling. */
+  @media(max-width:768px){
+    body{padding:0 !important}
+    .phone{
+      width:100vw !important;
+      height:100vh !important;
+      border-radius:0 !important;
+      border:none !important;
+      box-shadow:none !important;
+      overflow:hidden !important;
+    }
+  }
 
-  .status-bar{height:50px;padding:14px 28px 0;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;flex-shrink:0;z-index:10;background:var(--bg-0)}
-  .status-icons{display:flex;gap:6px;align-items:center;font-size:12px;opacity:.85}
-  .status-logo{height:28px;width:28px;border-radius:8px;object-fit:cover;display:block;box-shadow:0 1px 4px rgba(124,108,255,.35)}
-  .island{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:116px;height:30px;background:#000;border-radius:22px;z-index:20}
-  .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:100px}
+  .screen{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:100px}
   .screen::-webkit-scrollbar{display:none}
 
   .header{padding:12px 24px 24px;display:flex;justify-content:space-between;align-items:flex-start;background:var(--bg-0)}
@@ -100,7 +116,7 @@
   .bnav{
     position:absolute;bottom:0;left:0;right:0;
     display:flex;align-items:flex-start;
-    padding:6px 6px calc(6px + var(--safe-bot));
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0));
     min-height:64px;
     background:linear-gradient(to top,rgba(15,17,23,.94) 0%,rgba(15,17,23,.78) 100%);
     backdrop-filter:blur(20px) saturate(180%);
@@ -282,7 +298,7 @@
 
   .ovl{position:absolute;inset:0;z-index:100;background:rgba(8,9,14,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:flex-end;animation:fade 200ms var(--ease)}
   @keyframes fade{from{opacity:0}to{opacity:1}}
-  .sheet{width:100%;background:var(--bg-1);border-radius:var(--r-2xl) var(--r-2xl) 0 0;padding:8px 24px calc(28px + var(--safe-bot));max-height:88%;overflow-y:auto;border-top:1px solid var(--border);animation:up 280ms var(--ease);box-shadow:0 -20px 60px rgba(0,0,0,.5)}
+  .sheet{width:100%;background:var(--bg-1);border-radius:var(--r-2xl) var(--r-2xl) 0 0;padding:8px 24px 28px;max-height:88%;overflow-y:auto;border-top:1px solid var(--border);animation:up 280ms var(--ease);box-shadow:0 -20px 60px rgba(0,0,0,.5)}
   @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .handle{width:38px;height:4px;background:var(--border-bright);border-radius:99px;margin:10px auto 22px}
   .sh-h2{font-size:22px;font-weight:700;margin-bottom:22px;letter-spacing:-.025em}
@@ -292,7 +308,7 @@
   @keyframes slide-r{from{transform:translateX(100%)}to{transform:translateX(0)}}
   .panel-head{padding:18px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
   .panel-head .sh-h2{font-size:18px;margin-bottom:0}
-  .panel-body{flex:1;overflow-y:auto;padding:8px 14px calc(20px + var(--safe-bot))}
+  .panel-body{flex:1;overflow-y:auto;padding:8px 14px 20px}
   .panel-body::-webkit-scrollbar{display:none}
 
   .notif{display:flex;gap:12px;padding:14px 12px;border-radius:14px;cursor:pointer;transition:background var(--t);align-items:flex-start;position:relative}
@@ -324,7 +340,7 @@
   .msg.ai .bubble{background:var(--bg-1);border:1px solid var(--border);border-bottom-left-radius:6px}
   .msg.user .bubble{background:var(--grad);color:#fff;border-bottom-right-radius:6px;box-shadow:0 4px 12px rgba(124,108,255,.25);font-weight:500}
   .ai-av{width:32px;height:32px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#fff;box-shadow:0 4px 12px rgba(124,108,255,.25)}
-  .ibar{padding:12px 20px calc(16px + var(--safe-bot));background:var(--bg-0);border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
+  .ibar{padding:12px 20px 16px;background:var(--bg-0);border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
   .ai-in{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:22px;padding:12px 18px;color:var(--text);font-family:inherit;font-size:14px;font-weight:500;outline:none;resize:none;max-height:100px;-webkit-appearance:none;transition:all var(--t)}
   .ai-in:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(124,108,255,.15)}
   .send{width:44px;height:44px;border-radius:14px;padding:0;background:var(--grad);color:#fff;flex-shrink:0;font-size:17px;font-weight:600;box-shadow:0 4px 12px rgba(124,108,255,.3);border:none;cursor:pointer}
@@ -383,7 +399,7 @@
   .gstep-t{font-size:14.5px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px}
   .gstep-b{font-size:13px;color:var(--text-2);line-height:1.5}
   .gh{font-size:11px;font-weight:600;color:var(--indigo-bright);text-transform:uppercase;letter-spacing:.12em;margin:24px 0 12px}
-  .ob-foot{padding:16px 24px calc(20px + var(--safe-bot));background:var(--bg-0);border-top:1px solid var(--border);display:flex;gap:10px}
+  .ob-foot{padding:16px 24px 20px;background:var(--bg-0);border-top:1px solid var(--border);display:flex;gap:10px}
 
   .key-warn{background:rgba(245,181,107,.08);border:1px solid rgba(245,181,107,.2);padding:12px 14px;border-radius:10px;font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:14px}
   .key-warn strong{color:var(--warn);font-weight:600}
