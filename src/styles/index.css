@@ -304,21 +304,36 @@
   .sh-h2{font-size:22px;font-weight:700;margin-bottom:22px;letter-spacing:-.025em}
 
   .ovl-r{align-items:stretch;justify-content:flex-end}
-  .panel{width:88%;max-width:360px;height:100%;background:var(--bg-1);border-left:1px solid var(--border);box-shadow:-20px 0 60px rgba(0,0,0,.5);display:flex;flex-direction:column;animation:slide-r 280ms var(--ease)}
+  .panel{width:88%;max-width:360px;height:100%;background:var(--bg-1);border-left:1px solid var(--border);box-shadow:-20px 0 60px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;animation:slide-r 280ms var(--ease)}
   @keyframes slide-r{from{transform:translateX(100%)}to{transform:translateX(0)}}
-  .panel-head{padding:18px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .panel-head{padding:18px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border);background:var(--bg-1);flex-shrink:0;position:sticky;top:0;z-index:2}
   .panel-head .sh-h2{font-size:18px;margin-bottom:0}
-  .panel-body{flex:1;overflow-y:auto;padding:8px 14px 20px}
+  .panel-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 14px 20px}
   .panel-body::-webkit-scrollbar{display:none}
+  /* Phone: panel becomes a true fullscreen sheet with safe-area paddings
+     so the head clears the notch and the scroll bottom clears the home
+     indicator. Same flex pattern as .phone/.screen — outer container is
+     overflow:hidden, inner body is the single scroll surface. */
+  @media(max-width:768px){
+    .panel{
+      width:100vw !important;
+      max-width:none !important;
+      height:100vh !important;
+      border-left:none !important;
+      box-shadow:none !important;
+      padding-top:env(safe-area-inset-top,0);
+      padding-bottom:env(safe-area-inset-bottom,0);
+    }
+  }
 
-  .notif{display:flex;gap:12px;padding:14px 12px;border-radius:14px;cursor:pointer;transition:background var(--t);align-items:flex-start;position:relative}
+  .notif{display:flex;gap:12px;padding:14px 12px;border-radius:14px;cursor:pointer;transition:background var(--t);align-items:flex-start;position:relative;max-width:100%;min-width:0}
   .notif:hover{background:var(--bg-2)}
   .notif-unread{background:rgba(124,108,255,.06)}
   .notif-unread::before{content:'';position:absolute;left:4px;top:20px;width:6px;height:6px;border-radius:50%;background:var(--indigo);box-shadow:0 0 6px var(--indigo)}
   .notif-icon{width:36px;height:36px;border-radius:11px;background:var(--bg-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--indigo-bright);flex-shrink:0}
   .notif-unread .notif-icon{background:var(--grad-soft);border-color:rgba(124,108,255,.25)}
-  .notif-title{font-size:13.5px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
-  .notif-body{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-top:3px}
+  .notif-title{font-size:13.5px;font-weight:600;letter-spacing:-.01em;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .notif-body{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-top:3px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .notif-meta{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--muted);margin-top:6px;font-weight:500}
   .notif-dot{opacity:.6}
 
