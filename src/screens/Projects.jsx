@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
@@ -72,11 +72,7 @@ export default function Projects({role}) {
         <span style={{fontSize:16}}>⌕</span>
         <input placeholder="Search projects, courses..." value={search} onChange={e=>setSearch(e.target.value)}/>
       </div>
-      <div className="chips">
-        {filters.map(([k,t]) => (
-          <div key={k} className={`chip ${filter===k?'active':''}`} onClick={()=>setFilter(k)}>{t}</div>
-        ))}
-      </div>
+      <FilterChips items={filters} active={filter} onChange={setFilter} />
 
       {error && demoOn && allProjects.length > 0 && (
         <div className="alert" style={{margin:'0 24px 14px',background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)'}}>
@@ -131,5 +127,55 @@ export default function Projects({role}) {
         </div>
       )}
     </>
+  );
+}
+
+// Variable-width sliding pill behind the active filter chip. Same measure-
+// then-morph pattern as the project-detail DTabs: refs + useLayoutEffect
+// snapshot each chip's offsetLeft/Width/Top/Height after layout, the pill is
+// a sibling .chip-pill that animates between those snapshots. Because the
+// pill lives inside the overflow-x:auto .chips container, its coordinates
+// are content-space — it scrolls with the chips automatically.
+function FilterChips({ items, active, onChange }) {
+  const refs = useRef({});
+  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
+
+  useLayoutEffect(() => {
+    const el = refs.current[active];
+    if (!el) { setPill(p => ({ ...p, ready: false })); return; }
+    setPill({
+      left: el.offsetLeft,
+      top: el.offsetTop,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      ready: true,
+    });
+  }, [active, items.map(([k]) => k).join('|')]);
+
+  return (
+    <div className="chips">
+      <span
+        className="chip-pill"
+        aria-hidden
+        style={{
+          left: pill.left,
+          top: pill.top,
+          width: pill.width,
+          height: pill.height,
+          opacity: pill.ready ? 1 : 0,
+        }}
+      />
+      {items.map(([k, t]) => (
+        <button
+          key={k}
+          ref={el => { refs.current[k] = el; }}
+          type="button"
+          className={`chip ${active === k ? 'active' : ''}`}
+          onClick={() => onChange(k)}
+        >
+          {t}
+        </button>
+      ))}
+    </div>
   );
 }
