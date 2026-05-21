@@ -97,25 +97,12 @@ export default function ProjectCreate() {
       }
       if (!courseId) throw new Error('Pick a course.');
 
-      // DEBUG (Feature-7 RLS bug) — surface the exact payload + auth context
-      // we're inserting under so we can correlate against the policy that's
-      // rejecting on the server. Remove these logs once the bug is closed.
-      const teamPayload = {
+      const team = await createTeam(supabase, {
         course_id: courseId,
         name: title.trim(),
         description: description.trim() || null,
         created_by: user.id,
-      };
-      const { data: { session: dbgSession } = {} } = await supabase.auth.getSession();
-      console.log('[create-team debug] insert payload:', teamPayload);
-      console.log('[create-team debug] user.id:', user.id);
-      console.log('[create-team debug] profile.role:', profile?.role);
-      console.log('[create-team debug] profile.id:', profile?.id);
-      console.log('[create-team debug] profile.university_id:', profile?.university_id);
-      console.log('[create-team debug] session.user.id:', dbgSession?.user?.id);
-      console.log('[create-team debug] mode:', mode, 'createdCourseId:', createdCourseId);
-
-      const team = await createTeam(supabase, teamPayload);
+      });
       navigate(`/projects/${team.id}`, { replace: true });
     } catch (e2) {
       // Best-effort rollback: if we just created a course but the team insert
