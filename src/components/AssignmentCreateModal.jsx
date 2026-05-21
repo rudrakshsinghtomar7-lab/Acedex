@@ -175,7 +175,7 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
 
   return (
     <div className="ovl pdf-full-ovl" onClick={() => !busy && onClose()}>
-      <div className="pdf-fullviewer" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="pdf-fullviewer asgn-create-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="pdf-fullviewer-head">
           <div className="pdf-fullviewer-titleblock">
             <div className="pdf-kicker">New Assignment</div>
