@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createAssignment } from '../lib/assignments.js';
 
 function uid() { return `t-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; }
@@ -45,6 +45,30 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
 
   function toggleAssignee(id) {
     setAssigneeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
+
+  // Modal-open behavior: pin scroll to the top so the Title field is the
+  // first thing the user sees, then focus it after a tiny delay so iOS
+  // brings up the keyboard cleanly. The delay also lets the slide-in
+  // animation finish before the focus ring shows up.
+  const bodyRef = useRef(null);
+  const titleRef = useRef(null);
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    const t = setTimeout(() => titleRef.current?.focus(), 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  // iOS resizes the viewport when the keyboard slides up; on long forms a
+  // focused field below the fold can end up hidden under the keyboard. Pull
+  // the focused field into the center of the modal body after the
+  // keyboard-animation settles.
+  function onFieldFocus(e) {
+    const el = e.target;
+    setTimeout(() => {
+      try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      catch { /* older Safari versions */ }
+    }, 280);
   }
 
   useEffect(() => {
@@ -160,14 +184,29 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
           <button type="button" className="btn-icon-x" aria-label="Close" disabled={busy} onClick={onClose}>×</button>
         </header>
 
-        <div className="asgn-detail-body asgn-create-body">
+        <div className="asgn-detail-body asgn-create-body" ref={bodyRef}>
           <div className="field">
             <label>Title</label>
-            <input className="input" type="text" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Research paper" maxLength={120} autoFocus/>
+            <input
+              ref={titleRef}
+              className="input"
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              onFocus={onFieldFocus}
+              placeholder="Research paper"
+              maxLength={120}
+            />
           </div>
           <div className="field">
             <label>Description <span style={{ color: 'var(--muted)', fontWeight: 500 }}>· optional</span></label>
-            <textarea className="textarea" value={description} onChange={e=>setDescription(e.target.value)} placeholder="What should students hand in?"/>
+            <textarea
+              className="textarea"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              onFocus={onFieldFocus}
+              placeholder="What should students hand in?"
+            />
           </div>
 
           <div className="asgn-section-h">Type</div>
@@ -313,11 +352,11 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
           <div className="asgn-section-h">Grading & deadline</div>
           <div className="field">
             <label>Max points</label>
-            <input className="input" type="number" min="0" max="10000" value={maxPoints} onChange={e=>setMaxPoints(e.target.value)} />
+            <input className="input" type="number" min="0" max="10000" value={maxPoints} onChange={e=>setMaxPoints(e.target.value)} onFocus={onFieldFocus} />
           </div>
           <div className="field">
             <label>Due date <span style={{ color: 'var(--muted)', fontWeight: 500 }}>· optional</span></label>
-            <input className="input" type="datetime-local" value={dueAt} onChange={e=>setDueAt(e.target.value)} />
+            <input className="input" type="datetime-local" value={dueAt} onChange={e=>setDueAt(e.target.value)} onFocus={onFieldFocus} />
           </div>
           <Segmented
             value={deadlineType}
@@ -330,7 +369,7 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
           {deadlineType === 'grace' && (
             <div className="field" style={{ marginTop: 10 }}>
               <label>Grace days</label>
-              <input className="input" type="number" min="0" max="60" value={graceDays} onChange={e=>setGraceDays(e.target.value)} />
+              <input className="input" type="number" min="0" max="60" value={graceDays} onChange={e=>setGraceDays(e.target.value)} onFocus={onFieldFocus} />
             </div>
           )}
 
