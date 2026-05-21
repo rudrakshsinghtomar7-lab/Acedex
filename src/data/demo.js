@@ -397,6 +397,8 @@ function demoSub(student, status, opts = {}) {
     submitted_at: opts.submitted_at ?? hoursAgo(opts.submittedHoursAgo ?? 18),
     reviewed_at: opts.reviewed_at ?? null,
     reviewer: opts.reviewer ?? null,
+    points_awarded: opts.points_awarded ?? null,
+    letter_grade: opts.letter_grade ?? null,
     created_at: opts.created_at ?? (opts.submitted_at ?? hoursAgo(opts.submittedHoursAgo ?? 18)),
   };
 }
@@ -413,7 +415,7 @@ DEMO_PROJECTS[0].assignments = [
     status: 'active', order_idx: 1, created_at: daysAgo(7), updated_at: daysAgo(1),
     submissions: [
       demoSub(DEMO_STUDENTS[0], 'submitted', { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Alex.pdf', submittedHoursAgo: 6 }),
-      demoSub(DEMO_STUDENTS[2], 'approved',  { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Marcus.pdf', submittedHoursAgo: 32, feedback: 'Strong revision — power calc is exactly what I was after.', reviewed_at: hoursAgo(4), reviewer: _PROF_AS_REVIEWER }),
+      demoSub(DEMO_STUDENTS[2], 'approved',  { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Marcus.pdf', submittedHoursAgo: 32, feedback: 'Strong revision — power calc is exactly what I was after.', reviewed_at: hoursAgo(4), reviewer: _PROF_AS_REVIEWER, points_awarded: 88, letter_grade: 'HD' }),
     ],
   },
   {
@@ -485,7 +487,7 @@ DEMO_PROJECTS[3].assignments = [
     due_at: '2026-04-30T17:00:00Z', owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
     status: 'done', order_idx: 1, created_at: '2026-04-01T00:00:00Z', updated_at: '2026-05-01T00:00:00Z',
     submissions: [
-      demoSub(DEMO_STUDENTS[2], 'approved', { assignment_id: 'demo-asgn-4a', team_id: 'demo-proj-4', pdfTitle: 'Final Report.pdf', submitted_at: '2026-04-30T16:32:00Z', feedback: 'Excellent. Promote two of the usability quotes to the abstract.', reviewed_at: '2026-05-01T10:00:00Z', reviewer: _PROF_AS_REVIEWER }),
+      demoSub(DEMO_STUDENTS[2], 'approved', { assignment_id: 'demo-asgn-4a', team_id: 'demo-proj-4', pdfTitle: 'Final Report.pdf', submitted_at: '2026-04-30T16:32:00Z', feedback: 'Excellent. Promote two of the usability quotes to the abstract.', reviewed_at: '2026-05-01T10:00:00Z', reviewer: _PROF_AS_REVIEWER, points_awarded: 92, letter_grade: 'HD' }),
     ],
   },
 ];

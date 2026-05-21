@@ -589,6 +589,81 @@
   .asgn-subtask-assign select{flex:1;min-width:0}
   .asgn-claim-btn{align-self:center;flex-shrink:0}
 
+  /* Filter chips spacing (compact inside Assignments tab) */
+  .asgn-filter-chips{padding:0 0 12px}
+
+  /* Type / distribution / submission-count chips on each assignment card */
+  .asgn-row-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .asgn-type-chip,.asgn-dist-chip,.asgn-count-chip{
+    display:inline-flex;align-items:center;
+    padding:3px 10px;border-radius:99px;
+    font:700 10.5px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    letter-spacing:.04em;text-transform:uppercase;
+    border:1px solid var(--border);
+  }
+  .asgn-type-individual{color:var(--info);background:rgba(107,181,245,.10);border-color:rgba(107,181,245,.32)}
+  .asgn-type-team{color:var(--indigo-bright);background:rgba(124,108,255,.10);border-color:rgba(124,108,255,.32)}
+  .asgn-dist-chip{color:var(--text-2);background:var(--bg-2)}
+  .asgn-count-chip{color:var(--success);background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.32);text-transform:none;letter-spacing:0;font-weight:600;font-size:11px;padding:3px 10px}
+
+  /* Letter grade badge — Australian buckets, gradient per spec */
+  .grade-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 8px;border-radius:7px;
+    font:700 11px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    letter-spacing:.04em;
+    color:#0a0b10;
+    border:1px solid rgba(0,0,0,.18);
+    box-shadow:0 1px 2px rgba(0,0,0,.18);
+  }
+  .grade-badge .grade-pts{font-size:10.5px;font-weight:600;opacity:.78;letter-spacing:0}
+  .grade-hd{background:linear-gradient(135deg,#f7d774 0%,#c8961a 100%);color:#1f1500}
+  .grade-d {background:linear-gradient(135deg,#e8ebef 0%,#9ba1ad 100%);color:#1a1d22}
+  .grade-c {background:linear-gradient(135deg,#d4a574 0%,#8a5a2b 100%);color:#1f1300}
+  .grade-p {background:linear-gradient(135deg,rgba(74,222,128,.30) 0%,rgba(74,222,128,.55) 100%);color:#0d2615;border-color:rgba(74,222,128,.55)}
+  .grade-f {background:linear-gradient(135deg,rgba(248,113,113,.30) 0%,rgba(248,113,113,.55) 100%);color:#2a0e0e;border-color:rgba(248,113,113,.55)}
+
+  /* Create modal — assignee multi-select for Individual mode */
+  .asgn-assignee-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+  .asgn-assignee-chip{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 12px;border-radius:99px;
+    background:var(--bg-2);border:1px solid var(--border);
+    font-size:12.5px;color:var(--text-2);font-weight:500;cursor:pointer;
+    transition:border-color .2s,background .2s,color .2s;
+  }
+  .asgn-assignee-chip:hover{border-color:var(--border-bright)}
+  .asgn-assignee-chip.active{border-color:rgba(124,108,255,.55);background:rgba(124,108,255,.10);color:var(--text)}
+  .asgn-assignee-chip input[type=checkbox]{
+    appearance:none;width:14px;height:14px;border-radius:4px;
+    border:1.5px solid var(--border-bright);background:var(--bg-3);
+    position:relative;cursor:pointer;margin:0;flex-shrink:0;
+  }
+  .asgn-assignee-chip.active input[type=checkbox]{
+    background:var(--indigo);border-color:var(--indigo);
+  }
+  .asgn-assignee-chip.active input[type=checkbox]::after{
+    content:'';position:absolute;left:3px;top:0;width:5px;height:9px;
+    border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg);
+  }
+
+  /* AI plagiarism check row — disabled + "Coming soon" badge */
+  .asgn-ai-row.disabled{opacity:.6;cursor:not-allowed}
+  .asgn-ai-row.disabled input{cursor:not-allowed}
+  .asgn-soon-badge{
+    display:inline-block;padding:1px 7px;border-radius:99px;
+    font:700 9px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    text-transform:uppercase;letter-spacing:.08em;
+    color:var(--indigo-bright);background:rgba(124,108,255,.12);
+    border:1px solid rgba(124,108,255,.32);
+  }
+
+  /* Grade input row inside the review form */
+  .asgn-grade-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .asgn-grade-row label{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+  .asgn-grade-row .input{width:90px;flex:0 0 auto}
+  .asgn-grade-out-of{color:var(--muted);font-size:12.5px;font-weight:500}
+
   .pdf-full-ovl{align-items:stretch;justify-content:stretch;background:rgba(8,9,14,.82);padding:0}
   .pdf-fullviewer{width:100%;height:100%;background:var(--bg-0);display:flex;flex-direction:column;animation:fade 200ms var(--ease);padding-bottom:env(safe-area-inset-bottom,0)}
   .pdf-fullviewer-head{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--bg-1);flex-shrink:0;position:sticky;top:0;z-index:5}

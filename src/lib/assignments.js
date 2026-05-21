@@ -22,10 +22,16 @@ const LEADER_SELECT = `
 const SUBMISSION_SELECT = `
   id, assignment_id, team_id, submitter_id, status, version,
   notes, feedback, pdf_document_id, storage_path,
+  points_awarded, letter_grade,
   submitted_at, reviewed_at, reviewed_by, created_at, updated_at,
   submitter:profiles!submissions_submitter_id_fkey(id, full_name, avatar_url, role),
   reviewer:profiles!submissions_reviewed_by_fkey(id, full_name, avatar_url, role),
   pdf:pdf_documents!submissions_pdf_document_id_fkey(id, title, storage_path, file_size_bytes, page_count)
+`;
+
+const ASSIGNEE_SELECT = `
+  id, assignment_id, student_id, assigned_at,
+  student:profiles!assignment_assignees_student_id_fkey(id, full_name, avatar_url, role)
 `;
 
 export async function listTeamAssignments(supabase, teamId) {
@@ -56,6 +62,7 @@ export async function createAssignment(supabase, opts) {
     distributionMode = null,
     subtasks = [],
     leaderId = null,
+    assigneeIds = [],
   } = opts;
 
   const payload = {
@@ -101,7 +108,28 @@ export async function createAssignment(supabase, opts) {
     if (leadErr) throw leadErr;
   }
 
+  // Individual mode: insert the subset of team members the prof selected as
+  // assignees. Empty array = leave the join table empty, which the read side
+  // interprets as "every team member" (back-compat with PR-A assignments).
+  if (assignmentType === 'individual' && assigneeIds.length > 0) {
+    const rows = assigneeIds.map(sid => ({
+      assignment_id: assignment.id,
+      student_id: sid,
+    }));
+    const { error: asgErr } = await supabase.from('assignment_assignees').insert(rows);
+    if (asgErr) throw asgErr;
+  }
+
   return assignment;
+}
+
+export async function listAssigneesForAssignment(supabase, assignmentId) {
+  const { data, error } = await supabase
+    .from('assignment_assignees')
+    .select(ASSIGNEE_SELECT)
+    .eq('assignment_id', assignmentId);
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function listSubtasksForAssignment(supabase, assignmentId) {
@@ -246,23 +274,41 @@ export async function submitAssignmentPdf(supabase, { teamId, assignmentId, subm
 // Professor reviews a submission — flips status and writes feedback. The
 // migration-008 trigger fans out a 'submission_reviewed' notification to
 // the submitter.
-export async function reviewSubmission(supabase, { submissionId, reviewerId, status, feedback }) {
+export async function reviewSubmission(supabase, { submissionId, reviewerId, status, feedback, pointsAwarded = null }) {
   if (!['approved', 'rejected', 'needs_resubmission'].includes(status)) {
     throw new Error(`Invalid review status: ${status}`);
   }
+  const patch = {
+    status,
+    feedback: feedback?.trim() || null,
+    reviewed_by: reviewerId,
+    reviewed_at: new Date().toISOString(),
+  };
+  // points_awarded is only sent when the prof actually scored the submission.
+  // The set_letter_grade_from_points BEFORE-UPDATE trigger fills letter_grade
+  // automatically, so we don't include it in the client payload.
+  if (pointsAwarded !== null && pointsAwarded !== '' && pointsAwarded !== undefined) {
+    patch.points_awarded = Number(pointsAwarded);
+  }
   const { data, error } = await supabase
     .from('submissions')
-    .update({
-      status,
-      feedback: feedback?.trim() || null,
-      reviewed_by: reviewerId,
-      reviewed_at: new Date().toISOString(),
-    })
+    .update(patch)
     .eq('id', submissionId)
     .select(SUBMISSION_SELECT)
     .single();
   if (error) throw error;
   return data;
+}
+
+// Pure-frontend mirror of the DB function for demo mode (no DB round-trip).
+export function letterGradeFor(points, maxPoints) {
+  if (maxPoints == null || maxPoints <= 0 || points == null) return null;
+  const pct = (Number(points) / Number(maxPoints)) * 100;
+  if (pct >= 85) return 'HD';
+  if (pct >= 75) return 'D';
+  if (pct >= 65) return 'C';
+  if (pct >= 50) return 'P';
+  return 'F';
 }
 
 const STATUS_LABEL = {

@@ -4,6 +4,7 @@ import {
   assignSubtaskTo,
   claimSubtask,
   effectiveAssignmentStatus,
+  letterGradeFor,
   listLeadersForAssignment,
   listSubmissionsForAssignment,
   listSubtasksForAssignment,
@@ -37,7 +38,7 @@ export default function AssignmentDetailModal({
   const [leaders, setLeaders] = useState([]);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [reviewState, setReviewState] = useState({}); // { [submissionId]: { feedback, openId } }
+  const [reviewState, setReviewState] = useState({}); // { [submissionId]: { feedback, points, openId } }
   const [assignPicker, setAssignPicker] = useState({}); // { [subtaskId]: assigneeId }
   const fileRef = useRef(null);
 
@@ -179,28 +180,41 @@ export default function AssignmentDetailModal({
   }
 
   async function onReview(submission, verdict) {
-    const fb = reviewState[submission.id]?.feedback?.trim() || null;
+    const rs = reviewState[submission.id] ?? {};
+    const fb = rs.feedback?.trim() || null;
+    const pts = rs.points;
     setError(null);
     setBusy(true);
     try {
       if (isDemo) {
-        const next = { ...submission, status: verdict, feedback: fb, reviewed_at: new Date().toISOString(),
-          reviewer: { id: user?.id, full_name: user?.full_name || 'You', role: 'professor' } };
+        const ptsNum = pts !== undefined && pts !== '' ? Number(pts) : null;
+        const letter = ptsNum != null
+          ? letterGradeFor(ptsNum, assignment.max_points)
+          : null;
+        const next = {
+          ...submission,
+          status: verdict,
+          feedback: fb,
+          reviewed_at: new Date().toISOString(),
+          reviewer: { id: user?.id, full_name: user?.full_name || 'You', role: 'professor' },
+          points_awarded: ptsNum,
+          letter_grade: letter,
+        };
         setSubs(cur => cur.map(s => s.id === submission.id ? next : s));
-        // mutate the demo backing array too so list refresh sees it
         if (Array.isArray(assignment.submissions)) {
           assignment.submissions = assignment.submissions.map(s => s.id === submission.id ? next : s);
         }
         onSubmissionChanged?.(next);
-        setReviewState(prev => ({ ...prev, [submission.id]: { feedback: '', openId: null } }));
+        setReviewState(prev => ({ ...prev, [submission.id]: { feedback: '', points: '', openId: null } }));
         return;
       }
       const next = await reviewSubmission(supabase, {
         submissionId: submission.id, reviewerId: user.id, status: verdict, feedback: fb,
+        pointsAwarded: pts,
       });
       setSubs(cur => cur.map(s => s.id === submission.id ? next : s));
       onSubmissionChanged?.(next);
-      setReviewState(prev => ({ ...prev, [submission.id]: { feedback: '', openId: null } }));
+      setReviewState(prev => ({ ...prev, [submission.id]: { feedback: '', points: '', openId: null } }));
     } catch (e) {
       setError(e.message || String(e));
     } finally {
@@ -369,7 +383,17 @@ export default function AssignmentDetailModal({
                     <span className="asgn-sub-when">{formatRelativeTime(s.submitted_at ?? s.created_at)} · v{s.version}</span>
                   </div>
                   {s.pdf?.title && <div className="asgn-sub-file">📄 {s.pdf.title}</div>}
-                  <div className={`asgn-sub-status asgn-sub-status-${s.status}`}>{submissionStatusLabel(s.status)}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div className={`asgn-sub-status asgn-sub-status-${s.status}`}>{submissionStatusLabel(s.status)}</div>
+                    {s.letter_grade && (
+                      <span className={`grade-badge grade-${s.letter_grade.toLowerCase()}`} title={s.points_awarded != null ? `${s.points_awarded} / ${assignment.max_points ?? '—'}` : undefined}>
+                        {s.letter_grade}
+                        {s.points_awarded != null && assignment.max_points
+                          ? <span className="grade-pts">{Number(s.points_awarded)}/{assignment.max_points}</span>
+                          : null}
+                      </span>
+                    )}
+                  </div>
                   {s.feedback && (
                     <div className="asgn-sub-feedback">{s.feedback}</div>
                   )}
@@ -390,6 +414,29 @@ export default function AssignmentDetailModal({
                             value={reviewState[s.id]?.feedback ?? ''}
                             onChange={e => setReviewState(prev => ({ ...prev, [s.id]: { ...prev[s.id], feedback: e.target.value } }))}
                           />
+                          {assignment.max_points ? (
+                            <div className="asgn-grade-row">
+                              <label>Points</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max={assignment.max_points}
+                                step="0.5"
+                                className="input"
+                                placeholder={`0 – ${assignment.max_points}`}
+                                value={reviewState[s.id]?.points ?? ''}
+                                onChange={e => setReviewState(prev => ({ ...prev, [s.id]: { ...prev[s.id], points: e.target.value } }))}
+                              />
+                              <span className="asgn-grade-out-of">/ {assignment.max_points}</span>
+                              {(() => {
+                                const pts = reviewState[s.id]?.points;
+                                if (pts === '' || pts === undefined) return null;
+                                const lg = letterGradeFor(pts, assignment.max_points);
+                                if (!lg) return null;
+                                return <span className={`grade-badge grade-${lg.toLowerCase()}`}>{lg}</span>;
+                              })()}
+                            </div>
+                          ) : null}
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {REVIEW_VERDICTS.map(v => (
                               <button

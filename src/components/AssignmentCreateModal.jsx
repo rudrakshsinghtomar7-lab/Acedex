@@ -31,6 +31,7 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignmentType, setAssignmentType] = useState('individual');
+  const [assigneeIds, setAssigneeIds] = useState([]); // for individual mode
   const [subtasks, setSubtasks] = useState([]);
   const [distributionMode, setDistributionMode] = useState('professor');
   const [leaderId, setLeaderId] = useState('');
@@ -38,9 +39,13 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
   const [dueAt, setDueAt] = useState('');
   const [deadlineType, setDeadlineType] = useState('hard');
   const [graceDays, setGraceDays] = useState('3');
-  const [aiCheck, setAiCheck] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const aiCheck = false; // AI plagiarism check ships in Phase 8; toggle is disabled with a "Coming soon" label.
+
+  function toggleAssignee(id) {
+    setAssigneeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape' && !busy) onClose(); }
@@ -134,6 +139,7 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
         distributionMode: isTeam ? distributionMode : null,
         subtasks: isTeam ? cleanSubtasks : [],
         leaderId: isTeam && distributionMode === 'team_leader' ? leaderId : null,
+        assigneeIds: !isTeam ? assigneeIds : [],
       });
       onCreated(row);
     } catch (e) {
@@ -173,6 +179,40 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
               { value: 'team',       label: 'Team' },
             ]}
           />
+
+          {!isTeam && (
+            <>
+              <div className="asgn-section-h">
+                Assignees
+                <span style={{ color: 'var(--muted)', fontWeight: 500, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>
+                  {assigneeIds.length === 0 ? 'All team members' : `${assigneeIds.length} selected`}
+                </span>
+              </div>
+              <div className="asgn-assignee-grid">
+                {members.length === 0 && (
+                  <div className="pdf-muted" style={{ padding: '4px 0 8px' }}>No team members yet.</div>
+                )}
+                {members.map(m => {
+                  const on = assigneeIds.includes(m.id);
+                  return (
+                    <label key={m.id} className={`asgn-assignee-chip ${on ? 'active' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={() => toggleAssignee(m.id)}
+                      />
+                      <span>{m.full_name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {assigneeIds.length > 0 && (
+                <button type="button" className="pdf-link-btn" onClick={() => setAssigneeIds([])} style={{ marginTop: 4 }}>
+                  Clear → assign to everyone
+                </button>
+              )}
+            </>
+          )}
 
           {isTeam && (
             <>
@@ -294,13 +334,18 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
             </div>
           )}
 
-          <label className="asgn-ai-row">
-            <input type="checkbox" checked={aiCheck} onChange={e=>setAiCheck(e.target.checked)} />
+          <div className="asgn-ai-row disabled" aria-disabled="true" title="Coming soon">
+            <input type="checkbox" disabled checked={false} readOnly />
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 600 }}>AI plagiarism check</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5, marginTop: 2 }}>Run Claude relevance / similarity / web checks on each submission.</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                AI plagiarism check
+                <span className="asgn-soon-badge">Coming soon</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5, marginTop: 2 }}>
+                Will run Claude relevance, similarity, and web checks on each submission. Lands with Feature 8.
+              </div>
             </div>
-          </label>
+          </div>
 
           {error && (
             <div className="alert" style={{ marginTop: 12 }}>

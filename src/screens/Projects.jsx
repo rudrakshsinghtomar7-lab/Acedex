@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
+import FilterChips from '../components/FilterChips.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 import StatusTag from '../components/StatusTag.jsx';
@@ -130,52 +131,3 @@ export default function Projects({role}) {
   );
 }
 
-// Variable-width sliding pill behind the active filter chip. Same measure-
-// then-morph pattern as the project-detail DTabs: refs + useLayoutEffect
-// snapshot each chip's offsetLeft/Width/Top/Height after layout, the pill is
-// a sibling .chip-pill that animates between those snapshots. Because the
-// pill lives inside the overflow-x:auto .chips container, its coordinates
-// are content-space — it scrolls with the chips automatically.
-function FilterChips({ items, active, onChange }) {
-  const refs = useRef({});
-  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
-
-  useLayoutEffect(() => {
-    const el = refs.current[active];
-    if (!el) { setPill(p => ({ ...p, ready: false })); return; }
-    setPill({
-      left: el.offsetLeft,
-      top: el.offsetTop,
-      width: el.offsetWidth,
-      height: el.offsetHeight,
-      ready: true,
-    });
-  }, [active, items.map(([k]) => k).join('|')]);
-
-  return (
-    <div className="chips">
-      <span
-        className="chip-pill"
-        aria-hidden
-        style={{
-          left: pill.left,
-          top: pill.top,
-          width: pill.width,
-          height: pill.height,
-          opacity: pill.ready ? 1 : 0,
-        }}
-      />
-      {items.map(([k, t]) => (
-        <button
-          key={k}
-          ref={el => { refs.current[k] = el; }}
-          type="button"
-          className={`chip ${active === k ? 'active' : ''}`}
-          onClick={() => onChange(k)}
-        >
-          {t}
-        </button>
-      ))}
-    </div>
-  );
-}

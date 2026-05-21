@@ -89,8 +89,8 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
   }
 
   const tabs = role === 'professor'
-    ? ['overview','milestones','tasks','assignments','team','pdfs','activity','insights','ai']
-    : ['overview','milestones','tasks','assignments','team','pdfs','activity','ai'];
+    ? ['overview','milestones','tasks','team','pdfs','assignments','activity','insights','ai']
+    : ['overview','milestones','tasks','team','pdfs','assignments','activity','ai'];
 
   return (
     <>

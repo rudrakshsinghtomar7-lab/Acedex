@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AssignmentCreateModal from '../../components/AssignmentCreateModal.jsx';
 import AssignmentDetailModal from '../../components/AssignmentDetailModal.jsx';
+import FilterChips from '../../components/FilterChips.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
 import {
   effectiveAssignmentStatus,
@@ -9,6 +10,20 @@ import {
   submissionStatusLabel,
 } from '../../lib/assignments.js';
 import { formatRelativeTime } from '../../lib/pdfs.js';
+
+const FILTERS = [
+  ['all',       'All'],
+  ['open',      'Open'],
+  ['submitted', 'Submitted'],
+  ['reviewed',  'Reviewed'],
+  ['late',      'Late'],
+];
+
+const DIST_LABEL = {
+  professor:   'Prof assigns',
+  team_leader: 'Leader assigns',
+  self_pick:   'Self-pick',
+};
 
 function adaptDemoAssignment(a) {
   // Demo rows already match the canonical shape (see DEMO_ASSIGNMENTS in
@@ -38,6 +53,8 @@ export default function Assignments({ project, role }) {
 
   const [rows, setRows] = useState(null);
   const [mySubmissions, setMySubmissions] = useState({});
+  const [submissionCounts, setSubmissionCounts] = useState({}); // { [assignmentId]: { submitted, total } }
+  const [filter, setFilter] = useState('all');
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
   const [detailRow, setDetailRow] = useState(null);
@@ -47,13 +64,19 @@ export default function Assignments({ project, role }) {
     if (isDemo) {
       const list = (project.assignments ?? []).map(adaptDemoAssignment);
       setRows(list);
-      // Demo own-submissions live alongside each assignment row.
       const map = {};
+      const counts = {};
+      const totalMembers = (project.memberRecords ?? []).length || (project.members?.length ?? 0);
       for (const a of list) {
-        const own = (a.submissions ?? []).filter(s => s.submitter_id === 'demo-student-1');
+        const subs = a.submissions ?? [];
+        const own = subs.filter(s => s.submitter_id === 'demo-student-1');
         if (own.length) map[a.id] = own[0];
+        // For prof counts: unique submitters with status != draft.
+        const distinct = new Set(subs.filter(s => s.status !== 'draft').map(s => s.submitter_id));
+        counts[a.id] = { submitted: distinct.size, total: totalMembers };
       }
       setMySubmissions(map);
+      setSubmissionCounts(counts);
       return;
     }
     try {
@@ -62,10 +85,24 @@ export default function Assignments({ project, role }) {
         user?.id ? listOwnSubmissionsForTeam(supabase, project.id, user.id) : Promise.resolve([]),
       ]);
       setRows(list);
-      // Latest version per assignment (already sorted desc).
       const map = {};
       for (const s of mine) if (!map[s.assignment_id]) map[s.assignment_id] = s;
       setMySubmissions(map);
+      // Submission counts are lazy — we fetch a head-count per assignment in
+      // parallel. Skipped if there are no assignments to avoid noise.
+      if (list.length > 0 && isProfessor) {
+        const totalMembers = (project.memberRecords ?? []).length || 1;
+        const counts = {};
+        await Promise.all(list.map(async (a) => {
+          const { count } = await supabase
+            .from('submissions')
+            .select('submitter_id', { count: 'exact', head: true })
+            .eq('assignment_id', a.id)
+            .neq('status', 'draft');
+          counts[a.id] = { submitted: count ?? 0, total: totalMembers };
+        }));
+        setSubmissionCounts(counts);
+      }
     } catch (e) {
       setError(e.message || String(e));
     }
@@ -91,6 +128,26 @@ export default function Assignments({ project, role }) {
     setDetailRow(prev => (prev?.id === row?.id ? row : prev));
   }
 
+  // Filter pipeline. 'open' = not yet submitted by me (student) or assignment
+  // accepting submissions (prof). 'submitted' / 'reviewed' look at my latest
+  // submission (student) or any submission state (prof). 'late' uses the
+  // computed effectiveAssignmentStatus.
+  const filtered = useMemo(() => {
+    if (!rows) return null;
+    if (filter === 'all') return rows;
+    return rows.filter(a => {
+      const eff = effectiveAssignmentStatus(a);
+      const mine = mySubmissions[a.id];
+      switch (filter) {
+        case 'late':      return eff === 'late';
+        case 'open':      return isProfessor ? eff !== 'done' : !mine;
+        case 'submitted': return mine ? mine.status === 'submitted' : false;
+        case 'reviewed':  return mine ? ['approved','rejected','needs_resubmission','reviewed'].includes(mine.status) : false;
+        default:          return true;
+      }
+    });
+  }, [rows, filter, mySubmissions, isProfessor]);
+
   return (
     <div className="asgn-workspace">
       <div className="pdf-toolbar">
@@ -106,6 +163,10 @@ export default function Assignments({ project, role }) {
           <button className="btn btn-p btn-sm" onClick={() => setCreating(true)}>+ New</button>
         )}
       </div>
+
+      {rows && rows.length > 0 && (
+        <FilterChips items={FILTERS} active={filter} onChange={setFilter} className="asgn-filter-chips"/>
+      )}
 
       {error && (
         <div className="alert" style={{ marginBottom: 14 }}>
@@ -125,11 +186,19 @@ export default function Assignments({ project, role }) {
               : 'Your professor hasn\'t posted anything here yet.'}
           </p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="empty">
+          <div className="empty-i">⌕</div>
+          <div className="empty-h">No matches</div>
+          <p style={{ fontSize: 13, color: 'var(--muted)' }}>Nothing in the "{FILTERS.find(([k]) => k === filter)?.[1] ?? filter}" bucket.</p>
+        </div>
       ) : (
         <div className="asgn-grid">
-          {rows.map(a => {
+          {filtered.map(a => {
             const eff = effectiveAssignmentStatus(a);
             const mine = mySubmissions[a.id];
+            const counts = submissionCounts[a.id];
+            const isTeam = a.assignment_type === 'team';
             return (
               <button
                 key={a.id}
@@ -146,14 +215,45 @@ export default function Assignments({ project, role }) {
                   </div>
                   <span className={`asgn-badge asgn-badge-${eff}`}>{eff === 'late' ? 'Late' : eff === 'done' ? 'Done' : 'Open'}</span>
                 </div>
+
+                <div className="asgn-row-pills">
+                  {a.assignment_type && (
+                    <span className={`asgn-type-chip asgn-type-${a.assignment_type}`}>
+                      {a.assignment_type === 'team' ? 'Team' : 'Individual'}
+                    </span>
+                  )}
+                  {isTeam && a.distribution_mode && (
+                    <span className="asgn-dist-chip">{DIST_LABEL[a.distribution_mode] ?? a.distribution_mode}</span>
+                  )}
+                  {isProfessor && counts && (
+                    <span className="asgn-count-chip" title={`${counts.submitted} of ${counts.total} team members submitted`}>
+                      {counts.submitted}/{counts.total} submitted
+                    </span>
+                  )}
+                </div>
+
                 {a.description && (
                   <div className="asgn-row-desc">{a.description}</div>
                 )}
+
                 {!isProfessor && (
                   <div className="asgn-mine">
-                    {mine
-                      ? <>Your submission · <strong>{submissionStatusLabel(mine.status)}</strong>{mine.submitted_at ? ` · ${formatRelativeTime(mine.submitted_at)}` : ''}</>
-                      : <span style={{ color: 'var(--muted)' }}>Not submitted yet</span>}
+                    {mine ? (
+                      <>
+                        Your submission · <strong>{submissionStatusLabel(mine.status)}</strong>
+                        {mine.submitted_at ? ` · ${formatRelativeTime(mine.submitted_at)}` : ''}
+                        {mine.letter_grade && (
+                          <span className={`grade-badge grade-${mine.letter_grade.toLowerCase()}`} style={{ marginLeft: 8 }}>
+                            {mine.letter_grade}
+                            {mine.points_awarded != null && a.max_points
+                              ? <span className="grade-pts">{Number(mine.points_awarded)}/{a.max_points}</span>
+                              : null}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ color: 'var(--muted)' }}>Not submitted yet</span>
+                    )}
                   </div>
                 )}
               </button>
