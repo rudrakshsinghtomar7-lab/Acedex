@@ -73,4 +73,6 @@ export const TYPE_GLYPH = {
   system: '◉',
   pdf_uploaded: '▦',
   pdf_comment: '◗',
+  assignment_created: '▤',
+  submission_reviewed: '✓',
 };

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Overview from './Overview.jsx';
 import Milestones from './Milestones.jsx';
 import Tasks from './Tasks.jsx';
+import Assignments from './Assignments.jsx';
 import Team from './Team.jsx';
 import Activity from './Activity.jsx';
 import Insights from './Insights.jsx';
@@ -88,8 +89,8 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
   }
 
   const tabs = role === 'professor'
-    ? ['overview','milestones','tasks','team','pdfs','activity','insights','ai']
-    : ['overview','milestones','tasks','team','pdfs','activity','ai'];
+    ? ['overview','milestones','tasks','assignments','team','pdfs','activity','insights','ai']
+    : ['overview','milestones','tasks','assignments','team','pdfs','activity','ai'];
 
   return (
     <>
@@ -103,6 +104,7 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
         {tab==='overview' && <Overview project={project} role={role}/>}
         {tab==='milestones' && <Milestones project={project}/>}
         {tab==='tasks' && <Tasks project={project}/>}
+        {tab==='assignments' && <Assignments project={project} role={role}/>}
         {tab==='team' && <Team project={project} role={role} onMembersChanged={refetch}/>}
         {tab==='pdfs' && <PDFs project={project} initialPdfId={initialPdfId} initialPage={initialPage}/>}
         {tab==='activity' && <Activity project={project}/>}
@@ -114,9 +116,10 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
 }
 
 function tabLabel(t) {
-  if (t === 'insights') return '✦ Insights';
-  if (t === 'ai')       return '✦ AI';
-  if (t === 'pdfs')     return 'PDFs';
+  if (t === 'insights')    return '✦ Insights';
+  if (t === 'ai')          return '✦ AI';
+  if (t === 'pdfs')        return 'PDFs';
+  if (t === 'assignments') return 'Assignments';
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 

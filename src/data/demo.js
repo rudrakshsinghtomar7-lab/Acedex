@@ -376,6 +376,104 @@ export const DEMO_PDF_HIGHLIGHTS = [
   { id: 'demo-h-8',  document_id: 'demo-pdf-8', annotation_type: 'highlight', page_number: 9, content: 'all five participants completed the core task unaided',         resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'all five participants completed the core task unaided' },         created_at: '2026-04-30T18:01:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
 ];
 
+// Demo assignments per project. Shape matches the canonical assignments row +
+// joined owner profile, with a synthetic .submissions array for the detail
+// modal. The Assignments tab reads project.assignments directly when isDemo.
+function demoSub(student, status, opts = {}) {
+  const id = opts.id ?? `demo-sub-${student.id}-${Date.now() + Math.floor(Math.random()*1000)}`;
+  return {
+    id,
+    assignment_id: opts.assignment_id ?? null,
+    team_id: opts.team_id ?? null,
+    submitter_id: student.id,
+    submitter: { id: student.id, full_name: student.full_name, avatar_url: null, role: 'student' },
+    status,
+    version: opts.version ?? 1,
+    notes: opts.notes ?? null,
+    feedback: opts.feedback ?? null,
+    pdf_document_id: null,
+    storage_path: null,
+    pdf: opts.pdfTitle ? { id: `demo-pdf-${id}`, title: opts.pdfTitle, file_size_bytes: 712800, page_count: 8 } : null,
+    submitted_at: opts.submitted_at ?? hoursAgo(opts.submittedHoursAgo ?? 18),
+    reviewed_at: opts.reviewed_at ?? null,
+    reviewer: opts.reviewer ?? null,
+    created_at: opts.created_at ?? (opts.submitted_at ?? hoursAgo(opts.submittedHoursAgo ?? 18)),
+  };
+}
+
+const _PROF_AS_REVIEWER = { id: PROF.id, full_name: PROF.full_name, avatar_url: null, role: 'professor' };
+
+// Attach assignments to each demo project so .assignments[] is read by the tab.
+DEMO_PROJECTS[0].assignments = [
+  {
+    id: 'demo-asgn-1a', team_id: 'demo-proj-1',
+    title: 'Methodology section v2',
+    description: 'Revise §2.1 to address Dr. Rivera\'s feedback. Include power analysis and a paragraph on the BERTScore + NLI pairing.',
+    due_at: daysAgo(-3), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 1, created_at: daysAgo(7), updated_at: daysAgo(1),
+    submissions: [
+      demoSub(DEMO_STUDENTS[0], 'submitted', { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Alex.pdf', submittedHoursAgo: 6 }),
+      demoSub(DEMO_STUDENTS[2], 'approved',  { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Marcus.pdf', submittedHoursAgo: 32, feedback: 'Strong revision — power calc is exactly what I was after.', reviewed_at: hoursAgo(4), reviewer: _PROF_AS_REVIEWER }),
+    ],
+  },
+  {
+    id: 'demo-asgn-1b', team_id: 'demo-proj-1',
+    title: 'Annotated hallucination dataset',
+    description: '1,000 annotated samples across the three eval domains. Submit as a single PDF index linking to the JSONL files.',
+    due_at: daysAgo(-10), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 2, created_at: daysAgo(4), updated_at: daysAgo(4),
+    submissions: [],
+  },
+];
+
+DEMO_PROJECTS[1].assignments = [
+  {
+    id: 'demo-asgn-2a', team_id: 'demo-proj-2',
+    title: 'Raft consensus prototype',
+    description: 'Working leader-election + log-replication implementation. Include a one-page architecture diagram.',
+    due_at: daysAgo(-5), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 1, created_at: daysAgo(10), updated_at: daysAgo(2),
+    submissions: [
+      demoSub(DEMO_STUDENTS[2], 'needs_resubmission', { assignment_id: 'demo-asgn-2a', team_id: 'demo-proj-2', pdfTitle: 'Raft prototype v1.pdf', submittedHoursAgo: 50, feedback: 'Logic is solid. Please add the failure-mode test cases we discussed.', reviewed_at: hoursAgo(20), reviewer: _PROF_AS_REVIEWER, version: 1 }),
+    ],
+  },
+];
+
+DEMO_PROJECTS[2].assignments = [
+  {
+    id: 'demo-asgn-3a', team_id: 'demo-proj-3',
+    title: 'Cleaning pipeline spec',
+    description: 'Document handling of missing-station data + the NOAA license deltas surfaced last week.',
+    due_at: daysAgo(2), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,  // overdue → 'late'
+    status: 'active', order_idx: 1, created_at: daysAgo(14), updated_at: daysAgo(14),
+    submissions: [],
+  },
+];
+
+DEMO_PROJECTS[3].assignments = [
+  {
+    id: 'demo-asgn-4a', team_id: 'demo-proj-4',
+    title: 'Final report + usability appendix',
+    description: 'Wrap-up artifact for the mobile reading app capstone.',
+    due_at: '2026-04-30T17:00:00Z', owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'done', order_idx: 1, created_at: '2026-04-01T00:00:00Z', updated_at: '2026-05-01T00:00:00Z',
+    submissions: [
+      demoSub(DEMO_STUDENTS[2], 'approved', { assignment_id: 'demo-asgn-4a', team_id: 'demo-proj-4', pdfTitle: 'Final Report.pdf', submitted_at: '2026-04-30T16:32:00Z', feedback: 'Excellent. Promote two of the usability quotes to the abstract.', reviewed_at: '2026-05-01T10:00:00Z', reviewer: _PROF_AS_REVIEWER }),
+    ],
+  },
+];
+
+DEMO_PROJECTS[4].assignments = [
+  {
+    id: 'demo-asgn-5a', team_id: 'demo-proj-5',
+    title: 'Chapter 8–10 writeup',
+    description: 'Synthesize counterfactual reasoning chapters. Include problem-set 7 worked solutions.',
+    due_at: daysAgo(-25), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 1, created_at: daysAgo(6), updated_at: daysAgo(6),
+    submissions: [],
+  },
+];
+
 // Shaped to match the NOTIFICATION_SELECT projection the panel reads against
 // the live DB: created_at (ISO) drives relativeTime; link is what tapping a
 // row navigates to; related_team_id + team.name surface the team in the meta
