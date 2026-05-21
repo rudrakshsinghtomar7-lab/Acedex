@@ -422,6 +422,15 @@ DEMO_PROJECTS[0].assignments = [
     description: '1,000 annotated samples across the three eval domains. Submit as a single PDF index linking to the JSONL files.',
     due_at: daysAgo(-10), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
     status: 'active', order_idx: 2, created_at: daysAgo(4), updated_at: daysAgo(4),
+    assignment_type: 'team', distribution_mode: 'self_pick',
+    max_points: 100, deadline_type: 'grace', grace_days: 3, ai_plagiarism_check: false,
+    subtasks: [
+      { id: 'demo-st-1b-1', assignment_id: 'demo-asgn-1b', title: 'Literature Review', description: 'Survey existing hallucination eval methods.', assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(4) },
+      { id: 'demo-st-1b-2', assignment_id: 'demo-asgn-1b', title: 'Methodology Section', description: 'Define the annotation protocol and inter-rater steps.', assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(4) },
+      { id: 'demo-st-1b-3', assignment_id: 'demo-asgn-1b', title: 'Data Analysis',      description: 'Run BERTScore + NLI across the labeled set.',                    assigned_to: DEMO_STUDENTS[1].id, assignee: { id: DEMO_STUDENTS[1].id, full_name: DEMO_STUDENTS[1].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(2), created_at: daysAgo(4) },
+      { id: 'demo-st-1b-4', assignment_id: 'demo-asgn-1b', title: 'Conclusion',         description: 'Synthesize results, limitations, future work.',                    assigned_to: DEMO_STUDENTS[2].id, assignee: { id: DEMO_STUDENTS[2].id, full_name: DEMO_STUDENTS[2].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(1), created_at: daysAgo(4) },
+    ],
+    leaders: [],
     submissions: [],
   },
 ];
@@ -433,6 +442,16 @@ DEMO_PROJECTS[1].assignments = [
     description: 'Working leader-election + log-replication implementation. Include a one-page architecture diagram.',
     due_at: daysAgo(-5), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
     status: 'active', order_idx: 1, created_at: daysAgo(10), updated_at: daysAgo(2),
+    assignment_type: 'team', distribution_mode: 'team_leader',
+    max_points: 100, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: true,
+    subtasks: [
+      { id: 'demo-st-2a-1', assignment_id: 'demo-asgn-2a', title: 'Leader election',   description: 'Implement the heartbeat + election timeout state machine.', assigned_to: DEMO_STUDENTS[1].id, assignee: { id: DEMO_STUDENTS[1].id, full_name: DEMO_STUDENTS[1].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(7), created_at: daysAgo(10) },
+      { id: 'demo-st-2a-2', assignment_id: 'demo-asgn-2a', title: 'Log replication',   description: 'AppendEntries RPC + commit index tracking.',                 assigned_to: DEMO_STUDENTS[2].id, assignee: { id: DEMO_STUDENTS[2].id, full_name: DEMO_STUDENTS[2].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(7), created_at: daysAgo(10) },
+      { id: 'demo-st-2a-3', assignment_id: 'demo-asgn-2a', title: 'Failure-mode tests', description: 'Network partition + node-crash test harness.',               assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(10) },
+    ],
+    leaders: [
+      { id: 'demo-lead-2a-1', assignment_id: 'demo-asgn-2a', leader_id: DEMO_STUDENTS[0].id, leader: { id: DEMO_STUDENTS[0].id, full_name: DEMO_STUDENTS[0].full_name, avatar_url: null, role: 'student' }, designated_by: PROF.id, designated_at: daysAgo(10) },
+    ],
     submissions: [
       demoSub(DEMO_STUDENTS[2], 'needs_resubmission', { assignment_id: 'demo-asgn-2a', team_id: 'demo-proj-2', pdfTitle: 'Raft prototype v1.pdf', submittedHoursAgo: 50, feedback: 'Logic is solid. Please add the failure-mode test cases we discussed.', reviewed_at: hoursAgo(20), reviewer: _PROF_AS_REVIEWER, version: 1 }),
     ],
@@ -446,6 +465,14 @@ DEMO_PROJECTS[2].assignments = [
     description: 'Document handling of missing-station data + the NOAA license deltas surfaced last week.',
     due_at: daysAgo(2), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,  // overdue → 'late'
     status: 'active', order_idx: 1, created_at: daysAgo(14), updated_at: daysAgo(14),
+    assignment_type: 'team', distribution_mode: 'professor',
+    max_points: 80, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: false,
+    subtasks: [
+      { id: 'demo-st-3a-1', assignment_id: 'demo-asgn-3a', title: 'NOAA license writeup', description: '1-page summary of changes since last term.', assigned_to: DEMO_STUDENTS[3].id, assignee: { id: DEMO_STUDENTS[3].id, full_name: DEMO_STUDENTS[3].full_name, avatar_url: null, role: 'student' }, assigned_by: PROF.id, status: 'in_progress', claimed_at: null, created_at: daysAgo(14) },
+      { id: 'demo-st-3a-2', assignment_id: 'demo-asgn-3a', title: 'Missing-station handling', description: 'Interpolation strategy + flag column.', assigned_to: DEMO_STUDENTS[0].id, assignee: { id: DEMO_STUDENTS[0].id, full_name: DEMO_STUDENTS[0].full_name, avatar_url: null, role: 'student' }, assigned_by: PROF.id, status: 'submitted', claimed_at: null, created_at: daysAgo(14) },
+      { id: 'demo-st-3a-3', assignment_id: 'demo-asgn-3a', title: 'Coverage map',           description: 'Visualize station coverage for the 50-yr window.', assigned_to: DEMO_STUDENTS[4].id, assignee: { id: DEMO_STUDENTS[4].id, full_name: DEMO_STUDENTS[4].full_name, avatar_url: null, role: 'student' }, assigned_by: PROF.id, status: 'in_progress', claimed_at: null, created_at: daysAgo(14) },
+    ],
+    leaders: [],
     submissions: [],
   },
 ];

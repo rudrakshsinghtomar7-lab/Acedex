@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Avatar from './Avatar.jsx';
 import {
+  assignSubtaskTo,
+  claimSubtask,
   effectiveAssignmentStatus,
+  listLeadersForAssignment,
   listSubmissionsForAssignment,
+  listSubtasksForAssignment,
   reviewSubmission,
   submissionStatusLabel,
   submitAssignmentPdf,
@@ -26,11 +30,25 @@ export default function AssignmentDetailModal({
   project, assignment, role, isDemo, supabase, user, onClose, onSubmissionChanged,
 }) {
   const isProfessor = role === 'professor';
+  const isTeam = assignment.assignment_type === 'team';
+  const dist = assignment.distribution_mode;
   const [subs, setSubs] = useState(null);
+  const [subtasks, setSubtasks] = useState(null);
+  const [leaders, setLeaders] = useState([]);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const [reviewState, setReviewState] = useState({}); // { [submissionId]: { feedback, openId } }
+  const [assignPicker, setAssignPicker] = useState({}); // { [subtaskId]: assigneeId }
   const fileRef = useRef(null);
+
+  const members = useMemo(
+    () => (project.memberRecords ?? [])
+      .map(m => m.profile)
+      .filter(p => p && p.id && p.full_name),
+    [project.memberRecords],
+  );
+  const userId = user?.id ?? (isDemo ? 'demo-student-1' : null);
+  const amILeader = leaders.some(l => (l.leader_id ?? l.leader?.id) === userId);
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape' && !busy) onClose(); }
@@ -42,14 +60,25 @@ export default function AssignmentDetailModal({
     setError(null);
     if (isDemo) {
       setSubs(assignment.submissions ?? []);
+      setSubtasks(assignment.subtasks ?? []);
+      setLeaders(assignment.leaders ?? []);
       return;
     }
     let cancelled = false;
-    listSubmissionsForAssignment(supabase, assignment.id)
-      .then(rows => { if (!cancelled) setSubs(rows); })
+    Promise.all([
+      listSubmissionsForAssignment(supabase, assignment.id),
+      isTeam ? listSubtasksForAssignment(supabase, assignment.id) : Promise.resolve([]),
+      isTeam ? listLeadersForAssignment(supabase, assignment.id) : Promise.resolve([]),
+    ])
+      .then(([s, st, le]) => {
+        if (cancelled) return;
+        setSubs(s);
+        setSubtasks(st);
+        setLeaders(le);
+      })
       .catch(e => { if (!cancelled) setError(e.message || String(e)); });
     return () => { cancelled = true; };
-  }, [supabase, assignment, isDemo]);
+  }, [supabase, assignment, isDemo, isTeam]);
 
   const mine = (subs ?? []).find(s => s.submitter_id === user?.id || s.submitter_id === 'demo-student-1');
 
@@ -94,6 +123,54 @@ export default function AssignmentDetailModal({
       });
       setSubs(cur => [row, ...(cur ?? [])]);
       onSubmissionChanged?.(row);
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onClaim(subtask) {
+    setError(null);
+    setBusy(true);
+    try {
+      if (isDemo) {
+        const me = { id: userId, full_name: 'Alex Chen', role: 'student', avatar_url: null };
+        const next = { ...subtask, assigned_to: userId, assignee: me, claimed_at: new Date().toISOString(), status: 'in_progress' };
+        setSubtasks(cur => cur.map(s => s.id === subtask.id ? next : s));
+        if (Array.isArray(assignment.subtasks)) {
+          assignment.subtasks = assignment.subtasks.map(s => s.id === subtask.id ? next : s);
+        }
+        return;
+      }
+      const next = await claimSubtask(supabase, { subtaskId: subtask.id, userId });
+      setSubtasks(cur => cur.map(s => s.id === subtask.id ? next : s));
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onAssign(subtask) {
+    const assigneeId = assignPicker[subtask.id];
+    if (!assigneeId) { setError('Pick a teammate before assigning.'); return; }
+    setError(null);
+    setBusy(true);
+    try {
+      if (isDemo) {
+        const assignee = members.find(m => m.id === assigneeId) ?? null;
+        const next = { ...subtask, assigned_to: assigneeId, assignee, assigned_by: userId, status: 'in_progress' };
+        setSubtasks(cur => cur.map(s => s.id === subtask.id ? next : s));
+        if (Array.isArray(assignment.subtasks)) {
+          assignment.subtasks = assignment.subtasks.map(s => s.id === subtask.id ? next : s);
+        }
+        setAssignPicker(prev => ({ ...prev, [subtask.id]: '' }));
+        return;
+      }
+      const next = await assignSubtaskTo(supabase, { subtaskId: subtask.id, assigneeId, leaderId: userId });
+      setSubtasks(cur => cur.map(s => s.id === subtask.id ? next : s));
+      setAssignPicker(prev => ({ ...prev, [subtask.id]: '' }));
     } catch (e) {
       setError(e.message || String(e));
     } finally {
@@ -154,9 +231,78 @@ export default function AssignmentDetailModal({
             <div className="asgn-detail-desc">{assignment.description}</div>
           )}
 
+          {amILeader && !isProfessor && (
+            <div className="asgn-leader-pill">
+              <span aria-hidden>👑</span> You're the team leader for this assignment
+            </div>
+          )}
+
           {error && (
             <div className="alert" style={{ margin: '12px 0' }}>
               <span>◇</span><div>{error}</div>
+            </div>
+          )}
+
+          {isTeam && (
+            <div className="asgn-subtasks-section">
+              <div className="asgn-subs-head">
+                <h3>Subtasks</h3>
+                <span className="pdf-muted">
+                  {dist === 'professor' && 'Assigned by professor'}
+                  {dist === 'team_leader' && 'Assigned by team leader'}
+                  {dist === 'self_pick' && 'Open pool · self-pick'}
+                </span>
+              </div>
+
+              {subtasks === null ? (
+                <div className="empty"><div className="spin" style={{ margin: '0 auto' }}/></div>
+              ) : subtasks.length === 0 ? (
+                <div className="pdf-muted" style={{ padding: '10px 0' }}>No subtasks on this assignment.</div>
+              ) : (
+                <div className="asgn-subtask-list">
+                  {/* Open / claimable rows first, then assigned. */}
+                  {[...subtasks].sort((a, b) => Number(!!a.assigned_to) - Number(!!b.assigned_to)).map(st => {
+                    const open = !st.assigned_to;
+                    const mineSubtask = st.assigned_to === userId;
+                    const canClaim = open && dist === 'self_pick' && !isProfessor;
+                    const canAssign = open && dist === 'team_leader' && amILeader;
+                    return (
+                      <div key={st.id} className={`asgn-subtask-item ${open ? 'open' : ''} ${mineSubtask ? 'mine' : ''}`}>
+                        <div className="asgn-subtask-main">
+                          <div className="asgn-subtask-title">{st.title}</div>
+                          {st.description && <div className="asgn-subtask-desc">{st.description}</div>}
+                          <div className="asgn-subtask-foot">
+                            {st.assignee
+                              ? <><Avatar name={st.assignee.full_name} size={18}/><span>{st.assignee.full_name}{mineSubtask ? ' · you' : ''}</span></>
+                              : <span className="pdf-muted">Unassigned</span>}
+                            <span className={`asgn-sub-status asgn-sub-status-${st.status}`} style={{ marginLeft: 'auto', marginTop: 0 }}>{st.status.replace('_',' ')}</span>
+                          </div>
+                          {canAssign && (
+                            <div className="asgn-subtask-assign">
+                              <select
+                                className="input"
+                                value={assignPicker[st.id] ?? ''}
+                                onChange={e => setAssignPicker(prev => ({ ...prev, [st.id]: e.target.value }))}
+                              >
+                                <option value="">Pick teammate…</option>
+                                {members.map(m => (
+                                  <option key={m.id} value={m.id}>{m.full_name}</option>
+                                ))}
+                              </select>
+                              <button className="btn btn-p btn-sm" disabled={busy || !assignPicker[st.id]} onClick={() => onAssign(st)}>Assign</button>
+                            </div>
+                          )}
+                        </div>
+                        {canClaim && (
+                          <button className="btn btn-p btn-sm asgn-claim-btn" disabled={busy} onClick={() => onClaim(st)}>
+                            Claim
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
