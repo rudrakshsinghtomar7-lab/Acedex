@@ -75,4 +75,6 @@ export const TYPE_GLYPH = {
   pdf_comment: '◗',
   assignment_created: '▤',
   submission_reviewed: '✓',
+  subtask_assigned: '◬',
+  deadline_reminder: '⏰',
 };
