@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { createCourse, createTeam, listProfessorCourses } from '../lib/teams.js';
 
@@ -33,10 +33,13 @@ export default function ProjectCreate() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user?.id || profile?.role !== 'professor') return;
+    if (!user?.id) return;
     let cancelled = false;
     (async () => {
       try {
+        // Anyone reaching this form sees their own owned courses (if any).
+        // Non-profs / new users with zero rows fall through to "new course"
+        // mode automatically.
         const list = await listProfessorCourses(supabase, user.id);
         if (cancelled) return;
         setCourses(list);
@@ -45,19 +48,18 @@ export default function ProjectCreate() {
       } catch (e) {
         if (cancelled) return;
         setError(e.message || String(e));
-        // If we couldn't list courses, the dropdown is useless — fall back to
-        // the inline-create form so the professor can still proceed.
         setMode('new');
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, profile?.role, supabase]);
+  }, [user?.id, supabase]);
 
-  if (profile && profile.role !== 'professor') {
-    return <Navigate to="/projects" replace/>;
-  }
+  // Anyone signed in can reach the form. RLS (migration 013) requires
+  // created_by = auth.uid() on teams and professor_id = auth.uid() on
+  // courses, so the row always traces back to the creator regardless of
+  // their stored role.
 
   if (loading || !profile) {
     return <div className="empty"><div className="spin" style={{margin:'0 auto 12px'}}/><p className="empty-h">Loading…</p></div>;

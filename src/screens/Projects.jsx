@@ -65,9 +65,7 @@ export default function Projects({role}) {
           <div className="greeting">All workspaces · {allProjects.length} total</div>
           <div className="display">Projects</div>
         </div>
-        {role === 'professor' && (
-          <Link to="/projects/create" className="icon-btn" style={{textDecoration:'none',fontSize:20,fontWeight:600}}>+</Link>
-        )}
+        <Link to="/projects/create" className="icon-btn" style={{textDecoration:'none',fontSize:20,fontWeight:600}}>+</Link>
       </div>
       <div className="search">
         <span style={{fontSize:16}}>⌕</span>
@@ -93,11 +91,9 @@ export default function Projects({role}) {
           <div className="empty-i">⊞</div>
           <div className="empty-h">No projects yet</div>
           <p style={{fontSize:13,color:'var(--muted)'}}>
-            {role === 'professor' ? 'Create your first project to get started.' : 'You haven\'t been added to any projects yet.'}
+            Create your first project to get started.
           </p>
-          {role === 'professor' && (
-            <Link to="/projects/create" className="btn btn-p btn-bl" style={{display:'inline-block',marginTop:16,textDecoration:'none'}}>Create project</Link>
-          )}
+          <Link to="/projects/create" className="btn btn-p btn-bl" style={{display:'inline-block',marginTop:16,textDecoration:'none'}}>Create project</Link>
         </div>
       ) : (
         <div className="section">
