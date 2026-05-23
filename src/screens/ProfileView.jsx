@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
@@ -7,8 +7,10 @@ import { loadExtension, loadProfileById, sanitizeUrl } from '../lib/profile.js';
 
 export default function ProfileView() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { supabase, user } = useAuth();
   const { demoData } = useDemoMode();
+  const showBack = !!user?.id && user.id !== id;
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -76,8 +78,16 @@ export default function ProfileView() {
 
   return (
     <>
-      <div className="header">
-        <div>
+      <div className="header" style={{alignItems:'center',gap:12}}>
+        {showBack && (
+          <button
+            className="back"
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+            style={{width:44,height:44,fontSize:18}}
+          >←</button>
+        )}
+        <div style={{flex:1,minWidth:0}}>
           <div className="greeting">{isProf ? 'Professor' : 'Student'}</div>
           <div className="display">{name}</div>
         </div>
