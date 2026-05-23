@@ -6,6 +6,7 @@ import {
   effectiveAssignmentStatus,
   letterGradeFor,
   listLeadersForAssignment,
+  listOwnAssigneesForTeam,
   listSubmissionsForAssignment,
   listSubtasksForAssignment,
   reviewSubmission,
@@ -36,6 +37,7 @@ export default function AssignmentDetailModal({
   const [subs, setSubs] = useState(null);
   const [subtasks, setSubtasks] = useState(null);
   const [leaders, setLeaders] = useState([]);
+  const [myAssignee, setMyAssignee] = useState(null); // individual grade row (RLS-scoped to me)
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const [reviewState, setReviewState] = useState({}); // { [submissionId]: { feedback, points, openId } }
@@ -63,6 +65,8 @@ export default function AssignmentDetailModal({
       setSubs(assignment.submissions ?? []);
       setSubtasks(assignment.subtasks ?? []);
       setLeaders(assignment.leaders ?? []);
+      const me = (assignment.assignees ?? []).find(x => x.student_id === 'demo-student-1');
+      setMyAssignee(me ?? null);
       return;
     }
     let cancelled = false;
@@ -70,16 +74,21 @@ export default function AssignmentDetailModal({
       listSubmissionsForAssignment(supabase, assignment.id),
       isTeam ? listSubtasksForAssignment(supabase, assignment.id) : Promise.resolve([]),
       isTeam ? listLeadersForAssignment(supabase, assignment.id) : Promise.resolve([]),
+      // Per-student grade — RLS ensures we only see our own row.
+      !isProfessor && user?.id
+        ? listOwnAssigneesForTeam(supabase, assignment.team_id, user.id)
+        : Promise.resolve({}),
     ])
-      .then(([s, st, le]) => {
+      .then(([s, st, le, asgMap]) => {
         if (cancelled) return;
         setSubs(s);
         setSubtasks(st);
         setLeaders(le);
+        setMyAssignee(asgMap?.[assignment.id] ?? null);
       })
       .catch(e => { if (!cancelled) setError(e.message || String(e)); });
     return () => { cancelled = true; };
-  }, [supabase, assignment, isDemo, isTeam]);
+  }, [supabase, assignment, isDemo, isTeam, isProfessor, user?.id]);
 
   const mine = (subs ?? []).find(s => s.submitter_id === user?.id || s.submitter_id === 'demo-student-1');
 
@@ -251,6 +260,53 @@ export default function AssignmentDetailModal({
             </div>
           )}
 
+          {/* Dual-grade panel (student view). Team grade is the shared mark
+              every member sees; individual grade comes from the assignee
+              row, RLS-scoped to the caller's own row. Teammates' individual
+              grades are never rendered here. */}
+          {!isProfessor && (assignment.team_letter_grade || myAssignee?.letter_grade) && (
+            <div className="asgn-dual-grade">
+              {assignment.team_letter_grade && (
+                <div className="asgn-grade-card">
+                  <div className="asgn-grade-card-lbl">Team</div>
+                  <div className="asgn-grade-card-val">
+                    {assignment.team_points_awarded != null && assignment.max_points
+                      ? `${Number(assignment.team_points_awarded)}/${assignment.max_points}`
+                      : '—'}
+                  </div>
+                  <span className={`grade-badge grade-${assignment.team_letter_grade.toLowerCase()}`}>
+                    {assignment.team_letter_grade}
+                  </span>
+                </div>
+              )}
+              {myAssignee?.letter_grade && (
+                <div className="asgn-grade-card">
+                  <div className="asgn-grade-card-lbl">You</div>
+                  <div className="asgn-grade-card-val">
+                    {myAssignee.points_awarded != null && assignment.max_points
+                      ? `${Number(myAssignee.points_awarded)}/${assignment.max_points}`
+                      : '—'}
+                  </div>
+                  <span className={`grade-badge grade-${myAssignee.letter_grade.toLowerCase()}`}>
+                    {myAssignee.letter_grade}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          {!isProfessor && myAssignee?.feedback && (
+            <div className="asgn-mine-feedback" style={{ marginTop: 10 }}>
+              <div className="asgn-mine-feedback-h">Personal feedback</div>
+              {myAssignee.feedback}
+            </div>
+          )}
+          {!isProfessor && assignment.team_feedback && (
+            <div className="asgn-mine-feedback" style={{ marginTop: 10 }}>
+              <div className="asgn-mine-feedback-h">Team feedback</div>
+              {assignment.team_feedback}
+            </div>
+          )}
+
           {error && (
             <div className="alert" style={{ margin: '12px 0' }}>
               <span>◇</span><div>{error}</div>
@@ -385,7 +441,11 @@ export default function AssignmentDetailModal({
                   {s.pdf?.title && <div className="asgn-sub-file">📄 {s.pdf.title}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <div className={`asgn-sub-status asgn-sub-status-${s.status}`}>{submissionStatusLabel(s.status)}</div>
-                    {s.letter_grade && (
+                    {/* Grade badge — hidden from students looking at a
+                        teammate's row. Privacy: dual-grade model keeps
+                        individual marks per-student; surfacing the legacy
+                        submissions.letter_grade here would re-leak it. */}
+                    {s.letter_grade && (isProfessor || isMine) && (
                       <span className={`grade-badge grade-${s.letter_grade.toLowerCase()}`} title={s.points_awarded != null ? `${s.points_awarded} / ${assignment.max_points ?? '—'}` : undefined}>
                         {s.letter_grade}
                         {s.points_awarded != null && assignment.max_points
@@ -394,7 +454,8 @@ export default function AssignmentDetailModal({
                       </span>
                     )}
                   </div>
-                  {s.feedback && (
+                  {/* Same privacy rule for written feedback. */}
+                  {s.feedback && (isProfessor || isMine) && (
                     <div className="asgn-sub-feedback">{s.feedback}</div>
                   )}
 

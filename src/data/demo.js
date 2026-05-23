@@ -422,10 +422,22 @@ DEMO_PROJECTS[0].assignments = [
     id: 'demo-asgn-1b', team_id: 'demo-proj-1',
     title: 'Annotated hallucination dataset',
     description: '1,000 annotated samples across the three eval domains. Submit as a single PDF index linking to the JSONL files.',
-    due_at: daysAgo(-10), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 2, created_at: daysAgo(4), updated_at: daysAgo(4),
+    due_at: daysAgo(10), owner_id: PROF.id, owner: _PROF_AS_REVIEWER, // already graded
+    status: 'active', order_idx: 2, created_at: daysAgo(20), updated_at: daysAgo(3),
     assignment_type: 'team', distribution_mode: 'self_pick',
     max_points: 100, deadline_type: 'grace', grace_days: 3, ai_plagiarism_check: false,
+    // Phase 2 dual-grade demo. Team mark = 85/HD; Alex Chen's individual
+    // contribution graded separately at 80/D. Teammates' individual grades
+    // are intentionally absent from the assignees list passed to the client;
+    // the per-student RLS in prod would only return Alex's row anyway.
+    team_points_awarded: 85, team_letter_grade: 'HD',
+    team_feedback: 'Solid dataset. Methodology section is publishable as-is.',
+    assignees: [
+      { id: 'demo-asg-1b-alex', assignment_id: 'demo-asgn-1b', student_id: 'demo-student-1',
+        points_awarded: 80, letter_grade: 'D',
+        feedback: 'Strong analysis section. Push harder on the inter-rater discussion next time.',
+        graded_at: daysAgo(3) },
+    ],
     subtasks: [
       { id: 'demo-st-1b-1', assignment_id: 'demo-asgn-1b', title: 'Literature Review', description: 'Survey existing hallucination eval methods.', assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(4) },
       { id: 'demo-st-1b-2', assignment_id: 'demo-asgn-1b', title: 'Methodology Section', description: 'Define the annotation protocol and inter-rater steps.', assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(4) },
@@ -434,6 +446,27 @@ DEMO_PROJECTS[0].assignments = [
     ],
     leaders: [],
     submissions: [],
+  },
+  // Phase 2 student-view demos — give Alex a "Not Started" and a "Late".
+  {
+    id: 'demo-asgn-1c', team_id: 'demo-proj-1',
+    title: 'Reading-week reflection memo',
+    description: 'One-pager: which of the three eval domains do you want to lead, and why? Due before our next sync.',
+    due_at: daysAgo(-5), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 3, created_at: daysAgo(2), updated_at: daysAgo(2),
+    assignment_type: 'individual', max_points: 20, deadline_type: 'hard',
+    submissions: [],
+    assignees: [],
+  },
+  {
+    id: 'demo-asgn-1d', team_id: 'demo-proj-1',
+    title: 'Eval rubric draft',
+    description: 'First pass at a 5-point rubric per domain. Overdue — please get this in.',
+    due_at: daysAgo(2), owner_id: PROF.id, owner: _PROF_AS_REVIEWER, // 2 days past
+    status: 'active', order_idx: 4, created_at: daysAgo(9), updated_at: daysAgo(9),
+    assignment_type: 'individual', max_points: 30, deadline_type: 'hard',
+    submissions: [],
+    assignees: [],
   },
 ];
 

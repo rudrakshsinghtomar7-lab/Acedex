@@ -4,8 +4,16 @@ const ASSIGNMENT_SELECT = `
   id, team_id, title, description, due_at, owner_id, status, order_idx,
   assignment_type, max_points, deadline_type, grace_days,
   ai_plagiarism_check, distribution_mode,
+  team_points_awarded, team_letter_grade, team_feedback, team_graded_at,
   created_at, updated_at,
   owner:profiles!assignments_owner_id_fkey(id, full_name, avatar_url, role)
+`;
+
+// Dual-grade model (migration 016): per-student grade lives on assignees.
+// RLS on assignment_assignees only lets a student SELECT their own row.
+const OWN_ASSIGNEE_SELECT = `
+  id, assignment_id, student_id, points_awarded, letter_grade, feedback,
+  graded_at
 `;
 
 const SUBTASK_SELECT = `
@@ -121,6 +129,22 @@ export async function createAssignment(supabase, opts) {
   }
 
   return assignment;
+}
+
+// Fetch the caller's own assignee rows for a whole team in one query. RLS
+// will already filter to their own rows, but we still pass student_id to keep
+// it cheap. Returns a map keyed by assignment_id.
+export async function listOwnAssigneesForTeam(supabase, teamId, studentId) {
+  if (!studentId) return {};
+  const { data, error } = await supabase
+    .from('assignment_assignees')
+    .select(`${OWN_ASSIGNEE_SELECT}, assignment:assignments!inner(team_id)`)
+    .eq('assignment.team_id', teamId)
+    .eq('student_id', studentId);
+  if (error) throw error;
+  const map = {};
+  for (const row of data ?? []) map[row.assignment_id] = row;
+  return map;
 }
 
 export async function listAssigneesForAssignment(supabase, assignmentId) {

@@ -5,6 +5,7 @@ import FilterChips from '../../components/FilterChips.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
 import {
   effectiveAssignmentStatus,
+  listOwnAssigneesForTeam,
   listOwnSubmissionsForTeam,
   listTeamAssignments,
   submissionStatusLabel,
@@ -18,6 +19,56 @@ const FILTERS = [
   ['reviewed',  'Reviewed'],
   ['late',      'Late'],
 ];
+
+// Student-side filters — by assignment_type. Matches the Phase 1 chip-pill
+// style (FilterChips renders the sliding background).
+const STUDENT_FILTERS = [
+  ['mine', 'My Assignments'],
+  ['team', 'Team Assignments'],
+];
+
+// Tone bucket for the deadline countdown on student cards.
+//   urgent  → <24h until due
+//   soon    → <3 days until due
+//   muted   → further out, no due date, or already past
+function deadlineTone(due) {
+  if (!due) return 'muted';
+  const ms = new Date(due).getTime() - Date.now();
+  if (Number.isNaN(ms) || ms < 0) return 'muted';
+  if (ms < 24 * 3600_000) return 'urgent';
+  if (ms < 3 * 24 * 3600_000) return 'soon';
+  return 'muted';
+}
+
+// Five-state derivation for a student's perspective on one assignment.
+//   late       → due passed and we have no reviewed terminal state
+//   reviewed   → latest submission is in a reviewed bucket OR prof has
+//                written an individual grade (assignee row is graded).
+//                The grade path matters for team assignments where the
+//                student themselves didn't submit anything.
+//   submitted  → latest submission is awaiting review
+//   in_progress → latest submission is still a draft
+//   not_started → no submission at all
+function studentAssignmentState(assignment, mySubmission, myAssignee) {
+  const eff = effectiveAssignmentStatus(assignment);
+  const status = mySubmission?.status;
+  if (myAssignee?.letter_grade) return 'reviewed';
+  if (status && ['approved','rejected','needs_resubmission','reviewed'].includes(status)) {
+    return 'reviewed';
+  }
+  if (status === 'submitted') return 'submitted';
+  if (eff === 'late' && !mySubmission) return 'late';
+  if (status === 'draft') return 'in_progress';
+  return 'not_started';
+}
+
+const STUDENT_STATE_LABEL = {
+  not_started: 'Not Started',
+  in_progress: 'In Progress',
+  submitted:   'Submitted',
+  reviewed:    'Reviewed',
+  late:        'Late',
+};
 
 const DIST_LABEL = {
   professor:   'Prof assigns',
@@ -53,8 +104,10 @@ export default function Assignments({ project, role }) {
 
   const [rows, setRows] = useState(null);
   const [mySubmissions, setMySubmissions] = useState({});
+  const [myAssignees, setMyAssignees] = useState({}); // { [assignmentId]: assigneeRow with individual grade }
   const [submissionCounts, setSubmissionCounts] = useState({}); // { [assignmentId]: { submitted, total } }
   const [filter, setFilter] = useState('all');
+  const [studentFilter, setStudentFilter] = useState('mine');
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
   const [detailRow, setDetailRow] = useState(null);
@@ -65,29 +118,38 @@ export default function Assignments({ project, role }) {
       const list = (project.assignments ?? []).map(adaptDemoAssignment);
       setRows(list);
       const map = {};
+      const assigneeMap = {};
       const counts = {};
       const totalMembers = (project.memberRecords ?? []).length || (project.members?.length ?? 0);
       for (const a of list) {
         const subs = a.submissions ?? [];
         const own = subs.filter(s => s.submitter_id === 'demo-student-1');
         if (own.length) map[a.id] = own[0];
+        // Demo individual grade row, mirrors the assignment_assignees shape.
+        const myAsg = (a.assignees ?? []).find(x => x.student_id === 'demo-student-1');
+        if (myAsg) assigneeMap[a.id] = myAsg;
         // For prof counts: unique submitters with status != draft.
         const distinct = new Set(subs.filter(s => s.status !== 'draft').map(s => s.submitter_id));
         counts[a.id] = { submitted: distinct.size, total: totalMembers };
       }
       setMySubmissions(map);
+      setMyAssignees(assigneeMap);
       setSubmissionCounts(counts);
       return;
     }
     try {
-      const [list, mine] = await Promise.all([
+      const [list, mine, myAsg] = await Promise.all([
         listTeamAssignments(supabase, project.id),
         user?.id ? listOwnSubmissionsForTeam(supabase, project.id, user.id) : Promise.resolve([]),
+        user?.id && !isProfessor
+          ? listOwnAssigneesForTeam(supabase, project.id, user.id)
+          : Promise.resolve({}),
       ]);
       setRows(list);
       const map = {};
       for (const s of mine) if (!map[s.assignment_id]) map[s.assignment_id] = s;
       setMySubmissions(map);
+      setMyAssignees(myAsg);
       // Submission counts are lazy — we fetch a head-count per assignment in
       // parallel. Skipped if there are no assignments to avoid noise.
       if (list.length > 0 && isProfessor) {
@@ -128,25 +190,33 @@ export default function Assignments({ project, role }) {
     setDetailRow(prev => (prev?.id === row?.id ? row : prev));
   }
 
-  // Filter pipeline. 'open' = not yet submitted by me (student) or assignment
-  // accepting submissions (prof). 'submitted' / 'reviewed' look at my latest
-  // submission (student) or any submission state (prof). 'late' uses the
-  // computed effectiveAssignmentStatus.
+  // Filter pipeline. For professors: 'open' = accepting submissions,
+  // 'submitted'/'reviewed' look at any submission state, 'late' uses
+  // effectiveAssignmentStatus. For students: the two pills are
+  // 'mine' (individual-mode) and 'team' (team-mode), filtering by
+  // assignment_type.
   const filtered = useMemo(() => {
     if (!rows) return null;
+    if (!isProfessor) {
+      return rows.filter(a =>
+        studentFilter === 'team'
+          ? a.assignment_type === 'team'
+          : a.assignment_type !== 'team',
+      );
+    }
     if (filter === 'all') return rows;
     return rows.filter(a => {
       const eff = effectiveAssignmentStatus(a);
       const mine = mySubmissions[a.id];
       switch (filter) {
         case 'late':      return eff === 'late';
-        case 'open':      return isProfessor ? eff !== 'done' : !mine;
+        case 'open':      return eff !== 'done';
         case 'submitted': return mine ? mine.status === 'submitted' : false;
         case 'reviewed':  return mine ? ['approved','rejected','needs_resubmission','reviewed'].includes(mine.status) : false;
         default:          return true;
       }
     });
-  }, [rows, filter, mySubmissions, isProfessor]);
+  }, [rows, filter, studentFilter, mySubmissions, isProfessor]);
 
   return (
     <div className="asgn-workspace">
@@ -165,7 +235,9 @@ export default function Assignments({ project, role }) {
       </div>
 
       {rows && rows.length > 0 && (
-        <FilterChips items={FILTERS} active={filter} onChange={setFilter} className="asgn-filter-chips"/>
+        isProfessor
+          ? <FilterChips items={FILTERS} active={filter} onChange={setFilter} className="asgn-filter-chips"/>
+          : <FilterChips items={STUDENT_FILTERS} active={studentFilter} onChange={setStudentFilter} className="asgn-filter-chips"/>
       )}
 
       {error && (
@@ -190,7 +262,9 @@ export default function Assignments({ project, role }) {
         <div className="empty">
           <div className="empty-i">⌕</div>
           <div className="empty-h">No matches</div>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>Nothing in the "{FILTERS.find(([k]) => k === filter)?.[1] ?? filter}" bucket.</p>
+          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+            Nothing in the "{(isProfessor ? FILTERS : STUDENT_FILTERS).find(([k]) => k === (isProfessor ? filter : studentFilter))?.[1] ?? '—'}" bucket.
+          </p>
         </div>
       ) : (
         <div className="asgn-grid">
@@ -199,21 +273,43 @@ export default function Assignments({ project, role }) {
             const mine = mySubmissions[a.id];
             const counts = submissionCounts[a.id];
             const isTeam = a.assignment_type === 'team';
+            // Student-only derivations. Individual grade lives on the
+            // assignee row (RLS already restricts to own row).
+            const myAsg = myAssignees[a.id];
+            const myIndivGrade = myAsg?.letter_grade
+              ? { letter: myAsg.letter_grade, points: myAsg.points_awarded }
+              : (mine?.letter_grade
+                  ? { letter: mine.letter_grade, points: mine.points_awarded }
+                  : null);
+            const sState = !isProfessor ? studentAssignmentState(a, mine, myAsg) : null;
+            const dlTone = !isProfessor ? deadlineTone(a.due_at) : null;
+            const ctaLabel = sState === 'reviewed'
+              ? 'View Feedback'
+              : sState === 'submitted'
+                ? 'View Submission'
+                : 'Submit Work';
             return (
               <button
                 key={a.id}
                 type="button"
-                className={`asgn-row asgn-status-${eff}`}
+                className={`asgn-row asgn-status-${eff}${!isProfessor ? ` asgn-sstate-${sState}` : ''}`}
                 onClick={() => setDetailRow(a)}
               >
                 <div className="asgn-row-top">
                   <div className="asgn-row-main">
                     <div className="asgn-row-title">{a.title}</div>
                     <div className="asgn-row-meta">
-                      {a.owner?.full_name ? `${a.owner.full_name} · ` : ''}{dueLabel(a.due_at)}
+                      {a.owner?.full_name ? `${a.owner.full_name} · ` : ''}
+                      {isProfessor
+                        ? dueLabel(a.due_at)
+                        : <span className={`asgn-due asgn-due-${dlTone}`}>{dueLabel(a.due_at)}</span>}
                     </div>
                   </div>
-                  <span className={`asgn-badge asgn-badge-${eff}`}>{eff === 'late' ? 'Late' : eff === 'done' ? 'Done' : 'Open'}</span>
+                  {isProfessor ? (
+                    <span className={`asgn-badge asgn-badge-${eff}`}>{eff === 'late' ? 'Late' : eff === 'done' ? 'Done' : 'Open'}</span>
+                  ) : (
+                    <span className={`asgn-badge asgn-sbadge-${sState}`}>{STUDENT_STATE_LABEL[sState]}</span>
+                  )}
                 </div>
 
                 <div className="asgn-row-pills">
@@ -237,23 +333,21 @@ export default function Assignments({ project, role }) {
                 )}
 
                 {!isProfessor && (
-                  <div className="asgn-mine">
-                    {mine ? (
-                      <>
-                        Your submission · <strong>{submissionStatusLabel(mine.status)}</strong>
-                        {mine.submitted_at ? ` · ${formatRelativeTime(mine.submitted_at)}` : ''}
-                        {mine.letter_grade && (
-                          <span className={`grade-badge grade-${mine.letter_grade.toLowerCase()}`} style={{ marginLeft: 8 }}>
-                            {mine.letter_grade}
-                            {mine.points_awarded != null && a.max_points
-                              ? <span className="grade-pts">{Number(mine.points_awarded)}/{a.max_points}</span>
-                              : null}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span style={{ color: 'var(--muted)' }}>Not submitted yet</span>
-                    )}
+                  <div className="asgn-mine asgn-student-foot">
+                    <div className="asgn-mine-line">
+                      {mine
+                        ? <><strong>{submissionStatusLabel(mine.status)}</strong>{mine.submitted_at ? ` · ${formatRelativeTime(mine.submitted_at)}` : ''}</>
+                        : <span style={{ color: 'var(--muted)' }}>No submission yet</span>}
+                      {myIndivGrade?.letter && (
+                        <span className={`grade-badge grade-${myIndivGrade.letter.toLowerCase()}`} style={{ marginLeft: 8 }}>
+                          {myIndivGrade.letter}
+                          {myIndivGrade.points != null && a.max_points
+                            ? <span className="grade-pts">{Number(myIndivGrade.points)}/{a.max_points}</span>
+                            : null}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`asgn-cta asgn-cta-${sState}`}>{ctaLabel} →</span>
                   </div>
                 )}
               </button>

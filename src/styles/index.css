@@ -623,6 +623,36 @@
   .grade-p {background:linear-gradient(135deg,rgba(74,222,128,.30) 0%,rgba(74,222,128,.55) 100%);color:#0d2615;border-color:rgba(74,222,128,.55)}
   .grade-f {background:linear-gradient(135deg,rgba(248,113,113,.30) 0%,rgba(248,113,113,.55) 100%);color:#2a0e0e;border-color:rgba(248,113,113,.55)}
 
+  /* Phase 2 student view — 5-state status badge */
+  .asgn-sbadge-not_started{color:var(--muted);background:var(--bg-2);border:1px solid var(--border);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+  .asgn-sbadge-in_progress{color:var(--info);background:rgba(107,181,245,.12);border:1px solid rgba(107,181,245,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+  .asgn-sbadge-submitted{color:var(--warn);background:rgba(245,181,107,.12);border:1px solid rgba(245,181,107,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+  .asgn-sbadge-reviewed{color:var(--success);background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+  .asgn-sbadge-late{color:#f87171;background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+
+  /* Deadline countdown color (student-side row meta) */
+  .asgn-due-urgent{color:#f87171;font-weight:700}
+  .asgn-due-soon{color:var(--warn);font-weight:700}
+  .asgn-due-muted{color:var(--muted)}
+
+  /* Inline CTA pill at the bottom of a student card */
+  .asgn-student-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .asgn-mine-line{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;flex:1}
+  .asgn-cta{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--indigo-bright);white-space:nowrap}
+  .asgn-cta-reviewed{color:var(--success)}
+  .asgn-cta-submitted{color:var(--warn)}
+  .asgn-cta-late{color:#f87171}
+
+  /* Dual-grade panel inside the assignment detail modal (student view).
+     Renders side-by-side: Team grade + You grade. */
+  .asgn-dual-grade{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
+  .asgn-grade-card{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-md);
+    padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;
+  }
+  .asgn-grade-card-lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+  .asgn-grade-card-val{font-size:18px;font-weight:700;letter-spacing:-.015em;color:var(--text)}
+
   /* Create modal — assignee multi-select for Individual mode */
   .asgn-assignee-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
   .asgn-assignee-chip{
