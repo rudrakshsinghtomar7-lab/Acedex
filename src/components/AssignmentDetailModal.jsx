@@ -16,10 +16,27 @@ import {
 import { formatRelativeTime, validatePdfFile } from '../lib/pdfs.js';
 
 const REVIEW_VERDICTS = [
-  { value: 'approved',           label: 'Approve',         tone: 'p' },
-  { value: 'needs_resubmission', label: 'Request changes', tone: 'g' },
-  { value: 'rejected',           label: 'Reject',          tone: 'g' },
+  { value: 'approved',           label: 'Approve',          tone: 'p' },
+  { value: 'resubmit_requested', label: 'Request resubmit', tone: 'g' },
+  { value: 'rejected',           label: 'Reject',           tone: 'g' },
 ];
+
+// Latest submission per submitter — used to gate the prof Review button so
+// only the most recent version is gradeable; older versions stay visible
+// as history (with their original feedback) but read-only.
+function computeLatestIds(submissions) {
+  const seen = new Set();
+  const ids = new Set();
+  // submissions arrive sorted by version desc, so the first row per
+  // submitter is their latest.
+  for (const s of submissions ?? []) {
+    if (!seen.has(s.submitter_id)) {
+      seen.add(s.submitter_id);
+      ids.add(s.id);
+    }
+  }
+  return ids;
+}
 
 function dueLabel(due) {
   if (!due) return 'No due date';
@@ -90,7 +107,14 @@ export default function AssignmentDetailModal({
     return () => { cancelled = true; };
   }, [supabase, assignment, isDemo, isTeam, isProfessor, user?.id]);
 
-  const mine = (subs ?? []).find(s => s.submitter_id === user?.id || s.submitter_id === 'demo-student-1');
+  // Latest = first row per submitter (subs are sorted version desc).
+  const myVersions = useMemo(
+    () => (subs ?? []).filter(s => s.submitter_id === userId),
+    [subs, userId],
+  );
+  const mine = myVersions[0] ?? null;
+  const needsResubmit = !!mine && ['needs_resubmission','resubmit_requested'].includes(mine.status);
+  const latestIds = useMemo(() => computeLatestIds(subs), [subs]);
 
   function pickFile() { fileRef.current?.click(); }
 
@@ -104,14 +128,16 @@ export default function AssignmentDetailModal({
     setBusy(true);
     try {
       if (isDemo) {
+        // Mirror submitAssignmentPdf: v1 = 'submitted', v2+ = 'under_review'.
+        const nextVersion = ((mine?.version) ?? 0) + 1;
         const row = {
           id: `demo-sub-${Date.now()}`,
           assignment_id: assignment.id,
           team_id: project.id,
           submitter_id: 'demo-student-1',
           submitter: { id: 'demo-student-1', full_name: 'Alex Chen', role: 'student' },
-          status: 'submitted',
-          version: ((mine?.version) ?? 0) + 1,
+          status: nextVersion === 1 ? 'submitted' : 'under_review',
+          version: nextVersion,
           notes: null,
           feedback: null,
           pdf_document_id: null,
@@ -387,15 +413,25 @@ export default function AssignmentDetailModal({
                     {mine.version && <span> · v{mine.version}</span>}
                   </div>
                   {mine.pdf?.title && <div className="asgn-mine-file">📄 {mine.pdf.title}</div>}
-                  {mine.feedback && (
+                  {/* Resubmit callout: surface the LATEST version's feedback
+                      prominently so the student sees exactly what the prof
+                      asked for on this specific assignment. Scoping is
+                      per-assignment — no global student state involved. */}
+                  {needsResubmit && mine.feedback && (
+                    <div className="asgn-resubmit-callout">
+                      <div className="asgn-resubmit-callout-h">Prof asked for a resubmission · v{mine.version}</div>
+                      {mine.feedback}
+                    </div>
+                  )}
+                  {!needsResubmit && mine.feedback && (
                     <div className="asgn-mine-feedback">
                       <div className="asgn-mine-feedback-h">Feedback</div>
                       {mine.feedback}
                     </div>
                   )}
-                  {(mine.status === 'needs_resubmission' || mine.status === 'rejected') && (
+                  {(needsResubmit || mine.status === 'rejected') && (
                     <button className="btn btn-p btn-sm" disabled={busy} onClick={pickFile}>
-                      {busy ? 'Uploading…' : 'Resubmit PDF'}
+                      {busy ? 'Uploading…' : 'Resubmit Work'}
                     </button>
                   )}
                 </>
@@ -414,6 +450,34 @@ export default function AssignmentDetailModal({
                 hidden
                 onChange={onFileChange}
               />
+              {/* Version history — shows v1, v2, … with their dates +
+                  per-version status. Each row is its own DB row (no
+                  update-in-place), so feedback stays paired with the
+                  version it was given on. */}
+              {myVersions.length > 1 && (
+                <div className="asgn-version-history">
+                  <div className="asgn-version-history-h">Version history</div>
+                  {[...myVersions].reverse().map(v => (
+                    <div key={v.id} className="asgn-version-row">
+                      <span className="asgn-version-tag">v{v.version}</span>
+                      <span className={`asgn-sub-status asgn-sub-status-${v.status}`} style={{ marginTop: 0 }}>
+                        {submissionStatusLabel(v.status)}
+                      </span>
+                      <span className="asgn-version-when">
+                        {v.submitted_at ? formatRelativeTime(v.submitted_at) : 'pending'}
+                      </span>
+                      {v.letter_grade && (
+                        <span className={`grade-badge grade-${v.letter_grade.toLowerCase()}`}>
+                          {v.letter_grade}
+                          {v.points_awarded != null && assignment.max_points
+                            ? <span className="grade-pts">{Number(v.points_awarded)}/{assignment.max_points}</span>
+                            : null}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -428,15 +492,19 @@ export default function AssignmentDetailModal({
             <div className="pdf-muted" style={{ padding: '10px 0' }}>No submissions yet.</div>
           ) : subs.map(s => {
             const isMine = s.submitter_id === user?.id;
+            const isLatest = latestIds.has(s.id);
             const open = reviewState[s.id]?.openId === s.id;
             return (
-              <div key={s.id} className="asgn-sub-row">
+              <div key={s.id} className={`asgn-sub-row${isLatest ? '' : ' asgn-sub-history'}`}>
                 <Avatar name={s.submitter?.full_name || 'Student'} size={28}/>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="asgn-sub-meta">
                     <strong>{s.submitter?.full_name || 'Student'}</strong>
                     {isMine && <span className="pdf-prof-badge" style={{ color: 'var(--indigo-bright)', background: 'rgba(124,108,255,.14)', borderColor: 'rgba(124,108,255,.32)' }}>You</span>}
-                    <span className="asgn-sub-when">{formatRelativeTime(s.submitted_at ?? s.created_at)} · v{s.version}</span>
+                    {isLatest
+                      ? <span className="asgn-version-tag asgn-version-tag-latest">v{s.version} · latest</span>
+                      : <span className="asgn-version-tag">v{s.version} · history</span>}
+                    <span className="asgn-sub-when">{formatRelativeTime(s.submitted_at ?? s.created_at)}</span>
                   </div>
                   {s.pdf?.title && <div className="asgn-sub-file">📄 {s.pdf.title}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -459,7 +527,10 @@ export default function AssignmentDetailModal({
                     <div className="asgn-sub-feedback">{s.feedback}</div>
                   )}
 
-                  {isProfessor && (s.status === 'submitted' || s.status === 'needs_resubmission' || s.status === 'rejected') && (
+                  {/* Only the latest version of each submitter is gradeable.
+                      Older versions stay visible as history with their own
+                      feedback but no Review button. */}
+                  {isProfessor && isLatest && ['submitted','under_review','needs_resubmission','resubmit_requested','rejected'].includes(s.status) && (
                     <div className="asgn-sub-review">
                       {!open ? (
                         <button

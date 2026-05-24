@@ -257,7 +257,9 @@ export async function listOwnSubmissionsForTeam(supabase, teamId, submitterId) {
 
 // Upload a PDF + insert the submission row that references it. version is
 // computed server-side via SELECT coalesce(max(version), 0) + 1 so concurrent
-// submits don't collide.
+// submits don't collide. Initial submission (v1) lands as 'submitted';
+// resubmissions (v2+) land as 'under_review' to signal the prof needs to
+// re-grade. Old rows are never overwritten — each version is its own row.
 export async function submitAssignmentPdf(supabase, { teamId, assignmentId, submitterId, file, notes = null }) {
   const pdf = await uploadPdfDocument(supabase, {
     teamId,
@@ -275,6 +277,7 @@ export async function submitAssignmentPdf(supabase, { teamId, assignmentId, subm
     .limit(1);
   if (versionErr) throw versionErr;
   const nextVersion = (existing?.[0]?.version ?? 0) + 1;
+  const status = nextVersion === 1 ? 'submitted' : 'under_review';
 
   const { data, error } = await supabase
     .from('submissions')
@@ -282,7 +285,7 @@ export async function submitAssignmentPdf(supabase, { teamId, assignmentId, subm
       assignment_id: assignmentId,
       team_id: teamId,
       submitter_id: submitterId,
-      status: 'submitted',
+      status,
       version: nextVersion,
       notes,
       pdf_document_id: pdf.id,
@@ -299,7 +302,9 @@ export async function submitAssignmentPdf(supabase, { teamId, assignmentId, subm
 // migration-008 trigger fans out a 'submission_reviewed' notification to
 // the submitter.
 export async function reviewSubmission(supabase, { submissionId, reviewerId, status, feedback, pointsAwarded = null }) {
-  if (!['approved', 'rejected', 'needs_resubmission'].includes(status)) {
+  // resubmit_requested is the new canonical name (migration 017); the
+  // legacy needs_resubmission alias is still accepted for back-compat.
+  if (!['approved', 'rejected', 'needs_resubmission', 'resubmit_requested'].includes(status)) {
     throw new Error(`Invalid review status: ${status}`);
   }
   const patch = {
@@ -338,11 +343,13 @@ export function letterGradeFor(points, maxPoints) {
 const STATUS_LABEL = {
   draft:              'Draft',
   submitted:          'Submitted',
+  under_review:       'Under review',
   reviewed:           'Reviewed',
   returned:           'Returned',
   approved:           'Approved',
   rejected:           'Rejected',
   needs_resubmission: 'Resubmit',
+  resubmit_requested: 'Resubmit',
 };
 
 export function submissionStatusLabel(status) {

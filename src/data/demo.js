@@ -468,6 +468,59 @@ DEMO_PROJECTS[0].assignments = [
     submissions: [],
     assignees: [],
   },
+  // Phase 3 demos — resubmission flow.
+  //
+  // 1e: PENDING resubmit. v1 sits at resubmit_requested with the prof's
+  // feedback. Demonstrates the Resubmit Work button + amber callout +
+  // per-assignment scoping: this assignment shows the button, the four
+  // above (Submitted / Team / Not Started / Late) do not.
+  {
+    id: 'demo-asgn-1e', team_id: 'demo-proj-1',
+    title: 'Calibration failure modes draft',
+    description: 'Cover the temperature scaling vs. Platt scaling comparison and the failure-mode taxonomy from the lit review.',
+    due_at: daysAgo(-7), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 5, created_at: daysAgo(12), updated_at: hoursAgo(8),
+    assignment_type: 'individual', max_points: 40, deadline_type: 'hard',
+    submissions: [
+      demoSub(DEMO_STUDENTS[0], 'resubmit_requested', {
+        id: 'demo-sub-1e-v1', assignment_id: 'demo-asgn-1e', team_id: 'demo-proj-1',
+        version: 1, pdfTitle: 'Calibration draft v1 - Alex.pdf',
+        submittedHoursAgo: 30, reviewed_at: hoursAgo(8), reviewer: _PROF_AS_REVIEWER,
+        feedback: 'The taxonomy section is good but §3 conflates temperature scaling with Platt scaling — please separate them clearly and add the calibration-failure example we discussed in office hours.',
+      }),
+    ],
+    assignees: [],
+  },
+  // 1f: COMPLETED LOOP. v1 was resubmit_requested with feedback, student
+  // submitted v2, prof approved with grade. Both versions visible in the
+  // history list; latest is the approved v2 so the Resubmit Work button
+  // is NOT shown (per-assignment scoping again).
+  {
+    id: 'demo-asgn-1f', team_id: 'demo-proj-1',
+    title: 'Pilot study writeup',
+    description: '1,200-word writeup of the pilot run. Methodology, results, threats to validity.',
+    due_at: daysAgo(8), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 6, created_at: daysAgo(18), updated_at: hoursAgo(3),
+    assignment_type: 'individual', max_points: 50, deadline_type: 'hard',
+    submissions: [
+      // v2 (latest) — approved with grade after the resubmission.
+      demoSub(DEMO_STUDENTS[0], 'approved', {
+        id: 'demo-sub-1f-v2', assignment_id: 'demo-asgn-1f', team_id: 'demo-proj-1',
+        version: 2, pdfTitle: 'Pilot writeup v2 - Alex.pdf',
+        submittedHoursAgo: 14, reviewed_at: hoursAgo(3), reviewer: _PROF_AS_REVIEWER,
+        points_awarded: 44, letter_grade: 'D',
+        feedback: 'Much better — threats-to-validity section now reads well. Promote the calibration paragraph to the abstract.',
+      }),
+      // v1 (history) — the resubmit_requested verdict that triggered the loop.
+      demoSub(DEMO_STUDENTS[0], 'resubmit_requested', {
+        id: 'demo-sub-1f-v1', assignment_id: 'demo-asgn-1f', team_id: 'demo-proj-1',
+        version: 1, pdfTitle: 'Pilot writeup v1 - Alex.pdf',
+        submittedHoursAgo: 72, reviewed_at: hoursAgo(40), reviewer: _PROF_AS_REVIEWER,
+        feedback: 'Methods section is thin and the results discussion misses the calibration comparison. Please revise and resubmit.',
+      }),
+    ],
+    assignees: [],
+  },
 ];
 
 DEMO_PROJECTS[1].assignments = [

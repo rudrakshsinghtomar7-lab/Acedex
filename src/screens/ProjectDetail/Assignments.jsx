@@ -40,34 +40,43 @@ function deadlineTone(due) {
   return 'muted';
 }
 
-// Five-state derivation for a student's perspective on one assignment.
+// Six-state derivation for a student's perspective on one assignment.
+//   resubmit_needed → prof asked for a new version (per-assignment scope;
+//                     never a global student flag — only this row's latest
+//                     submission triggers it)
 //   late       → due passed and we have no reviewed terminal state
-//   reviewed   → latest submission is in a reviewed bucket OR prof has
-//                written an individual grade (assignee row is graded).
-//                The grade path matters for team assignments where the
-//                student themselves didn't submit anything.
-//   submitted  → latest submission is awaiting review
+//   reviewed   → latest submission is in a reviewed terminal bucket OR
+//                prof has written an individual grade. Team assignments
+//                where the student themselves didn't submit still land
+//                here via the assignee grade row.
+//   submitted  → latest submission is awaiting review (incl. under_review
+//                for resubmissions before the prof re-grades)
 //   in_progress → latest submission is still a draft
 //   not_started → no submission at all
 function studentAssignmentState(assignment, mySubmission, myAssignee) {
   const eff = effectiveAssignmentStatus(assignment);
   const status = mySubmission?.status;
-  if (myAssignee?.letter_grade) return 'reviewed';
-  if (status && ['approved','rejected','needs_resubmission','reviewed'].includes(status)) {
-    return 'reviewed';
+  // resubmit_requested (canonical Phase 3) and needs_resubmission (legacy)
+  // take precedence over the grade — if prof rolled the verdict back, the
+  // student needs to act.
+  if (status && ['needs_resubmission','resubmit_requested'].includes(status)) {
+    return 'resubmit_needed';
   }
-  if (status === 'submitted') return 'submitted';
+  if (myAssignee?.letter_grade) return 'reviewed';
+  if (status && ['approved','rejected','reviewed'].includes(status)) return 'reviewed';
+  if (status === 'submitted' || status === 'under_review') return 'submitted';
   if (eff === 'late' && !mySubmission) return 'late';
   if (status === 'draft') return 'in_progress';
   return 'not_started';
 }
 
 const STUDENT_STATE_LABEL = {
-  not_started: 'Not Started',
-  in_progress: 'In Progress',
-  submitted:   'Submitted',
-  reviewed:    'Reviewed',
-  late:        'Late',
+  not_started:     'Not Started',
+  in_progress:     'In Progress',
+  submitted:       'Submitted',
+  reviewed:        'Reviewed',
+  late:            'Late',
+  resubmit_needed: 'Resubmit',
 };
 
 const DIST_LABEL = {
@@ -283,11 +292,13 @@ export default function Assignments({ project, role }) {
                   : null);
             const sState = !isProfessor ? studentAssignmentState(a, mine, myAsg) : null;
             const dlTone = !isProfessor ? deadlineTone(a.due_at) : null;
-            const ctaLabel = sState === 'reviewed'
-              ? 'View Feedback'
-              : sState === 'submitted'
-                ? 'View Submission'
-                : 'Submit Work';
+            const ctaLabel = sState === 'resubmit_needed'
+              ? 'Resubmit Work'
+              : sState === 'reviewed'
+                ? 'View Feedback'
+                : sState === 'submitted'
+                  ? 'View Submission'
+                  : 'Submit Work';
             return (
               <button
                 key={a.id}

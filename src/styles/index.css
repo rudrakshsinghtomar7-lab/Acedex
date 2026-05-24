@@ -554,6 +554,9 @@
   .asgn-sub-status-approved{color:var(--success);background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.32)}
   .asgn-sub-status-rejected{color:#f87171;background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.32)}
   .asgn-sub-status-needs_resubmission{color:var(--warn);background:rgba(245,181,107,.12);border-color:rgba(245,181,107,.32)}
+  .asgn-sub-status-resubmit_requested{color:var(--warn);background:rgba(245,181,107,.12);border-color:rgba(245,181,107,.32)}
+  .asgn-sub-status-under_review{color:var(--indigo-bright);background:rgba(124,108,255,.12);border-color:rgba(124,108,255,.32)}
+  .asgn-sub-status-approved{color:var(--success);background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.32)}
   .asgn-sub-feedback{margin-top:8px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text-2);line-height:1.5}
   .asgn-sub-review{margin-top:10px;display:flex;flex-direction:column;gap:8px}
 
@@ -629,6 +632,8 @@
   .asgn-sbadge-submitted{color:var(--warn);background:rgba(245,181,107,.12);border:1px solid rgba(245,181,107,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
   .asgn-sbadge-reviewed{color:var(--success);background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
   .asgn-sbadge-late{color:#f87171;background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.32);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+  .asgn-sbadge-resubmit_needed{color:var(--warn);background:rgba(245,181,107,.14);border:1px solid rgba(245,181,107,.42);display:inline-block;padding:2px 8px;font:700 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;flex-shrink:0}
+  .asgn-cta-resubmit_needed{color:var(--warn)}
 
   /* Deadline countdown color (student-side row meta) */
   .asgn-due-urgent{color:#f87171;font-weight:700}
@@ -652,6 +657,40 @@
   }
   .asgn-grade-card-lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
   .asgn-grade-card-val{font-size:18px;font-weight:700;letter-spacing:-.015em;color:var(--text)}
+
+  /* Phase 3 — Resubmission flow */
+  /* Eye-catching callout above the Resubmit Work button: pulls the prof's
+     verdict feedback to the top of the student's view. Amber so it
+     reads as actionable, not as a passive review note. */
+  .asgn-resubmit-callout{
+    background:rgba(245,181,107,.10);
+    border:1px solid rgba(245,181,107,.42);
+    border-radius:10px;padding:10px 12px;
+    font-size:12.5px;color:var(--text-2);line-height:1.5;
+  }
+  .asgn-resubmit-callout-h{font-size:10.5px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+
+  /* Per-student version history list inside the "Your submission" box.
+     One compact row per version with status pill + date + optional grade. */
+  .asgn-version-history{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border)}
+  .asgn-version-history-h{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+  .asgn-version-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text-2)}
+  .asgn-version-when{color:var(--muted);font-size:11.5px;margin-left:auto}
+
+  /* Version chip used inline next to a submission row (prof view) and on
+     each row of the per-student history. */
+  .asgn-version-tag{
+    display:inline-flex;align-items:center;
+    padding:2px 8px;border-radius:99px;
+    font:700 10.5px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);background:var(--bg-2);border:1px solid var(--border);
+  }
+  .asgn-version-tag-latest{color:var(--indigo-bright);background:rgba(124,108,255,.10);border-color:rgba(124,108,255,.32)}
+
+  /* Older versions in the prof's All Submissions list — dimmed so the
+     latest gradeable row reads as the action target. */
+  .asgn-sub-history{opacity:.72}
 
   /* Create modal — assignee multi-select for Individual mode */
   .asgn-assignee-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
