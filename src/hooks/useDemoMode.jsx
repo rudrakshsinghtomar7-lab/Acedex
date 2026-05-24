@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '../providers/SessionProvider.jsx';
 

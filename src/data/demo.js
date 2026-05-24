@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 // Demo data — DEV-only.
 //
 // This file is imported via a dynamic `import('./demo.js')` from

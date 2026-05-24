@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase.js';
 

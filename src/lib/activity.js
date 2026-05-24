@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 const ACTIVITY_SELECT = `
   id, event_type, target_type, target_id, metadata, occurred_at,
   actor:profiles!activity_events_profile_id_fkey(id, full_name, avatar_url)

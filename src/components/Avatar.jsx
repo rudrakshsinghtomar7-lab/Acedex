@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { avatarBg, initials } from '../utils/helpers.js';
 
 export default function Avatar({name, size=28}) {

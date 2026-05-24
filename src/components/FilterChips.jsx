@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useLayoutEffect, useRef, useState } from 'react';
 
 // Variable-width sliding pill behind the active filter chip. Refs +

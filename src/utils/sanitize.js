@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 

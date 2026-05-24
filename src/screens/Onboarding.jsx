@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

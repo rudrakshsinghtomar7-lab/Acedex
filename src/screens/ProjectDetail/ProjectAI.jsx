@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useState, useEffect, useRef } from 'react';
 import { askClaude } from '../../lib/claude.js';
 import { sanitize } from '../../utils/sanitize.js';

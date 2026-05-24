@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { Link, useLocation } from 'react-router-dom';
 
 // Outlined/filled icon pairs. Inactive uses 1.75 stroke + no fill so it reads

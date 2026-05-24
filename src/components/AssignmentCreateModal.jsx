@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createAssignment } from '../lib/assignments.js';
 

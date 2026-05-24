@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useState } from 'react';
 
 export default function TagInput({ values = [], onChange, placeholder = 'Add and press Enter' }) {

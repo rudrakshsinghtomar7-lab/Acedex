@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Overview from './Overview.jsx';
 import Milestones from './Milestones.jsx';

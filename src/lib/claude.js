@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 export async function askClaude(apiKey, userMessage, projectContext, role) {
   if (!apiKey) {
     return "⚠️ Claude API key not set. Tap the gear icon in the top right to add yours. Get one free at console.anthropic.com.";

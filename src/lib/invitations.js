@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 export async function inviteToTeam(supabase, { teamId, profileId = null, email = null, message = null }) {
   const { data, error } = await supabase.rpc('invite_to_team', {
     _team_id: teamId,

@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'Acedex_api_key';

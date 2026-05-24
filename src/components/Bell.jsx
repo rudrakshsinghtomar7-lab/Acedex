@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 export default function Bell({ count = 0, onClick }) {
   const has = count > 0;
   return (

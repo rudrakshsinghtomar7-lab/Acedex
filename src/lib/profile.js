@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 export const STUDENT_FIELDS = 'profile_id, student_id_number, major, minor, year, gpa, graduation_year, skills, interests';
 export const PROFESSOR_FIELDS = 'profile_id, employee_id, department, title, office_location, office_hours, research_areas, homepage_url';
 

@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 export default function ProgCircle({value, size=48}) {
   const r=(size-6)/2, circ=2*Math.PI*r, off=circ-(value/100)*circ;
   const id=`g${value}_${Math.random().toString(36).slice(2,6)}`;

@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { PROJECTS } from './data/projects.js';

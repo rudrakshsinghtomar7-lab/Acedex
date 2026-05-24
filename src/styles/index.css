@@ -1,3 +1,4 @@
+/* © 2026 Rudraksh Singh Tomar. All rights reserved. */
   :root {
     --bg-0:#0f1117; --bg-1:#161922; --bg-2:#1c2030; --bg-3:#232838;
     --border:#262b3d; --border-bright:#353b54;
@@ -129,6 +130,29 @@
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
   }
+  /* Shared © footer pinned to the bottom of the phone frame.
+     - Default position sits flush with the safe-area inset, so on auth
+       screens (no bnav) it lands right under the form.
+     - When a .bnav is present, :has() shifts the footer above the
+       64px nav strip so the two never collide visually.
+     - Pointer-events disabled so taps fall through to nav / content.
+     - Hidden when a full-screen overlay is open (PDF reader / modal). */
+  .app-footer{
+    position:absolute;left:0;right:0;
+    bottom:calc(env(safe-area-inset-bottom,0) + 4px);
+    text-align:center;
+    font-size:10px;font-weight:500;letter-spacing:.04em;
+    color:var(--muted);opacity:.5;
+    padding:4px 12px;
+    pointer-events:none;
+    z-index:0;
+  }
+  .phone:has(.bnav) .app-footer{
+    bottom:calc(env(safe-area-inset-bottom,0) + 70px);
+  }
+  .phone:has(.pdf-fullviewer) .app-footer,
+  .phone:has(.ovl) .app-footer{display:none}
+
   .bnav-pill{
     position:absolute;
     top:11px;

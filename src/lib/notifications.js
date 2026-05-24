@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 const NOTIFICATION_SELECT = `
   id, type, title, body, link, read, read_at, created_at,
   related_team_id, related_assignment_id, related_finding_id,

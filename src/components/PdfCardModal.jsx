@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useState } from 'react';
 import Avatar from './Avatar.jsx';
 import { formatFileSize, formatShortDate, getPdfSignedUrl } from '../lib/pdfs.js';

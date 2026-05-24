@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useRef, useState } from 'react';
 import Avatar from '../../components/Avatar.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';

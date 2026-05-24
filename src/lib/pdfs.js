@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 const PDF_BUCKET = 'pdfs';
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
 

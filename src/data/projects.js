@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 export const PROJECTS = [
   {id:1,title:"AI Research: LLM Hallucination Study",course:"CS 4890 · Advanced NLP",status:"active",progress:62,dueDate:"May 30",members:["Alex Chen","Priya Sharma","Marcus Lee","Yuki Tanaka"],
     milestones:[{id:1,title:"Project Proposal",status:"done",due:"Apr 1",owner:"Alex Chen",submissions:2},{id:2,title:"Literature Review",status:"done",due:"Apr 14",owner:"Priya Sharma",submissions:3},{id:3,title:"Methodology Design",status:"active",due:"May 5",owner:"Marcus Lee",submissions:1},{id:4,title:"Experiments & Results",status:"pending",due:"May 20",owner:"Yuki Tanaka",submissions:0},{id:5,title:"Final Paper",status:"pending",due:"May 30",owner:"All",submissions:0}],

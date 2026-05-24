@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useMemo, useState } from 'react';
 import AssignmentCreateModal from '../../components/AssignmentCreateModal.jsx';
 import AssignmentDetailModal from '../../components/AssignmentDetailModal.jsx';

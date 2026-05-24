@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import Avatar from '../../components/Avatar.jsx';
 import ProgBar from '../../components/ProgBar.jsx';
 import StatusTag from '../../components/StatusTag.jsx';

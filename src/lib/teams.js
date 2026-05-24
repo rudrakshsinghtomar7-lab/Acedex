@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 const TEAM_LIST_SELECT = `
   id, name, description, status, progress, due_date, created_at, course_id,
   course:courses(id, code, name, term, year, professor_id),

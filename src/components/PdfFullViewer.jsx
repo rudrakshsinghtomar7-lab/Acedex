@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useRef, useState } from 'react';
 import Avatar from './Avatar.jsx';
 import PdfViewer from './PdfViewer.jsx';

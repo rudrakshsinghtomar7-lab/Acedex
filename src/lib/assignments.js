@@ -1,3 +1,4 @@
+// © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { uploadPdfDocument } from './pdfs.js';
 
 const ASSIGNMENT_SELECT = `
