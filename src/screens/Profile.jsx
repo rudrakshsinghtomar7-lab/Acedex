@@ -4,10 +4,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../components/Avatar.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
+import { useTheme } from '../hooks/useTheme.jsx';
 import { loadExtension, completenessFor } from '../lib/profile.js';
 
 export default function Profile({role, projects, openSettings}) {
   const { supabase, profile, signOut } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const me = profile?.full_name ?? '';
   const [ext, setExt] = useState(null);
@@ -44,7 +46,7 @@ export default function Profile({role, projects, openSettings}) {
       <div style={{textAlign:"center",padding:"12px 24px 28px"}}>
         <div style={{display:"inline-block",position:"relative",marginBottom:16}}>
           <Avatar name={me} size={92}/>
-          <div style={{position:"absolute",bottom:2,right:2,width:28,height:28,background:"var(--grad)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,border:"3px solid var(--bg-0)",boxShadow:"0 4px 12px rgba(124,108,255,.35)"}}>✓</div>
+          <div style={{position:"absolute",bottom:2,right:2,width:28,height:28,background:"var(--grad)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,border:"3px solid var(--bg-0)",boxShadow:"0 4px 12px rgba(var(--accent-rgb),.35)"}}>✓</div>
         </div>
         <div style={{fontSize:22,fontWeight:700,letterSpacing:"-0.025em"}}>{me}</div>
         {subtitle && <div style={{fontSize:13.5,color:"var(--muted)",marginTop:5,fontWeight:500}}>{subtitle}</div>}
@@ -80,9 +82,16 @@ export default function Profile({role, projects, openSettings}) {
           </div>
           <span className="chev">›</span>
         </div>
+        <div className="set" onClick={toggleTheme} style={{cursor:'pointer'}}>
+          <div className="set-i">{theme === 'dark' ? '🌙' : '☀️'}</div>
+          <div className="set-info">
+            <div className="set-t">Appearance</div>
+            <div className="set-s">{theme === 'dark' ? 'Dark theme' : 'Light theme'}</div>
+          </div>
+          <span className="chev">›</span>
+        </div>
         {[
           {i:"🔔",t:"Notifications",s:"Manage alerts"},
-          {i:"🌙",t:"Appearance",s:"Dark theme"},
           {i:"🔒",t:"Privacy & security",s:"Account and data"},
           {i:"💬",t:"Help & support",s:"Documentation"}
         ].map((it,i) => (

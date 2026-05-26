@@ -33,4 +33,4 @@ export const PROJECTS = [
 ];
 
 export const HEATMAP = Array.from({length:84},()=> Math.random() > .55 ? Math.floor(Math.random()*5)+1 : 0);
-export const heatColor = (v) => v===0?"var(--bg-3)":v<=1?"rgba(124,108,255,.22)":v<=2?"rgba(124,108,255,.42)":v<=3?"rgba(124,108,255,.65)":"rgba(168,117,255,.95)";
+export const heatColor = (v) => v===0?"var(--bg-3)":v<=1?"rgba(var(--accent-rgb),.22)":v<=2?"rgba(var(--accent-rgb),.42)":v<=3?"rgba(var(--accent-rgb),.65)":"var(--violet)";

@@ -241,7 +241,7 @@ export default function ProfileEdit() {
         )}
 
         {loadError && (
-          <div className="alert" style={{marginBottom:14,background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)',alignItems:'center'}}>
+          <div className="alert" style={{marginBottom:14,background:'rgba(var(--warn-rgb),.08)',borderColor:'rgba(var(--warn-rgb),.18)',alignItems:'center'}}>
             <span style={{fontSize:13}}>◇</span>
             <div style={{flex:1,fontSize:12.5,color:'var(--text-2)',lineHeight:1.5}}>
               <strong>Couldn't load your profile.</strong> Saving is disabled. {loadError}
@@ -259,7 +259,7 @@ export default function ProfileEdit() {
         )}
         {error && <div className="alert" style={{marginBottom:14}}><span>{error}</span></div>}
         {savedAt && !error && (
-          <div className="alert" style={{marginBottom:14,background:'rgba(124,108,255,.08)',borderColor:'rgba(124,108,255,.35)'}}>
+          <div className="alert" style={{marginBottom:14,background:'rgba(var(--accent-rgb),.08)',borderColor:'rgba(var(--accent-rgb),.35)'}}>
             <span>Saved.</span>
           </div>
         )}

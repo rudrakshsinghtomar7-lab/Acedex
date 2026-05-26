@@ -166,7 +166,7 @@ export default function ProjectCreate() {
         )}
 
         {showInlineNew && (
-          <div style={{padding:14,borderRadius:12,background:'rgba(124,108,255,.06)',border:'1px solid rgba(124,108,255,.18)',marginBottom:14}}>
+          <div style={{padding:14,borderRadius:12,background:'rgba(var(--accent-rgb),.06)',border:'1px solid rgba(var(--accent-rgb),.18)',marginBottom:14}}>
             <div style={{fontSize:12,fontWeight:700,color:'var(--indigo-bright)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>New course</div>
             <div className="field">
               <label>Course code</label>

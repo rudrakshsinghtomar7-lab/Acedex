@@ -7,8 +7,8 @@ export default function ProgCircle({value, size=48}) {
       <svg width={size} height={size}>
         <defs>
           <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#7c6cff"/>
-            <stop offset="100%" stopColor="#a875ff"/>
+            <stop offset="0%" stopColor="var(--indigo)"/>
+            <stop offset="100%" stopColor="var(--violet)"/>
           </linearGradient>
         </defs>
         <circle cx={size/2} cy={size/2} r={r} stroke="var(--bg-3)" strokeWidth="3" fill="none"/>

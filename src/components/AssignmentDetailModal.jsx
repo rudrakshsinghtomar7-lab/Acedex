@@ -501,7 +501,7 @@ export default function AssignmentDetailModal({
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="asgn-sub-meta">
                     <strong>{s.submitter?.full_name || 'Student'}</strong>
-                    {isMine && <span className="pdf-prof-badge" style={{ color: 'var(--indigo-bright)', background: 'rgba(124,108,255,.14)', borderColor: 'rgba(124,108,255,.32)' }}>You</span>}
+                    {isMine && <span className="pdf-prof-badge" style={{ color: 'var(--indigo-bright)', background: 'rgba(var(--accent-rgb),.14)', borderColor: 'rgba(var(--accent-rgb),.32)' }}>You</span>}
                     {isLatest
                       ? <span className="asgn-version-tag asgn-version-tag-latest">v{s.version} · latest</span>
                       : <span className="asgn-version-tag">v{s.version} · history</span>}

@@ -169,7 +169,7 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
       <div className="section">
         <div className="section-head"><h3>{isProf ? 'Supervised projects' : 'Your projects'}</h3></div>
         {dataError && demoOn && allProjects.length > 0 && (
-          <div className="alert" style={{marginBottom:14,background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)'}}>
+          <div className="alert" style={{marginBottom:14,background:'rgba(var(--warn-rgb),.08)',borderColor:'rgba(var(--warn-rgb),.18)'}}>
             <span style={{fontSize:13}}>◇</span>
             <div style={{fontSize:12.5,color:'var(--text-2)',lineHeight:1.5}}>
               <strong>Showing demo data only.</strong> Couldn't load real projects: {dataError}

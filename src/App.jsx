@@ -23,6 +23,7 @@ import Reset from './screens/auth/Reset.jsx';
 import UpdatePassword from './screens/auth/UpdatePassword.jsx';
 import { SessionProvider, useAuth } from './providers/SessionProvider.jsx';
 import { DemoModeProvider } from './hooks/useDemoMode.jsx';
+import { ThemeProvider } from './hooks/useTheme.jsx';
 
 function ScreenLayout() {
   return <div className="screen"><Outlet/></div>;
@@ -134,9 +135,11 @@ export default function App() {
   return (
     <SessionProvider>
       <DemoModeProvider>
-        <BrowserRouter basename="/Acedex">
-          <AppShell/>
-        </BrowserRouter>
+        <ThemeProvider>
+          <BrowserRouter basename="/Acedex">
+            <AppShell/>
+          </BrowserRouter>
+        </ThemeProvider>
       </DemoModeProvider>
     </SessionProvider>
   );

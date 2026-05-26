@@ -75,7 +75,7 @@ export default function Projects({role}) {
       <FilterChips items={filters} active={filter} onChange={setFilter} />
 
       {error && demoOn && allProjects.length > 0 && (
-        <div className="alert" style={{margin:'0 24px 14px',background:'rgba(245,181,107,.08)',borderColor:'rgba(245,181,107,.18)'}}>
+        <div className="alert" style={{margin:'0 24px 14px',background:'rgba(var(--warn-rgb),.08)',borderColor:'rgba(var(--warn-rgb),.18)'}}>
           <span style={{fontSize:13}}>◇</span>
           <div style={{fontSize:12.5,color:'var(--text-2)',lineHeight:1.5}}>
             <strong>Showing demo data only.</strong> Couldn't load real projects: {error}

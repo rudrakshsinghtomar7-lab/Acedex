@@ -89,7 +89,7 @@ export default function Activity({ project }) {
           <div key={ev.id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
             {ev.actor?.full_name
               ? <Avatar name={ev.actor.full_name} size={32}/>
-              : <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--indigo)', marginTop: 10, flexShrink: 0, boxShadow: '0 0 0 3px rgba(124,108,255,.15)' }}/>}
+              : <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--indigo)', marginTop: 10, flexShrink: 0, boxShadow: '0 0 0 3px rgba(var(--accent-rgb),.15)' }}/>}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
                 {isPdfUpload && <span style={{ marginRight: 6 }} aria-hidden>📄</span>}
