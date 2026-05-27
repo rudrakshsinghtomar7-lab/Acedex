@@ -920,3 +920,16 @@
     background:linear-gradient(135deg,rgba(220,38,38,.20) 0%,rgba(220,38,38,.40) 100%);
     border-color:rgba(220,38,38,.40);
   }
+
+  [data-theme="light"] .nav{
+    color:#9CA3AF;opacity:1;
+  }
+  [data-theme="light"] .nav.active{
+    color:#fff;
+  }
+  [data-theme="light"] .nav-label{
+    color:#9CA3AF;
+  }
+  [data-theme="light"] .nav.active .nav-label{
+    color:#7C3AED;
+  }
