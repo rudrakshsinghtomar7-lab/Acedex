@@ -9,7 +9,7 @@ import { loadExtension, completenessFor } from '../lib/profile.js';
 
 export default function Profile({role, projects, openSettings}) {
   const { supabase, profile, signOut } = useAuth();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const { mode, theme, cycle: cycleTheme } = useTheme();
   const navigate = useNavigate();
   const me = profile?.full_name ?? '';
   const [ext, setExt] = useState(null);
@@ -82,11 +82,11 @@ export default function Profile({role, projects, openSettings}) {
           </div>
           <span className="chev">›</span>
         </div>
-        <div className="set" onClick={toggleTheme} style={{cursor:'pointer'}}>
-          <div className="set-i">{theme === 'dark' ? '🌙' : '☀️'}</div>
+        <div className="set" onClick={cycleTheme} style={{cursor:'pointer'}}>
+          <div className="set-i">{mode === 'system' ? '🖥' : theme === 'dark' ? '🌙' : '☀️'}</div>
           <div className="set-info">
             <div className="set-t">Appearance</div>
-            <div className="set-s">{theme === 'dark' ? 'Dark theme' : 'Light theme'}</div>
+            <div className="set-s">{mode === 'system' ? 'System' : mode === 'dark' ? 'Dark' : 'Light'}</div>
           </div>
           <span className="chev">›</span>
         </div>
