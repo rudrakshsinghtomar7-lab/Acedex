@@ -1,7 +1,8 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Avatar from './Avatar.jsx';
 import PdfViewer from './PdfViewer.jsx';
+import FloatingToolbar from './pdf/FloatingToolbar.jsx';
 import {
   addPdfComment,
   addPdfHighlight,
@@ -36,9 +37,11 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
   const [error, setError] = useState(null);
   const [addingComment, setAddingComment] = useState(false);
   const [commentText, setCommentText] = useState('');
-  const [highlightMode, setHighlightMode] = useState(false);
-  const [pendingMockLine, setPendingMockLine] = useState(null);
+  const [selection, setSelection] = useState(null);
+  const [clearToken, setClearToken] = useState(0);
+  const [savingHl, setSavingHl] = useState(false);
   const [activeHighlightId, setActiveHighlightId] = useState(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
@@ -54,6 +57,7 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
     setAnnotations([]);
     setViewerUrl(null);
     setActiveHighlightId(null);
+    setSelection(null);
     if (isDemo) {
       const comments = (demoData?.DEMO_PDF_COMMENTS ?? []).filter(a => a.document_id === doc.id);
       const highlights = (demoData?.DEMO_PDF_HIGHLIGHTS ?? []).filter(a => a.document_id === doc.id);
@@ -79,20 +83,14 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
   const highlights = annotations.filter(a =>
     a.annotation_type === 'highlight' && a.page_number === pageNumber);
 
-  function exitHighlightMode() {
-    setHighlightMode(false);
-    setPendingMockLine(null);
-  }
+  // Drop the live selection and tell the overlay to clear (bumping clearToken).
+  const clearSelection = useCallback(() => {
+    setSelection(null);
+    setClearToken(t => t + 1);
+  }, []);
 
   function startAddComment() {
-    exitHighlightMode();
     setAddingComment(true);
-  }
-
-  function startHighlightMode() {
-    setAddingComment(false);
-    setCommentText('');
-    setHighlightMode(true);
   }
 
   async function submitComment() {
@@ -128,40 +126,57 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
     }
   }
 
+  // Highlight the live selection in `color`. New highlights carry real
+  // word-range rects (selection.normBands) so they render exactly over the
+  // selected words; storage is the existing addPdfHighlight (bbox JSON).
   async function saveHighlight(color) {
+    const sel = selection;
+    if (!sel || !sel.normBands?.length) return;
+    const text = sel.text?.trim() || 'Highlighted passage';
+    const rects = sel.normBands;
     if (isDemo) {
-      if (pendingMockLine == null) return;
       const row = {
         id: newId('demo-h'),
         document_id: doc.id,
         annotation_type: 'highlight',
         page_number: pageNumber,
-        content: 'Highlighted passage',
+        content: text,
         color,
         resolved: false,
-        bbox: { x: 0, y: 0, w: 0, h: 0, text: 'Highlighted passage', mock_line: pendingMockLine },
+        bbox: { x: 0, y: 0, w: 0, h: 0, text, rects },
         created_at: new Date().toISOString(),
         author: { id: 'demo-you', full_name: 'You', avatar_url: null },
       };
       setAnnotations(cur => [...cur, row]);
-      exitHighlightMode();
+      clearSelection();
       return;
     }
-    const text = window.getSelection?.().toString().trim();
-    if (!text) {
-      setError('Select text on the PDF before choosing a color.');
-      return;
-    }
+    setSavingHl(true);
     try {
       const row = await addPdfHighlight(supabase, {
-        documentId: doc.id, userId: user.id, pageNumber, text, color,
+        documentId: doc.id, userId: user.id, pageNumber, text, color, rects,
       });
       setAnnotations(cur => [...cur, row]);
-      window.getSelection?.().removeAllRanges();
-      exitHighlightMode();
+      clearSelection();
     } catch (e) {
       setError(e.message || String(e));
+    } finally {
+      setSavingHl(false);
     }
+  }
+
+  // Toolbar → Comment: reuse the existing comment composer for this page.
+  function commentFromSelection() {
+    clearSelection();
+    setAddingComment(true);
+  }
+
+  // Toolbar → Copy: copy the selected text to the clipboard.
+  async function copySelection() {
+    const text = selection?.text?.trim();
+    clearSelection();
+    if (!text) return;
+    try { await navigator.clipboard?.writeText(text); } catch { /* clipboard may be blocked */ }
   }
 
   async function toggleResolved(row) {
@@ -203,7 +218,7 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
   // mode so dragging across text to select doesn't accidentally page.
   const touchStartRef = useRef(null);
   function onTouchStart(e) {
-    if (highlightMode) return;
+    if (selection) return; // don't page-swipe while a selection is active
     if (e.touches.length !== 1) { touchStartRef.current = null; return; }
     const t = e.touches[0];
     touchStartRef.current = { x: t.clientX, y: t.clientY };
@@ -224,14 +239,10 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
     }
   }
 
-  const colorPickerReady = isDemo ? pendingMockLine != null : true;
-  const colorPickerHint = isDemo
-    ? (pendingMockLine == null ? 'Tap a line on the page, then pick a color.' : 'Pick a color.')
-    : 'Select text on the page, then pick a color.';
-
   return (
     <div className="ovl pdf-full-ovl" onClick={onClose}>
       <div
+        ref={containerRef}
         className="pdf-fullviewer"
         onClick={e => { e.stopPropagation(); dismissActiveHighlight(); }}
         role="dialog"
@@ -243,11 +254,6 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
             <div className="pdf-title">{doc?.title}</div>
           </div>
           <div className="pdf-fullviewer-actions">
-            <button
-              type="button"
-              className={`btn btn-g btn-sm ${highlightMode ? 'btn-active' : ''}`}
-              onClick={() => highlightMode ? exitHighlightMode() : startHighlightMode()}
-            >Highlight</button>
             <button
               type="button"
               className={`btn btn-p btn-sm ${addingComment ? 'btn-active' : ''}`}
@@ -262,29 +268,9 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
           </div>
         </header>
 
-        {highlightMode && (
-          <div className="pdf-mode-banner">
-            <div className="pdf-mode-banner-hint">{colorPickerHint}</div>
-            <div className="pdf-color-picker">
-              {HIGHLIGHT_COLORS.map(c => (
-                <button
-                  key={c.value}
-                  type="button"
-                  className="pdf-color-swatch"
-                  style={{ background: c.value }}
-                  aria-label={c.label}
-                  disabled={!colorPickerReady}
-                  onClick={() => saveHighlight(c.value)}
-                />
-              ))}
-              <button
-                type="button"
-                className="pdf-link-btn"
-                onClick={exitHighlightMode}
-              >Cancel</button>
-            </div>
-          </div>
-        )}
+        <div className="pdf-mode-banner pdf-sel-hint">
+          <span aria-hidden>✦</span> Press and hold any word to select, then highlight.
+        </div>
 
         {error && (
           <div className="alert pdf-fullviewer-err">
@@ -315,12 +301,11 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
                 viewerUrl={viewerUrl}
                 onLoadSuccess={({ numPages }) => setPageCount(numPages)}
                 onLoadError={e => setError(e.message || String(e))}
-                highlightMode={highlightMode}
-                pendingMockLine={pendingMockLine}
-                onMockLineClick={highlightMode ? setPendingMockLine : null}
                 activeHighlightId={activeHighlightId}
                 onHighlightClick={row => setActiveHighlightId(prev => prev === row.id ? null : row.id)}
                 onHighlightDelete={deleteHighlight}
+                onSelectionChange={setSelection}
+                clearToken={clearToken}
               />
             </div>
           </div>
@@ -374,6 +359,16 @@ export default function PdfFullViewer({ isDemo, doc, supabase, user, demoData, o
             ))}
           </aside>
         </div>
+
+        <FloatingToolbar
+          selection={selection}
+          containerRef={containerRef}
+          colors={HIGHLIGHT_COLORS}
+          busy={savingHl}
+          onHighlight={saveHighlight}
+          onComment={commentFromSelection}
+          onCopy={copySelection}
+        />
       </div>
     </div>
   );
