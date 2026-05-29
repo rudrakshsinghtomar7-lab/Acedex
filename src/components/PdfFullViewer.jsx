@@ -84,6 +84,10 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [activeHighlightId, setActiveHighlightId] = useState(null);
+  // Reading mode is the default: the word-snap overlay is inert (CSS gates its
+  // pointer-events on .pdfx-highlighting) so touches scroll/swipe freely.
+  // Highlight mode is an explicit toggle that arms long-press → selection.
+  const [highlightMode, setHighlightMode] = useState(false);
   const [eraseMode, setEraseMode] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -129,6 +133,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     setCommentsOpen(false);
     setCommentText('');
     setSelection(null);
+    setHighlightMode(false);
     setEraseMode(false);
     if (isDemo) {
       const comments = (demoData?.DEMO_PDF_COMMENTS ?? []).filter(a => a.document_id === doc.id);
@@ -205,9 +210,22 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   function openComments() {
     clearSelection();
     setActiveHighlightId(null);
+    setHighlightMode(false);
     setEraseMode(false);
     setChromeVisible(true);
     setCommentsOpen(true);
+  }
+
+  // Highlight toggle: OFF = reading (overlay inert, free scroll/swipe);
+  // ON = long-press → word-snap selection → floating toolbar. Explicit so the
+  // default touch is reading, not selecting.
+  function toggleHighlight() {
+    clearSelection();
+    setActiveHighlightId(null);
+    setCommentsOpen(false);
+    setEraseMode(false);
+    setChromeVisible(true);
+    setHighlightMode(v => !v);
   }
 
   // Eraser toggle: while on, a tap on any highlight deletes it (no popover) so
@@ -216,6 +234,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     clearSelection();
     setActiveHighlightId(null);
     setCommentsOpen(false);
+    setHighlightMode(false);
     setChromeVisible(true);
     setEraseMode(v => !v);
   }
@@ -460,14 +479,15 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
 
   const pageLabel = `${pageNumber} / ${pageCount ?? '–'}`;
   const chromeHidden = !chromeVisible;
-  const showHint = chromeVisible && !commentsOpen && !selection;
+  // Hint only appears in an explicit mode — reading mode stays clean.
+  const showHint = chromeVisible && !commentsOpen && !selection && (highlightMode || eraseMode);
   const hintText = eraseMode
     ? '✦ Tap a highlight to remove it'
     : '✦ Press & hold a word to highlight';
 
   return (
     <div
-      className={`pdfx ${eraseMode ? 'pdfx-erasing' : ''}`}
+      className={`pdfx ${highlightMode ? 'pdfx-highlighting' : ''} ${eraseMode ? 'pdfx-erasing' : ''}`}
       ref={rootRef}
       role="dialog"
       aria-modal="true"
@@ -509,24 +529,36 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
         <div className="pdfx-head-row">
           <button type="button" className="btn-icon-x" aria-label="Close" onClick={onClose}>×</button>
           <div className="pdfx-title" title={doc?.title}>{doc?.title}</div>
-          <div className="pdfx-pagenav">
-            <button
-              type="button"
-              className="pdfx-pagebtn"
-              aria-label="Previous page"
-              disabled={pageNumber <= 1}
-              onClick={() => flipPage(-1)}
-            >‹</button>
-            <span className="pdfx-pageind" aria-label={`Page ${pageLabel}`}>{pageLabel}</span>
-            <button
-              type="button"
-              className="pdfx-pagebtn"
-              aria-label="Next page"
-              disabled={pageCount ? pageNumber >= pageCount : false}
-              onClick={() => flipPage(1)}
-            >›</button>
-          </div>
+          <button
+            type="button"
+            className={`pdfx-hl-toggle ${highlightMode ? 'active' : ''}`}
+            aria-pressed={highlightMode}
+            onClick={toggleHighlight}
+          >
+            <span aria-hidden>🖍</span>
+            <span>{highlightMode ? 'Highlighting' : 'Highlight'}</span>
+          </button>
         </div>
+
+        {/* Page navigation — works in reading and highlight mode alike. */}
+        <div className="pdfx-nav-row">
+          <button
+            type="button"
+            className="pdfx-pagebtn"
+            aria-label="Previous page"
+            disabled={pageNumber <= 1}
+            onClick={() => flipPage(-1)}
+          >‹</button>
+          <span className="pdfx-pageind" aria-label={`Page ${pageLabel}`}>{pageLabel}</span>
+          <button
+            type="button"
+            className="pdfx-pagebtn"
+            aria-label="Next page"
+            disabled={pageCount ? pageNumber >= pageCount : false}
+            onClick={() => flipPage(1)}
+          >›</button>
+        </div>
+
         <div className="pdfx-review" title={reviewLine}>{reviewLine}</div>
       </header>
 
@@ -546,8 +578,8 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
       )}
 
       {/* Bottom toolbar — Erase / Comment / Download / Share. Adding a highlight
-          lives in the on-selection FloatingToolbar (press & hold), so it isn't a
-          toolbar button; Erase is the quick way to clear one and re-highlight. */}
+          is the header Highlight toggle (arms press & hold → FloatingToolbar);
+          Erase is the quick way to clear one and re-highlight. */}
       <nav className={`pdfx-toolbar ${chromeHidden ? 'pdfx-hidden-bottom' : ''}`} aria-label="PDF actions">
         <button
           type="button"

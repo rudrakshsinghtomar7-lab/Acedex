@@ -860,7 +860,7 @@
      because .ovl/.pdfx position to .phone's padding box, not its content box.
      ═══════════════════════════════════════════════════════════════════════ */
   .pdfx{position:absolute;inset:0;z-index:150;background:var(--pdf-frame-bg);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-  .pdfx-doc{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0) + 96px) 12px calc(env(safe-area-inset-bottom,0) + 90px)}
+  .pdfx-doc{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0) + 138px) 12px calc(env(safe-area-inset-bottom,0) + 90px)}
   .pdfx-doc::-webkit-scrollbar{width:0;height:0}
   .pdfx-stage{display:flex;justify-content:center;width:100%}
   .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px}
@@ -873,7 +873,10 @@
   .pdfx-header{position:absolute;top:0;left:0;right:0;z-index:20;background:var(--bg-1);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top,0) + 8px) 12px 8px;box-shadow:var(--shadow-1);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
   .pdfx-head-row{display:flex;align-items:center;gap:10px}
   .pdfx-title{flex:1;min-width:0;font-size:14px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-  .pdfx-pagenav{flex-shrink:0;display:flex;align-items:center;gap:2px}
+  .pdfx-hl-toggle{flex-shrink:0;display:flex;align-items:center;gap:5px;height:36px;padding:0 12px;border:1px solid var(--border);background:var(--bg-2);color:var(--text);font-family:inherit;font-size:12.5px;font-weight:700;border-radius:99px;cursor:pointer;white-space:nowrap;transition:background var(--t),border-color var(--t),color var(--t)}
+  .pdfx-hl-toggle:active{background:var(--bg-3)}
+  .pdfx-hl-toggle.active{background:rgba(var(--accent-rgb),.15);border-color:rgba(var(--accent-rgb),.5);color:var(--indigo-bright)}
+  .pdfx-nav-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
   .pdfx-pagebtn{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--text);font-size:26px;line-height:1;border-radius:99px;cursor:pointer;font-family:inherit}
   .pdfx-pagebtn:active{background:var(--bg-2)}
   .pdfx-pagebtn:disabled{opacity:.3;pointer-events:none}
@@ -912,7 +915,7 @@
   .pdfx-composer{display:flex;gap:8px;align-items:flex-end;margin-top:8px;padding-top:10px;border-top:1px solid var(--border)}
   .pdfx-composer .textarea{flex:1;min-height:42px;max-height:120px}
 
-  .pdfx-err{position:absolute;top:calc(env(safe-area-inset-top,0) + 100px);left:12px;right:12px;z-index:30;align-items:center}
+  .pdfx-err{position:absolute;top:calc(env(safe-area-inset-top,0) + 148px);left:12px;right:12px;z-index:30;align-items:center}
   .pdfx-err-x{margin-left:auto;flex-shrink:0;background:none;border:none;color:inherit;font-size:18px;line-height:1;cursor:pointer}
   .pdfx-toast{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0) + 100px);z-index:30;background:var(--text);color:var(--bg-0);font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:99px;box-shadow:var(--shadow-2);animation:fade 200ms var(--ease);white-space:nowrap}
 
@@ -938,6 +941,9 @@
   .react-pdf__Page__textContent,.textLayer{pointer-events:none !important}
 
   .pdf-sel-overlay{position:absolute;left:0;top:0;z-index:6;touch-action:pan-y}
+  /* Reading mode (default): the selection overlay is inert so touches scroll
+     the page and swipe turns pages. Highlight mode re-arms it. */
+  .pdfx:not(.pdfx-highlighting) .pdf-sel-overlay{pointer-events:none}
   .pdf-sel-band{position:absolute;background:rgba(var(--accent-rgb),.30);border-radius:2px;pointer-events:none}
 
   /* Handle: 44px-wide transparent hit zone centered on the selection edge,
