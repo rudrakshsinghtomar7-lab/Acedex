@@ -201,6 +201,15 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     else if (dir < 0 && pageNumber > 1) setPageNumber(n => Math.max(1, n - 1));
   }
 
+  // Pan the view left/right. Touch only scrolls vertically (touch-action:pan-y),
+  // so when a zoomed-in page overflows horizontally these are the way to move
+  // sideways. Scrolls by most of a screen width.
+  function panX(dir) {
+    const el = docRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(140, el.clientWidth * 0.6), behavior: 'smooth' });
+  }
+
   // Drop the live selection and tell the overlay to clear (bumping clearToken).
   const clearSelection = useCallback(() => {
     setSelection(null);
@@ -562,31 +571,17 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
         <div className="pdfx-review" title={reviewLine}>{reviewLine}</div>
       </header>
 
-      {/* Compact zoom control — part of the chrome, slides away with it. */}
+      {/* Compact zoom + pan control — part of the chrome, slides away with it.
+          ‹ / › pan the view sideways (useful when zoomed in). */}
       <div className={`pdfx-zoom ${chromeHidden ? 'pdfx-hidden-zoom' : ''}`}>
+        <button type="button" aria-label="Pan left" onClick={() => panX(-1)}>‹</button>
         <button type="button" aria-label="Zoom out"
           onClick={() => setZoom(z => clamp(Number((z - 0.15).toFixed(3)), MIN_ZOOM, MAX_ZOOM))}>−</button>
         <button type="button" aria-label="Fit width" className="pdfx-zoom-fit" onClick={() => setZoom(fitZoom)}>Fit</button>
         <button type="button" aria-label="Zoom in"
           onClick={() => setZoom(z => clamp(Number((z + 0.15).toFixed(3)), MIN_ZOOM, MAX_ZOOM))}>+</button>
+        <button type="button" aria-label="Pan right" onClick={() => panX(1)}>›</button>
       </div>
-
-      {/* Big edge page arrows — the obvious left/right nav. Part of the chrome,
-          so they slide/fade with it; disabled at the first/last page. */}
-      <button
-        type="button"
-        className={`pdfx-edge pdfx-edge-l ${chromeHidden ? 'pdfx-hidden-edge' : ''}`}
-        aria-label="Previous page"
-        disabled={pageNumber <= 1}
-        onClick={() => flipPage(-1)}
-      >‹</button>
-      <button
-        type="button"
-        className={`pdfx-edge pdfx-edge-r ${chromeHidden ? 'pdfx-hidden-edge' : ''}`}
-        aria-label="Next page"
-        disabled={pageCount ? pageNumber >= pageCount : false}
-        onClick={() => flipPage(1)}
-      >›</button>
 
       {/* Hint — fades with the chrome, hidden during select/sheet. Reflects the
           current mode (highlight vs erase). */}
