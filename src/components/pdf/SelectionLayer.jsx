@@ -67,12 +67,10 @@ export default function SelectionLayer({
       const idx = wordAtPoint(words, p.x, p.y);
       if (idx >= 0) {
         setSel({ start: idx, end: idx });
-        // Continue this same gesture as an end-extend drag.
+        // Continue this same gesture as an end-extend drag. Panning is already
+        // locked in highlight mode (touch-action:none, see index.css), so the
+        // drag stays captured for selection — no per-gesture lock needed here.
         dragHandle.current = { mode: 'extend', anchor: idx };
-        // Lock panning for the duration of the extend so the browser doesn't
-        // steal the drag as a scroll/pan. The overlay otherwise allows both-axis
-        // pan (see index.css) so plain drags scroll. Released on pointer up.
-        if (overlayRef.current) overlayRef.current.style.touchAction = 'none';
       }
       try { overlayRef.current.setPointerCapture(e.pointerId); } catch { /* noop */ }
     }, LONG_PRESS_MS);
@@ -101,7 +99,6 @@ export default function SelectionLayer({
     clearPress();
     if (dragHandle.current?.mode === 'extend') {
       dragHandle.current = null;
-      if (overlayRef.current) overlayRef.current.style.touchAction = ''; // restore pan
       try { overlayRef.current.releasePointerCapture(e.pointerId); } catch { /* noop */ }
       return;
     }
