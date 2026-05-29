@@ -860,7 +860,11 @@
      because .ovl/.pdfx position to .phone's padding box, not its content box.
      ═══════════════════════════════════════════════════════════════════════ */
   .pdfx{position:absolute;inset:0;z-index:150;background:var(--pdf-frame-bg);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-  .pdfx-doc{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0) + 138px) 12px calc(env(safe-area-inset-bottom,0) + 90px)}
+  /* touch-action allows BOTH-axis panning + pinch so a finger can scroll up/down,
+     pan left/right (zoomed-in), and pinch-zoom. Native SELECTION is suppressed
+     separately (user-select/-webkit-touch-callout/selectstart below), so opening
+     up panning here does NOT bring the iOS callout back. */
+  .pdfx-doc{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0) + 138px) 12px calc(env(safe-area-inset-bottom,0) + 90px)}
   .pdfx-doc::-webkit-scrollbar{width:0;height:0}
   /* safe center: centred when the page fits, but left-aligned once it overflows
      horizontally so the ‹ / › pan buttons can reach the whole zoomed page. */
@@ -942,7 +946,11 @@
      the overlay; the overlay, highlight bands and handles keep their events. */
   .react-pdf__Page__textContent,.textLayer{pointer-events:none !important}
 
-  .pdf-sel-overlay{position:absolute;left:0;top:0;z-index:6;touch-action:pan-y}
+  /* Same both-axis pan + pinch as the doc so a PLAIN drag in highlight mode
+     still scrolls/pans. SelectionLayer flips this to touch-action:none for the
+     duration of an active long-press word-extend so that gesture isn't stolen
+     by the browser's pan. */
+  .pdf-sel-overlay{position:absolute;left:0;top:0;z-index:6;touch-action:pan-x pan-y pinch-zoom}
   /* Reading mode (default): the selection overlay is inert so touches scroll
      the page and swipe turns pages. Highlight mode re-arms it. */
   .pdfx:not(.pdfx-highlighting) .pdf-sel-overlay{pointer-events:none}

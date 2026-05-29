@@ -201,9 +201,9 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     else if (dir < 0 && pageNumber > 1) setPageNumber(n => Math.max(1, n - 1));
   }
 
-  // Pan the view left/right. Touch only scrolls vertically (touch-action:pan-y),
-  // so when a zoomed-in page overflows horizontally these are the way to move
-  // sideways. Scrolls by most of a screen width.
+  // Pan the view left/right. Finger pan handles this now (touch-action allows
+  // pan-x pan-y pinch-zoom), but these buttons remain a precise way to move
+  // sideways on a zoomed-in page. Scrolls by most of a screen width.
   function panX(dir) {
     const el = docRef.current;
     if (!el) return;
@@ -302,7 +302,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     if (g && pointers.current.size === 1) {
       // Keep the running delta on the gesture so a swipe can still be resolved
       // if iOS fires pointercancel before pointerup (common on a scrollable
-      // surface with touch-action:pan-y).
+      // surface with touch-action panning enabled).
       g.dx = e.clientX - g.x;
       g.dy = e.clientY - g.y;
       if (Math.abs(g.dx) > MOVE_TOL || Math.abs(g.dy) > MOVE_TOL) {
