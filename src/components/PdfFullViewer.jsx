@@ -26,12 +26,11 @@ const HIGHLIGHT_COLORS = [
   { value: '#a5b4fc', label: 'Indigo' },
 ];
 
-// US Letter point width — the inner page renders at this * zoom.
+// US Letter point width — fallback only, until the real page reports its size.
 const PAGE_W = 612;
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 2.5;
-const FIT_MAX = 1.0;        // cap the auto fit-to-width so big screens don't over-scale
-const FIT_PAD = 24;         // horizontal padding inside the doc surface
+const FIT_PAD = 24;         // horizontal padding inside the doc surface (12px each side)
 
 // Gesture thresholds. A "tap" is brief + still (toggles chrome); a long-press
 // is held (the word-snap SelectionLayer takes it over); a swipe moves
@@ -75,6 +74,9 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   const [pageCount, setPageCount] = useState(doc?.page_count ?? null);
   const [fitZoom, setFitZoom] = useState(0.6);
   const [zoom, setZoom] = useState(0.6);
+  // Natural page size (PDF points) reported by react-pdf once the page loads —
+  // drives true fit-to-WIDTH regardless of the document's real dimensions.
+  const [pageNatural, setPageNatural] = useState(null);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -98,6 +100,17 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
 
   const rootRef = useRef(null);
   const docRef = useRef(null);
+  const stageRef = useRef(null);
+  const fitZoomRef = useRef(0.6);  // latest fit, read inside the measure closure
+
+  // Drop the live pinch transform (set imperatively during a pinch) once the
+  // page has re-rasterized at the committed zoom, so it never fights layout.
+  const resetStage = useCallback(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    el.style.transform = '';
+    el.style.willChange = '';
+  }, []);
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
@@ -155,6 +168,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     setSelection(null);
     setHighlightMode(false);
     setEraseMode(false);
+    setPageNatural(null);
     if (isDemo) {
       const comments = (demoData?.DEMO_PDF_COMMENTS ?? []).filter(a => a.document_id === doc.id);
       const highlights = (demoData?.DEMO_PDF_HIGHLIGHTS ?? []).filter(a => a.document_id === doc.id);
@@ -175,19 +189,31 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     return () => { cancelled = true; };
   }, [doc, isDemo, supabase, demoData, initialPage]);
 
-  // Fit the page to the surface width so the PDF is the dominant element.
+  // Fit-to-WIDTH: the page fills the reading area's width (edge to edge minus
+  // padding) and you scroll vertically through it — the standard mobile PDF
+  // read. Computed from the page's *actual* width once known (PAGE_W until then)
+  // so it works for any document size, and not capped below full width so the
+  // page truly dominates instead of floating small in grey.
   useLayoutEffect(() => {
     function measure() {
       const el = docRef.current;
       if (!el) return;
-      const z = clamp((el.clientWidth - FIT_PAD) / PAGE_W, MIN_ZOOM, FIT_MAX);
+      const baseW = isDemo ? PAGE_W : (pageNatural?.w || PAGE_W);
+      const z = clamp((el.clientWidth - FIT_PAD) / baseW, MIN_ZOOM, MAX_ZOOM);
+      // Re-fit only if the user hasn't manually zoomed away from the old fit.
+      setZoom(cur => (Math.abs(cur - fitZoomRef.current) < 0.005 ? z : cur));
+      fitZoomRef.current = z;
       setFitZoom(z);
-      setZoom(z);
     }
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [doc]);
+  }, [doc, isDemo, pageNatural]);
+
+  // Demo has no async canvas raster (DOM resizes synchronously with `zoom`), so
+  // there's no onRenderSuccess to clear the pinch transform — do it here. Real
+  // PDFs clear it from <Page onRenderSuccess> once the crisp render lands.
+  useLayoutEffect(() => { if (isDemo) resetStage(); }, [zoom, isDemo, resetStage]);
 
   // ── Review context (document-wide) ──────────────────────────────────────
   const allComments = useMemo(
@@ -294,6 +320,20 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     clearTimeout(longTimer.current);
   }
 
+  // A pinch just ended (dropped below two fingers): bake the live transform into
+  // the real zoom so react-pdf re-rasterizes once at the new scale. The stage
+  // transform stays in place (keeping the page visually at `final`) until the
+  // crisp render lands — resetStage runs from <Page onRenderSuccess> — so there's
+  // no flash/jump on release. A no-op pinch just drops the transform.
+  function commitPinch() {
+    const p = pinch.current;
+    if (!p || p.live == null) return;
+    const final = p.live;
+    p.live = null;
+    if (Math.abs(final - zoom) < 0.005) resetStage();
+    else setZoom(final);
+  }
+
   function onPointerDown(e) {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const size = pointers.current.size;
@@ -315,7 +355,15 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     if (pinch.current?.active && pointers.current.size >= 2) {
       const [a, b] = [...pointers.current.values()];
       const ratio = dist(a, b) / pinch.current.startDist;
-      setZoom(clamp(Number((pinch.current.startZoom * ratio).toFixed(3)), MIN_ZOOM, MAX_ZOOM));
+      const target = clamp(Number((pinch.current.startZoom * ratio).toFixed(3)), MIN_ZOOM, MAX_ZOOM);
+      pinch.current.live = target;
+      // Live zoom = a GPU transform on the already-rendered page (no re-raster
+      // per frame). We re-rasterize once at `target` when the pinch ends.
+      const el = stageRef.current;
+      if (el) {
+        el.style.willChange = 'transform';
+        el.style.transform = `scale(${(target / zoom).toFixed(4)})`;
+      }
       return;
     }
     const g = gesture.current;
@@ -346,7 +394,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   function onPointerUp(e) {
     pointers.current.delete(e.pointerId);
     if (pointers.current.size > 0) {
-      if (pointers.current.size < 2 && pinch.current) pinch.current.active = false;
+      if (pointers.current.size < 2 && pinch.current) { pinch.current.active = false; commitPinch(); }
       return;
     }
     const g = gesture.current;
@@ -366,7 +414,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   function onPointerCancel(e) {
     pointers.current.delete(e.pointerId);
     if (pointers.current.size > 0) {
-      if (pointers.current.size < 2 && pinch.current) pinch.current.active = false;
+      if (pointers.current.size < 2 && pinch.current) { pinch.current.active = false; commitPinch(); }
       return;
     }
     // iOS can cancel a single-finger horizontal drag mid-swipe; resolve the
@@ -532,7 +580,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       >
-        <div className="pdfx-stage">
+        <div className="pdfx-stage" ref={stageRef}>
           <PdfViewer
             isDemo={isDemo}
             doc={doc}
@@ -542,6 +590,8 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
             viewerUrl={viewerUrl}
             onLoadSuccess={({ numPages }) => setPageCount(numPages)}
             onLoadError={e => setError(e.message || String(e))}
+            onPageLoadSuccess={setPageNatural}
+            onRenderDone={resetStage}
             activeHighlightId={activeHighlightId}
             onHighlightClick={row => eraseMode
               ? deleteHighlight(row)

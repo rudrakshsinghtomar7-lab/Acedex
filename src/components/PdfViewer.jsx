@@ -48,7 +48,7 @@ function demoLines(pageNumber) {
 // highlights. Demo and real share everything below the content render.
 function PdfPage({
   isDemo, doc, viewerUrl, pageNumber, zoom,
-  highlights, onLoadSuccess, onLoadError,
+  highlights, onLoadSuccess, onLoadError, onPageLoadSuccess, onRenderDone,
   activeHighlightId, onHighlightClick, onHighlightDelete,
   onSelectionChange, clearToken,
 }) {
@@ -126,7 +126,12 @@ function PdfPage({
             <Page
               pageNumber={pageNumber}
               scale={zoom}
+              onLoadSuccess={page => onPageLoadSuccess?.({
+                w: page.originalWidth ?? page.width,
+                h: page.originalHeight ?? page.height,
+              })}
               onRenderTextLayerSuccess={measure}
+              onRenderSuccess={() => { measure(); onRenderDone?.(); }}
             />
           </Document>
         ) : (
@@ -197,6 +202,8 @@ export default function PdfViewer({
   viewerUrl,
   onLoadSuccess,
   onLoadError,
+  onPageLoadSuccess,
+  onRenderDone,
   activeHighlightId,
   onHighlightClick,
   onHighlightDelete,
@@ -216,6 +223,8 @@ export default function PdfViewer({
       highlights={highlights}
       onLoadSuccess={onLoadSuccess}
       onLoadError={onLoadError}
+      onPageLoadSuccess={onPageLoadSuccess}
+      onRenderDone={onRenderDone}
       activeHighlightId={activeHighlightId}
       onHighlightClick={onHighlightClick}
       onHighlightDelete={onHighlightDelete}

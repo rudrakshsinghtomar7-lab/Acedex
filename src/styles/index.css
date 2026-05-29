@@ -873,8 +873,12 @@
   .pdfx-doc::-webkit-scrollbar{width:0;height:0}
   /* safe center: centred when the page fits, but left-aligned once it overflows
      horizontally so the ‹ / › pan buttons can reach the whole zoomed page. */
-  .pdfx-stage{display:flex;justify-content:safe center;width:100%}
-  .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px}
+  /* transform-origin top-centre so a pinch grows the page from the top edge it's
+     anchored to. will-change is toggled on imperatively only during a pinch. */
+  .pdfx-stage{display:flex;justify-content:safe center;width:100%;transform-origin:center top}
+  /* translateZ promotes the page canvas to its own GPU compositor layer so the
+     browser scrolls/pans it smoothly instead of repainting per frame. */
+  .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px;transform:translateZ(0);backface-visibility:hidden}
   /* ONLY the comment composer is selectable/editable. The PDF page itself is
      never natively selectable — our word-snap overlay owns selection — so iOS
      can't pop its Copy/Look Up/Share callout over the document (see the
