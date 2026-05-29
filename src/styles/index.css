@@ -873,7 +873,11 @@
   .pdfx-header{position:absolute;top:0;left:0;right:0;z-index:20;background:var(--bg-1);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top,0) + 8px) 12px 8px;box-shadow:var(--shadow-1);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
   .pdfx-head-row{display:flex;align-items:center;gap:10px}
   .pdfx-title{flex:1;min-width:0;font-size:14px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-  .pdfx-pageind{flex-shrink:0;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg-2);border:1px solid var(--border);border-radius:99px;padding:4px 10px;font-variant-numeric:tabular-nums}
+  .pdfx-pagenav{flex-shrink:0;display:flex;align-items:center;gap:2px}
+  .pdfx-pagebtn{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--text);font-size:26px;line-height:1;border-radius:99px;cursor:pointer;font-family:inherit}
+  .pdfx-pagebtn:active{background:var(--bg-2)}
+  .pdfx-pagebtn:disabled{opacity:.3;pointer-events:none}
+  .pdfx-pageind{flex-shrink:0;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg-2);border:1px solid var(--border);border-radius:99px;padding:4px 10px;font-variant-numeric:tabular-nums;min-width:54px;text-align:center}
   .pdfx-review{margin-top:6px;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pdfx-hidden-top{transform:translateY(-100%);opacity:0;pointer-events:none}
 

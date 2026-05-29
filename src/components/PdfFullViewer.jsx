@@ -272,10 +272,26 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     }
     const g = gesture.current;
     if (g && pointers.current.size === 1) {
-      if (Math.abs(e.clientX - g.x) > MOVE_TOL || Math.abs(e.clientY - g.y) > MOVE_TOL) {
+      // Keep the running delta on the gesture so a swipe can still be resolved
+      // if iOS fires pointercancel before pointerup (common on a scrollable
+      // surface with touch-action:pan-y).
+      g.dx = e.clientX - g.x;
+      g.dy = e.clientY - g.y;
+      if (Math.abs(g.dx) > MOVE_TOL || Math.abs(g.dy) > MOVE_TOL) {
         g.moved = true;
         clearTimeout(longTimer.current);
       }
+    }
+  }
+
+  // A horizontal swipe flips pages — only at fit zoom, never while a word
+  // selection is active (so a selection-extend drag never paginates). Called
+  // from both pointerup and pointercancel so the gesture survives either ending.
+  function maybeSwipe(g, dx, dy) {
+    if (!g || g.multi || g.long || selection) return;
+    if (zoom > fitZoom + 0.02) return; // zoomed in — leave horizontal to panning
+    if (Math.abs(dx) >= SWIPE_MIN && Math.abs(dy) <= Math.abs(dx) * 0.7) {
+      flipPage(dx < 0 ? 1 : -1);
     }
   }
 
@@ -291,17 +307,8 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
 
     const dx = e.clientX - g.x;
     const dy = e.clientY - g.y;
-    const atFit = zoom <= fitZoom + 0.02;
 
-    if (g.moved) {
-      // A horizontal swipe flips pages — only at fit zoom, never while a
-      // word selection is active (so a selection-extend drag never paginates).
-      if (!g.long && !selection && atFit &&
-          Math.abs(dx) >= SWIPE_MIN && Math.abs(dy) <= Math.abs(dx) * 0.7) {
-        flipPage(dx < 0 ? 1 : -1);
-      }
-      return;
-    }
+    if (g.moved) { maybeSwipe(g, dx, dy); return; }
     if (g.long) return;                              // long-press → word selection
     if (Date.now() - g.t > TAP_MAX_MS) return;       // too slow for a tap
     if (e.target.closest?.(NO_TOGGLE_SEL)) return;   // landed on a control
@@ -310,8 +317,15 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
 
   function onPointerCancel(e) {
     pointers.current.delete(e.pointerId);
-    if (pointers.current.size === 0) endGesture();
-    else if (pointers.current.size < 2 && pinch.current) pinch.current.active = false;
+    if (pointers.current.size > 0) {
+      if (pointers.current.size < 2 && pinch.current) pinch.current.active = false;
+      return;
+    }
+    // iOS can cancel a single-finger horizontal drag mid-swipe; resolve the
+    // flip from the last recorded delta before tearing the gesture down.
+    const g = gesture.current;
+    endGesture();
+    if (g && g.moved) maybeSwipe(g, g.dx ?? 0, g.dy ?? 0);
   }
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -495,7 +509,23 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
         <div className="pdfx-head-row">
           <button type="button" className="btn-icon-x" aria-label="Close" onClick={onClose}>×</button>
           <div className="pdfx-title" title={doc?.title}>{doc?.title}</div>
-          <span className="pdfx-pageind" aria-label={`Page ${pageLabel}`}>{pageLabel}</span>
+          <div className="pdfx-pagenav">
+            <button
+              type="button"
+              className="pdfx-pagebtn"
+              aria-label="Previous page"
+              disabled={pageNumber <= 1}
+              onClick={() => flipPage(-1)}
+            >‹</button>
+            <span className="pdfx-pageind" aria-label={`Page ${pageLabel}`}>{pageLabel}</span>
+            <button
+              type="button"
+              className="pdfx-pagebtn"
+              aria-label="Next page"
+              disabled={pageCount ? pageNumber >= pageCount : false}
+              onClick={() => flipPage(1)}
+            >›</button>
+          </div>
         </div>
         <div className="pdfx-review" title={reviewLine}>{reviewLine}</div>
       </header>
