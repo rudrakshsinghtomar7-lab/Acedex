@@ -119,6 +119,26 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     return () => el.removeEventListener('selectstart', blockNativeSelect);
   }, []);
 
+  // Freeze the page in highlight mode. touch-action:none alone does NOT stop the
+  // pan on iOS Safari — a -webkit-overflow-scrolling momentum scroller keeps
+  // panning regardless — so we cancel the scroll at the source with a non-passive
+  // touchmove listener. React's synthetic touch handlers are passive (preventDefault
+  // is a no-op there), hence the native addEventListener with { passive:false }.
+  // This blocks SCROLL only; our pointer-based word selection is a separate event
+  // stream and keeps working, and native selection stays suppressed (this doesn't
+  // touch user-select / the callout). Reading mode never preventDefaults, so its
+  // scroll/pan is untouched. highlightMode lives in a ref so the listener (attached
+  // once) always reads the live value without re-binding.
+  const highlightModeRef = useRef(highlightMode);
+  highlightModeRef.current = highlightMode;
+  useEffect(() => {
+    const el = docRef.current;
+    if (!el) return;
+    const blockPan = e => { if (highlightModeRef.current) e.preventDefault(); };
+    el.addEventListener('touchmove', blockPan, { passive: false });
+    return () => el.removeEventListener('touchmove', blockPan);
+  }, []);
+
   // Reset everything when the open document changes (deep-link re-open included).
   useEffect(() => {
     if (!doc) return;
