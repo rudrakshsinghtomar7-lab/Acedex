@@ -571,6 +571,23 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
           onClick={() => setZoom(z => clamp(Number((z + 0.15).toFixed(3)), MIN_ZOOM, MAX_ZOOM))}>+</button>
       </div>
 
+      {/* Big edge page arrows — the obvious left/right nav. Part of the chrome,
+          so they slide/fade with it; disabled at the first/last page. */}
+      <button
+        type="button"
+        className={`pdfx-edge pdfx-edge-l ${chromeHidden ? 'pdfx-hidden-edge' : ''}`}
+        aria-label="Previous page"
+        disabled={pageNumber <= 1}
+        onClick={() => flipPage(-1)}
+      >‹</button>
+      <button
+        type="button"
+        className={`pdfx-edge pdfx-edge-r ${chromeHidden ? 'pdfx-hidden-edge' : ''}`}
+        aria-label="Next page"
+        disabled={pageCount ? pageNumber >= pageCount : false}
+        onClick={() => flipPage(1)}
+      >›</button>
+
       {/* Hint — fades with the chrome, hidden during select/sheet. Reflects the
           current mode (highlight vs erase). */}
       {showHint && (

@@ -893,6 +893,14 @@
   .pdfx-zoom-fit{font-size:12px !important;font-weight:700 !important;color:var(--muted) !important;padding:0 6px}
   .pdfx-hidden-zoom{transform:translateY(24px);opacity:0;pointer-events:none}
 
+  /* Big left/right page arrows pinned to the screen edges, vertically centred. */
+  .pdfx-edge{position:absolute;top:50%;transform:translateY(-50%);z-index:18;width:48px;height:48px;display:flex;align-items:center;justify-content:center;padding-bottom:3px;border:1px solid var(--border);background:var(--bg-1);color:var(--text);font-size:30px;line-height:1;border-radius:99px;cursor:pointer;box-shadow:var(--shadow-2);opacity:.94;transition:opacity 250ms var(--ease)}
+  .pdfx-edge-l{left:10px}
+  .pdfx-edge-r{right:10px}
+  .pdfx-edge:active{background:var(--bg-3)}
+  .pdfx-edge:disabled{opacity:.28;pointer-events:none}
+  .pdfx-hidden-edge{opacity:0;pointer-events:none}
+
   .pdfx-toolbar{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;background:var(--bg-1);border-top:1px solid var(--border);padding:6px 8px calc(env(safe-area-inset-bottom,0) + 6px);box-shadow:var(--nav-shadow);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
   .pdfx-hidden-bottom{transform:translateY(100%);opacity:0;pointer-events:none}
   .pdfx-tool{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:7px 4px;border-radius:12px;transition:color var(--t),background var(--t)}
