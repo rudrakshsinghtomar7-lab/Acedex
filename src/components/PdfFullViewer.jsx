@@ -84,6 +84,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [activeHighlightId, setActiveHighlightId] = useState(null);
+  const [eraseMode, setEraseMode] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   // Word-snap selection (reported up by SelectionLayer via PdfViewer).
@@ -128,6 +129,7 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     setCommentsOpen(false);
     setCommentText('');
     setSelection(null);
+    setEraseMode(false);
     if (isDemo) {
       const comments = (demoData?.DEMO_PDF_COMMENTS ?? []).filter(a => a.document_id === doc.id);
       const highlights = (demoData?.DEMO_PDF_HIGHLIGHTS ?? []).filter(a => a.document_id === doc.id);
@@ -203,14 +205,26 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   function openComments() {
     clearSelection();
     setActiveHighlightId(null);
+    setEraseMode(false);
     setChromeVisible(true);
     setCommentsOpen(true);
+  }
+
+  // Eraser toggle: while on, a tap on any highlight deletes it (no popover) so
+  // students/profs can quickly clear a highlight and re-highlight.
+  function toggleErase() {
+    clearSelection();
+    setActiveHighlightId(null);
+    setCommentsOpen(false);
+    setChromeVisible(true);
+    setEraseMode(v => !v);
   }
 
   // ── Empty-area tap routing (called only after the gesture filter passes) ──
   function onDocTap() {
     if (selection) { clearSelection(); return; }
     if (activeHighlightId != null) { setActiveHighlightId(null); return; }
+    if (eraseMode) { setEraseMode(false); return; }
     if (commentsOpen) { setCommentsOpen(false); return; }
     setChromeVisible(v => !v);
   }
@@ -433,9 +447,18 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   const pageLabel = `${pageNumber} / ${pageCount ?? '–'}`;
   const chromeHidden = !chromeVisible;
   const showHint = chromeVisible && !commentsOpen && !selection;
+  const hintText = eraseMode
+    ? '✦ Tap a highlight to remove it'
+    : '✦ Press & hold a word to highlight';
 
   return (
-    <div className="pdfx" ref={rootRef} role="dialog" aria-modal="true" aria-label={doc?.title || 'PDF'}>
+    <div
+      className={`pdfx ${eraseMode ? 'pdfx-erasing' : ''}`}
+      ref={rootRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={doc?.title || 'PDF'}
+    >
       {/* Document surface — the gesture target. Fixed padding clears the chrome
           so the page never shifts when chrome toggles. */}
       <div
@@ -457,7 +480,9 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
             onLoadSuccess={({ numPages }) => setPageCount(numPages)}
             onLoadError={e => setError(e.message || String(e))}
             activeHighlightId={activeHighlightId}
-            onHighlightClick={row => setActiveHighlightId(prev => prev === row.id ? null : row.id)}
+            onHighlightClick={row => eraseMode
+              ? deleteHighlight(row)
+              : setActiveHighlightId(prev => prev === row.id ? null : row.id)}
             onHighlightDelete={deleteHighlight}
             onSelectionChange={setSelection}
             clearToken={clearToken}
@@ -484,14 +509,25 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
           onClick={() => setZoom(z => clamp(Number((z + 0.15).toFixed(3)), MIN_ZOOM, MAX_ZOOM))}>+</button>
       </div>
 
-      {/* Press-and-hold hint — fades with the chrome, hidden during select/sheet. */}
+      {/* Hint — fades with the chrome, hidden during select/sheet. Reflects the
+          current mode (highlight vs erase). */}
       {showHint && (
-        <div className="pdfx-hint" aria-hidden>✦ Press &amp; hold a word to highlight</div>
+        <div className={`pdfx-hint ${eraseMode ? 'pdfx-hint-erase' : ''}`} aria-hidden>{hintText}</div>
       )}
 
-      {/* Bottom toolbar — Comment / Download / Share. Highlighting lives in the
-          on-selection FloatingToolbar, so it isn't a toolbar button here. */}
+      {/* Bottom toolbar — Erase / Comment / Download / Share. Adding a highlight
+          lives in the on-selection FloatingToolbar (press & hold), so it isn't a
+          toolbar button; Erase is the quick way to clear one and re-highlight. */}
       <nav className={`pdfx-toolbar ${chromeHidden ? 'pdfx-hidden-bottom' : ''}`} aria-label="PDF actions">
+        <button
+          type="button"
+          className={`pdfx-tool pdfx-tool-erase ${eraseMode ? 'active' : ''}`}
+          aria-pressed={eraseMode}
+          onClick={toggleErase}
+        >
+          <span className="pdfx-tool-i" aria-hidden>⌫</span>
+          <span className="pdfx-tool-l">{eraseMode ? 'Done' : 'Erase'}</span>
+        </button>
         <button
           type="button"
           className={`pdfx-tool ${commentsOpen ? 'active' : ''}`}
