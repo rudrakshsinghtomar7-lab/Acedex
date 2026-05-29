@@ -859,15 +859,16 @@
      moves during the toggle. Absolute children re-apply safe-area insets
      because .ovl/.pdfx position to .phone's padding box, not its content box.
      ═══════════════════════════════════════════════════════════════════════ */
-  .pdfx{position:absolute;inset:0;z-index:150;background:var(--pdf-frame-bg);overflow:hidden;-webkit-user-select:none;user-select:none}
+  .pdfx{position:absolute;inset:0;z-index:150;background:var(--pdf-frame-bg);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .pdfx-doc{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0) + 96px) 12px calc(env(safe-area-inset-bottom,0) + 90px)}
   .pdfx-doc::-webkit-scrollbar{width:0;height:0}
   .pdfx-stage{display:flex;justify-content:center;width:100%}
   .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px}
-  /* Real-PDF text + the comment composer stay selectable/editable despite the
-     no-select guard that stops the chrome text from being grabbed. */
-  .pdfx .pdf-real-page,.pdfx .pdf-real-page *,
-  .pdfx textarea,.pdfx input{-webkit-user-select:text;user-select:text}
+  /* ONLY the comment composer is selectable/editable. The PDF page itself is
+     never natively selectable — our word-snap overlay owns selection — so iOS
+     can't pop its Copy/Look Up/Share callout over the document (see the
+     suppression block further down). */
+  .pdfx textarea,.pdfx input{-webkit-user-select:text !important;user-select:text !important;-webkit-touch-callout:default}
 
   .pdfx-header{position:absolute;top:0;left:0;right:0;z-index:20;background:var(--bg-1);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top,0) + 8px) 12px 8px;box-shadow:var(--shadow-1);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
   .pdfx-head-row{display:flex;align-items:center;gap:10px}
@@ -908,14 +909,23 @@
   .btn.disabled{opacity:.55;pointer-events:none}
 
   /* ── Custom PDF word-selection engine ─────────────────────────────────────
-     Native selection is suppressed on the text layer; a transparent overlay
-     owns the gesture and we draw our own bands + handles. Works in light/dark
-     via accent tokens. */
-  .react-pdf__Page__textContent,.textLayer{
+     Native selection is suppressed on the PDF page AND its dynamically-created
+     text-layer spans. react-pdf injects the .textLayer spans after mount, so we
+     match them directly (.textLayer *, .pdf-real-page *) — a container-only rule
+     loses to the cascade once a span has its own user-select. -webkit-touch-callout
+     is the key one: it kills the iOS Copy/Look Up/Share callout specifically;
+     -webkit-user-drag stops drag-to-select. A transparent overlay then owns the
+     gesture (pointer events, not native selection) and we draw our own bands +
+     handles. Light/dark via accent tokens. */
+  .pdf-real-page,.pdf-real-page *,
+  .react-pdf__Page__textContent,.textLayer,.textLayer *,
+  .pdf-mock-para [data-w]{
     user-select:none !important;-webkit-user-select:none !important;
-    -webkit-touch-callout:none !important;pointer-events:none !important;
+    -webkit-touch-callout:none !important;-webkit-user-drag:none !important;
   }
-  .pdf-mock-para [data-w]{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  /* pointer-events stays off ONLY for the text layer so touches fall through to
+     the overlay; the overlay, highlight bands and handles keep their events. */
+  .react-pdf__Page__textContent,.textLayer{pointer-events:none !important}
 
   .pdf-sel-overlay{position:absolute;left:0;top:0;z-index:6;touch-action:pan-y}
   .pdf-sel-band{position:absolute;background:rgba(var(--accent-rgb),.30);border-radius:2px;pointer-events:none}

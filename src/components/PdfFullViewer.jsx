@@ -100,6 +100,20 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // iOS Safari (and especially the home-screen PWA) can still *begin* a native
+  // text selection on the PDF even with user-select:none, which is what pops the
+  // OS Copy/Look Up/Share callout. Cancelling selectstart on the doc surface
+  // stops it before it starts. The comment composer lives outside docRef, so its
+  // editing/selection is untouched; our word-snap overlay uses pointer events
+  // (not native selection), so long-press selection keeps working.
+  useEffect(() => {
+    const el = docRef.current;
+    if (!el) return;
+    const blockNativeSelect = e => e.preventDefault();
+    el.addEventListener('selectstart', blockNativeSelect);
+    return () => el.removeEventListener('selectstart', blockNativeSelect);
+  }, []);
+
   // Reset everything when the open document changes (deep-link re-open included).
   useEffect(() => {
     if (!doc) return;
