@@ -835,9 +835,15 @@
   .pdf-highlight-popover{position:absolute;top:calc(100% + 8px);left:8px;background:var(--bg-1);color:var(--text);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font:600 11.5px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;white-space:nowrap;box-shadow:var(--shadow-2);z-index:5;text-align:left;cursor:default}
   .pdf-highlight-popover strong{color:var(--text);font-weight:700}
 
-  .pdf-real-page{position:relative;flex-shrink:0}
+  /* Bake the whole page (canvas + the many text-layer spans + highlight/selection
+     overlays) into ONE GPU compositor layer. During scroll/pan the compositor
+     just translates that cached texture — it does NOT repaint the text-layer
+     spans per frame, which is the main scroll cost. contain:layout limits layout
+     scope; we deliberately skip contain:paint so edge selection handles (which
+     overhang the page by 22px) aren't clipped. */
+  .pdf-real-page{position:relative;flex-shrink:0;will-change:transform;transform:translateZ(0);contain:layout;backface-visibility:hidden}
 
-  .pdf-mock-page{position:relative;background:#f8f7f2;color:#1a1a1f;border-radius:4px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;flex-shrink:0}
+  .pdf-mock-page{position:relative;background:#f8f7f2;color:#1a1a1f;border-radius:4px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;flex-shrink:0;will-change:transform;transform:translateZ(0);contain:layout}
   .pdf-mock-inner{position:relative;width:612px;height:792px;transform:scale(var(--pdf-zoom,1));transform-origin:top left;padding:64px 56px 48px;box-sizing:border-box;font-family:Georgia,'Times New Roman',serif}
   .pdf-mock-header{border-bottom:1px solid #d8d4c4;padding-bottom:18px;margin-bottom:26px}
   .pdf-mock-title{font-size:22px;font-weight:700;letter-spacing:-.01em;color:#1a1a1f;line-height:1.2}
@@ -876,9 +882,7 @@
   /* transform-origin top-centre so a pinch grows the page from the top edge it's
      anchored to. will-change is toggled on imperatively only during a pinch. */
   .pdfx-stage{display:flex;justify-content:safe center;width:100%;transform-origin:center top}
-  /* translateZ promotes the page canvas to its own GPU compositor layer so the
-     browser scrolls/pans it smoothly instead of repainting per frame. */
-  .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px;transform:translateZ(0);backface-visibility:hidden}
+  .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px}
   /* ONLY the comment composer is selectable/editable. The PDF page itself is
      never natively selectable — our word-snap overlay owns selection — so iOS
      can't pop its Copy/Look Up/Share callout over the document (see the

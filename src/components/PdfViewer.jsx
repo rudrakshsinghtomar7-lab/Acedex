@@ -16,6 +16,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const PAGE_W = 612;
 const PAGE_H = 792;
 
+// Cap the raster resolution at 2x. iPhones report devicePixelRatio 3, which is
+// visually overkill for a PDF and makes the canvas ~2.25x heavier to composite/
+// scroll than 2x. 2x stays crisp and moves much more smoothly. (react-pdf
+// defaults to window.devicePixelRatio if we don't pass this.)
+const RASTER_DPR = Math.min(
+  typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
+  2,
+);
+
 // Legacy fallback position for highlights with no real rects (old placeholder
 // bboxes). Deterministic per (page, index) so they don't reshuffle.
 function highlightTop(page, idx) {
@@ -126,6 +135,7 @@ function PdfPage({
             <Page
               pageNumber={pageNumber}
               scale={zoom}
+              devicePixelRatio={RASTER_DPR}
               onLoadSuccess={page => onPageLoadSuccess?.({
                 w: page.originalWidth ?? page.width,
                 h: page.originalHeight ?? page.height,
