@@ -1,7 +1,6 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useState } from 'react';
 import Avatar from '../../components/Avatar.jsx';
-import PdfCardModal from '../../components/PdfCardModal.jsx';
 import PdfFullViewer from '../../components/PdfFullViewer.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
 import { useDemoMode } from '../../hooks/useDemoMode.jsx';
@@ -69,9 +68,8 @@ export default function PDFs({ project, initialPdfId, initialPage }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Two modal slots — at most one is open at a time. Click in the list opens
-  // the card; the card's Open button transfers the doc to the full viewer.
-  const [cardDoc, setCardDoc] = useState(null);
+  // Tapping a PDF opens the full-page viewer directly (Download/Share now live
+  // in the viewer's toolbar, so the old metadata card step is redundant).
   const [viewerDoc, setViewerDoc] = useState(null);
   // initialPage is consumed once per viewer-open so closing+reopening manually
   // doesn't keep jumping to the deep-linked page.
@@ -122,7 +120,6 @@ export default function PDFs({ project, initialPdfId, initialPage }) {
     if (!match) return;
     if (viewerDoc?.id === match.id) return;
     setViewerPage(Math.max(1, Number(initialPage) || 1));
-    setCardDoc(null);
     setViewerDoc(match);
   }, [initialPdfId, initialPage, docs]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -212,7 +209,7 @@ export default function PDFs({ project, initialPdfId, initialPage }) {
                 key={doc.id}
                 type="button"
                 className="pdf-row pdf-row-grid"
-                onClick={() => setCardDoc(doc)}
+                onClick={() => { setViewerPage(1); setViewerDoc(doc); }}
               >
                 <div className="pdf-row-top">
                   <div className="pdf-file-icon">PDF</div>
@@ -236,19 +233,10 @@ export default function PDFs({ project, initialPdfId, initialPage }) {
         </div>
       )}
 
-      {cardDoc && (
-        <PdfCardModal
-          doc={cardDoc}
-          isDemo={isDemo}
-          supabase={supabase}
-          onClose={() => setCardDoc(null)}
-          onOpen={doc => { setCardDoc(null); setViewerPage(1); setViewerDoc(doc); }}
-        />
-      )}
-
       {viewerDoc && (
         <PdfFullViewer
           doc={viewerDoc}
+          projectId={project.id}
           isDemo={isDemo}
           supabase={supabase}
           user={user}

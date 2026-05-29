@@ -170,6 +170,7 @@
     bottom:calc(env(safe-area-inset-bottom,0) + 70px);
   }
   .phone:has(.pdf-fullviewer) .app-footer,
+  .phone:has(.pdfx) .app-footer,
   .phone:has(.ovl) .app-footer{display:none}
 
   .bnav-pill{
@@ -850,6 +851,59 @@
   .pdf-mock-highlight:hover{filter:brightness(.96);transform:translateY(-1px)}
   .pdf-mock-highlight.active{box-shadow:0 0 0 2px rgba(var(--accent-rgb),.65),0 6px 16px rgba(0,0,0,.25);transform:translateY(-1px)}
   .pdf-mock-highlight-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FULL-PAGE PDF WORKSPACE (.pdfx)
+     Edge-to-edge review surface. Chrome (header/toolbar/zoom) overlays the
+     doc and slides away on tap; the doc keeps fixed padding so the page never
+     moves during the toggle. Absolute children re-apply safe-area insets
+     because .ovl/.pdfx position to .phone's padding box, not its content box.
+     ═══════════════════════════════════════════════════════════════════════ */
+  .pdfx{position:absolute;inset:0;z-index:150;background:var(--pdf-frame-bg);overflow:hidden;-webkit-user-select:none;user-select:none}
+  .pdfx-doc{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0) + 96px) 12px calc(env(safe-area-inset-bottom,0) + 90px)}
+  .pdfx-doc::-webkit-scrollbar{width:0;height:0}
+  .pdfx-stage{display:flex;justify-content:center;width:100%}
+  .pdfx-stage canvas{box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:4px}
+  /* Real-PDF text + the comment composer stay selectable/editable despite the
+     no-select guard that stops the chrome text from being grabbed. */
+  .pdfx .pdf-real-page,.pdfx .pdf-real-page *,
+  .pdfx textarea,.pdfx input{-webkit-user-select:text;user-select:text}
+
+  .pdfx-header{position:absolute;top:0;left:0;right:0;z-index:20;background:var(--bg-1);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top,0) + 8px) 12px 8px;box-shadow:var(--shadow-1);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
+  .pdfx-head-row{display:flex;align-items:center;gap:10px}
+  .pdfx-title{flex:1;min-width:0;font-size:14px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+  .pdfx-pageind{flex-shrink:0;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg-2);border:1px solid var(--border);border-radius:99px;padding:4px 10px;font-variant-numeric:tabular-nums}
+  .pdfx-review{margin-top:6px;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pdfx-hidden-top{transform:translateY(-100%);opacity:0;pointer-events:none}
+
+  /* Press-and-hold hint pill, centred just above the bottom toolbar. */
+  .pdfx-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0) + 78px);z-index:17;display:flex;align-items:center;gap:5px;background:rgba(var(--accent-rgb),.12);color:var(--text-2);border:1px solid rgba(var(--accent-rgb),.25);font-size:12px;font-weight:600;padding:6px 12px;border-radius:99px;box-shadow:var(--shadow-1);white-space:nowrap;pointer-events:none;animation:fade 200ms var(--ease)}
+
+  .pdfx-zoom{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0) + 98px);z-index:18;display:flex;align-items:center;gap:2px;background:var(--bg-1);border:1px solid var(--border);border-radius:99px;padding:3px;box-shadow:var(--shadow-2);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
+  .pdfx-zoom button{min-width:38px;height:38px;border:none;background:none;color:var(--text);font-size:19px;font-weight:600;border-radius:99px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pdfx-zoom button:active{background:var(--bg-3)}
+  .pdfx-zoom-fit{font-size:12px !important;font-weight:700 !important;color:var(--muted) !important;padding:0 6px}
+  .pdfx-hidden-zoom{transform:translateY(24px);opacity:0;pointer-events:none}
+
+  .pdfx-toolbar{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;background:var(--bg-1);border-top:1px solid var(--border);padding:6px 8px calc(env(safe-area-inset-bottom,0) + 6px);box-shadow:var(--nav-shadow);transition:transform 250ms var(--ease),opacity 250ms var(--ease)}
+  .pdfx-hidden-bottom{transform:translateY(100%);opacity:0;pointer-events:none}
+  .pdfx-tool{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:7px 4px;border-radius:12px;transition:color var(--t),background var(--t)}
+  .pdfx-tool:active{background:var(--bg-2)}
+  .pdfx-tool.active{color:var(--indigo-bright)}
+  .pdfx-tool:disabled{opacity:.4;pointer-events:none}
+  .pdfx-tool-i{font-size:19px;line-height:1}
+  .pdfx-tool-l{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .pdfx-sheet-scrim{position:absolute;inset:0;z-index:25;background:var(--scrim);animation:fade 200ms var(--ease)}
+  .pdfx-sheet{position:absolute;left:0;right:0;bottom:0;z-index:26;max-height:72%;display:flex;flex-direction:column;background:var(--bg-1);border-radius:20px 20px 0 0;padding:8px 16px calc(env(safe-area-inset-bottom,0) + 12px);box-shadow:var(--shadow-2);animation:up 280ms var(--ease)}
+  .pdfx-sheet-grab{width:36px;height:4px;border-radius:99px;background:var(--border-bright);margin:2px auto 8px}
+  .pdfx-sheet-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .pdfx-composer{display:flex;gap:8px;align-items:flex-end;margin-top:8px;padding-top:10px;border-top:1px solid var(--border)}
+  .pdfx-composer .textarea{flex:1;min-height:42px;max-height:120px}
+
+  .pdfx-err{position:absolute;top:calc(env(safe-area-inset-top,0) + 100px);left:12px;right:12px;z-index:30;align-items:center}
+  .pdfx-err-x{margin-left:auto;flex-shrink:0;background:none;border:none;color:inherit;font-size:18px;line-height:1;cursor:pointer}
+  .pdfx-toast{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0) + 100px);z-index:30;background:var(--text);color:var(--bg-0);font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:99px;box-shadow:var(--shadow-2);animation:fade 200ms var(--ease);white-space:nowrap}
 
   .btn.disabled{opacity:.55;pointer-events:none}
 
