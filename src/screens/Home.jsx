@@ -82,7 +82,7 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
   // tiles match what they actually see in the projects section.
   const dProj = demoOn ? demoProjects : [];
   const demoFakeTotalTasks = demoOn ? dProj.flatMap(p => p.tasks ?? []).length : 0;
-  const demoFakeDoneTasks  = demoOn ? dProj.flatMap(p => p.tasks ?? []).filter(t => t.done).length : 0;
+  const demoFakeDoneTasks  = demoOn ? dProj.flatMap(p => p.tasks ?? []).filter(t => t.done || t.status === 'done').length : 0;
   const demoFakeActiveMs   = demoOn ? dProj.flatMap(p => p.milestones ?? []).filter(m => m.status === 'active').length : 0;
   const demoFakeInsights   = demoOn ? dProj.reduce((a, p) => a + (p.insights ?? []).filter(i => i.type !== 'positive').length, 0) : 0;
 

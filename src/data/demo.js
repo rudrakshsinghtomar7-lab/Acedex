@@ -64,13 +64,16 @@ export const DEMO_PROJECTS = [
       { id: 4, title: 'Experiments & Results', status: 'pending', due: 'May 20', owner: 'Yuki Tanaka', submissions: 0 },
       { id: 5, title: 'Final Paper',         status: 'pending', due: 'May 30', owner: 'All',           submissions: 0 },
     ],
+    // Phase 1 Tasks shape: status ladder + three assignee modes + assignees
+    // join (mirrors the DB). Alex Chen (demo-student-1) is the current demo
+    // student, so tasks assigned to / claimable by Alex are interactive.
     tasks: [
-      { id: 1, title: 'Annotate hallucination dataset (1000 samples)', done: false, assignee: 'Alex Chen',     priority: 'high', due: 'May 10' },
-      { id: 2, title: 'Implement BERTScore evaluator',                 done: false, assignee: 'Marcus Lee',    priority: 'high', due: 'May 12' },
-      { id: 3, title: 'Write methods section draft',                   done: false, assignee: 'Priya Sharma',  priority: 'med',  due: 'May 15' },
-      { id: 4, title: 'Create result visualizations',                  done: false, assignee: 'Yuki Tanaka',   priority: 'med',  due: 'May 18' },
-      { id: 5, title: 'Peer review pass',                              done: true,  assignee: 'Alex Chen',     priority: 'low',  due: 'Apr 28' },
-      { id: 6, title: 'Citation cleanup',                              done: true,  assignee: 'Priya Sharma',  priority: 'low',  due: 'Apr 25' },
+      { id: 'demo-task-1', title: 'Annotate hallucination dataset (1000 samples)', status: 'not_started', assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-2', title: 'Implement BERTScore evaluator',                 status: 'in_progress', assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee',   avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-3', title: 'Write methods section draft',                   status: 'not_started', assignee_mode: 'self_pick',   assignees: [] },
+      { id: 'demo-task-4', title: 'Create result visualizations',                  status: 'not_started', assignee_mode: 'team_leader', leader_id: 'demo-student-1', assignees: [] },
+      { id: 'demo-task-5', title: 'Peer review pass',                              status: 'submitted',   assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-6', title: 'Citation cleanup',                              status: 'done',        assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-2', full_name: 'Priya Sharma', avatar_url: null, role: 'student' } }] },
     ],
     contributions: [
       { name: 'Alex Chen',    pct: 34 },

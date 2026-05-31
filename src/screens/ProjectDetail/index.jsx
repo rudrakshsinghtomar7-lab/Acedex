@@ -104,7 +104,7 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
       <div style={{padding:'20px 24px'}}>
         {tab==='overview' && <Overview project={project} role={role}/>}
         {tab==='milestones' && <Milestones project={project}/>}
-        {tab==='tasks' && <Tasks project={project}/>}
+        {tab==='tasks' && <Tasks project={project} role={role}/>}
         {tab==='assignments' && <Assignments project={project} role={role}/>}
         {tab==='team' && <Team project={project} role={role} onMembersChanged={refetch}/>}
         {tab==='pdfs' && <PDFs project={project} initialPdfId={initialPdfId} initialPage={initialPage}/>}
