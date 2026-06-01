@@ -57,23 +57,30 @@ export const DEMO_PROJECTS = [
       memberRecord(DEMO_STUDENTS[3]),
     ],
     professor: PROF,
+    // Phase 2 shape: string id + order_idx (used by the Milestones tab, whose
+    // status/progress roll up from linked tasks). Legacy status/owner/due/
+    // submissions fields are kept so the Overview/AI tabs keep rendering.
     milestones: [
-      { id: 1, title: 'Project Proposal',    status: 'done',    due: 'Apr 1',  owner: 'Alex Chen',     submissions: 2 },
-      { id: 2, title: 'Literature Review',   status: 'done',    due: 'Apr 14', owner: 'Priya Sharma',  submissions: 3 },
-      { id: 3, title: 'Methodology Design',  status: 'active',  due: 'May 5',  owner: 'Marcus Lee',    submissions: 1 },
-      { id: 4, title: 'Experiments & Results', status: 'pending', due: 'May 20', owner: 'Yuki Tanaka', submissions: 0 },
-      { id: 5, title: 'Final Paper',         status: 'pending', due: 'May 30', owner: 'All',           submissions: 0 },
+      { id: 'demo-ms-1', order_idx: 1, title: 'Project Proposal',     status: 'done',    due: 'Apr 1',  owner: 'Alex Chen',     submissions: 2 },
+      { id: 'demo-ms-2', order_idx: 2, title: 'Literature Review',    status: 'active',  due: 'Apr 14', owner: 'Priya Sharma',  submissions: 3 },
+      { id: 'demo-ms-3', order_idx: 3, title: 'Methodology Design',   status: 'active',  due: 'May 5',  owner: 'Marcus Lee',    submissions: 1 },
+      { id: 'demo-ms-4', order_idx: 4, title: 'Experiments & Results', status: 'pending', due: 'May 20', owner: 'Yuki Tanaka',  submissions: 0 },
+      { id: 'demo-ms-5', order_idx: 5, title: 'Final Paper',          status: 'pending', due: 'May 30', owner: 'All',           submissions: 0 },
     ],
     // Phase 1 Tasks shape: status ladder + three assignee modes + assignees
     // join (mirrors the DB). Alex Chen (demo-student-1) is the current demo
     // student, so tasks assigned to / claimable by Alex are interactive.
+    // milestone_id links a task into a milestone (Phase 2). Tasks 3 & 4 stay
+    // standalone (no milestone label; addable to a milestone by the prof).
+    // Rollups: ms-3 = [t1 not_started, t2 in_progress] → Not started 0/2;
+    //          ms-2 = [t5 submitted, t6 done]          → In progress 1/2.
     tasks: [
-      { id: 'demo-task-1', title: 'Annotate hallucination dataset (1000 samples)', status: 'not_started', assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-2', title: 'Implement BERTScore evaluator',                 status: 'in_progress', assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee',   avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-3', title: 'Write methods section draft',                   status: 'not_started', assignee_mode: 'self_pick',   assignees: [] },
-      { id: 'demo-task-4', title: 'Create result visualizations',                  status: 'not_started', assignee_mode: 'team_leader', leader_id: 'demo-student-1', assignees: [] },
-      { id: 'demo-task-5', title: 'Peer review pass',                              status: 'submitted',   assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-6', title: 'Citation cleanup',                              status: 'done',        assignee_mode: 'professor',   assignees: [{ student: { id: 'demo-student-2', full_name: 'Priya Sharma', avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-1', title: 'Annotate hallucination dataset (1000 samples)', status: 'not_started', assignee_mode: 'professor',   milestone_id: 'demo-ms-3', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-2', title: 'Implement BERTScore evaluator',                 status: 'in_progress', assignee_mode: 'professor',   milestone_id: 'demo-ms-3', assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee',   avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-3', title: 'Write methods section draft',                   status: 'not_started', assignee_mode: 'self_pick',   milestone_id: null,        assignees: [] },
+      { id: 'demo-task-4', title: 'Create result visualizations',                  status: 'not_started', assignee_mode: 'team_leader', leader_id: 'demo-student-1', milestone_id: null, assignees: [] },
+      { id: 'demo-task-5', title: 'Peer review pass',                              status: 'submitted',   assignee_mode: 'professor',   milestone_id: 'demo-ms-2', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-6', title: 'Citation cleanup',                              status: 'done',        assignee_mode: 'professor',   milestone_id: 'demo-ms-2', assignees: [{ student: { id: 'demo-student-2', full_name: 'Priya Sharma', avatar_url: null, role: 'student' } }] },
     ],
     contributions: [
       { name: 'Alex Chen',    pct: 34 },

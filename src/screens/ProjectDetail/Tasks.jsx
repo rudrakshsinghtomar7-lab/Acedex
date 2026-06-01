@@ -174,6 +174,16 @@ export default function Tasks({ project, role }) {
     [project.memberRecords],
   );
 
+  // Resolve a task's milestone label. Real rows carry an embedded
+  // milestone:{title}; demo rows only have milestone_id, so map it via the
+  // project's milestones. Standalone tasks (no milestone) get no chip.
+  const msTitleById = useMemo(() => {
+    const map = {};
+    if (isDemo) for (const ms of (project.milestones ?? [])) map[ms.id] = ms.title;
+    for (const r of (rows ?? [])) if (r.milestone?.title) map[r.milestone_id] = r.milestone.title;
+    return map;
+  }, [isDemo, project?.milestones, rows]);
+
   const openCount = (rows ?? []).filter(t => t.status !== 'done').length;
   const doneCount = (rows ?? []).filter(t => t.status === 'done').length;
 
@@ -224,11 +234,15 @@ export default function Tasks({ project, role }) {
           const canStart = !isProfessor && mine && t.status === 'not_started';
           const canClaim = !isProfessor && t.assignee_mode === 'self_pick' && !mine && t.status !== 'done';
           const showLeaderAssign = (isLeader || isProfessor) && t.assignee_mode === 'team_leader' && t._assignees.length === 0;
+          const msLabel = t.milestone?.title ?? (t.milestone_id ? msTitleById[t.milestone_id] : null) ?? null;
 
           return (
             <div key={t.id} className="task-row">
               <div className="task-row-top">
-                <div className="task-row-title">{t.title}</div>
+                <div className="task-row-titlewrap">
+                  <div className="task-row-title">{t.title}</div>
+                  {msLabel && <span className="task-milestone-label" title="Part of milestone">◇ {msLabel}</span>}
+                </div>
                 <StatusBadge status={t.status} />
               </div>
 

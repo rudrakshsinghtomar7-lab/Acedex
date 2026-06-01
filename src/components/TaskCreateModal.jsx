@@ -6,7 +6,7 @@ import { createTask, TASK_ASSIGNEE_MODES } from '../lib/tasks.js';
 // (same vocabulary as assignments' distribution_mode). Status always starts at
 // 'not_started'. Reuses the assignment-create modal's classes so it matches the
 // rest of the project workspace in both themes.
-export default function TaskCreateModal({ project, ownerId, supabase, isDemo, onClose, onCreated }) {
+export default function TaskCreateModal({ project, ownerId, supabase, isDemo, onClose, onCreated, milestoneId = null }) {
   const members = useMemo(
     () => (project.memberRecords ?? [])
       .map(m => m.profile)
@@ -60,6 +60,7 @@ export default function TaskCreateModal({ project, ownerId, supabase, isDemo, on
           done: false,
           assignee_mode: assigneeMode,
           leader_id: assigneeMode === 'team_leader' ? (leaderId || null) : null,
+          milestone_id: milestoneId || null,
           created_by: 'demo-prof-1',
           assignees: chosen.map(m => ({
             id: `demo-ta-${m.id}-${Date.now()}`,
@@ -78,6 +79,7 @@ export default function TaskCreateModal({ project, ownerId, supabase, isDemo, on
         assigneeMode,
         assigneeIds: assigneeMode === 'professor' ? assigneeIds : [],
         leaderId: assigneeMode === 'team_leader' ? leaderId : null,
+        milestoneId: milestoneId || null,
       });
       onCreated(row);
     } catch (e) {

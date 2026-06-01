@@ -36,12 +36,13 @@ export function taskStatusLabel(status) {
 }
 
 const TASK_SELECT = `
-  id, team_id, assignment_id, title, status, done, assignee_mode, leader_id,
+  id, team_id, assignment_id, milestone_id, title, status, done, assignee_mode, leader_id,
   created_by, created_at, updated_at,
   assignees:task_assignees(
     id, student_id, assigned_at,
     student:profiles!task_assignees_student_id_fkey(id, full_name, avatar_url, role)
-  )
+  ),
+  milestone:milestones!tasks_milestone_id_fkey(id, title)
 `;
 
 // Team-wide list — every task in the team (not just the caller's). RLS
@@ -73,6 +74,7 @@ export async function getTask(supabase, taskId) {
 export async function createTask(supabase, {
   teamId, createdBy, title,
   assigneeMode = 'professor', assigneeIds = [], leaderId = null,
+  milestoneId = null,
 }) {
   const payload = {
     team_id: teamId,
@@ -80,6 +82,7 @@ export async function createTask(supabase, {
     title: title.trim(),
     assignee_mode: assigneeMode,
     leader_id: assigneeMode === 'team_leader' ? (leaderId || null) : null,
+    milestone_id: milestoneId || null,
     status: 'not_started',
   };
   const { data: task, error } = await supabase
