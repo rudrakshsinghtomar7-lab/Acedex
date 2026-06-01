@@ -326,6 +326,9 @@
   /* Phase 2 — milestone label chip on task rows */
   .task-row-titlewrap{display:flex;flex-direction:column;gap:6px;min-width:0}
   .task-milestone-label{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;font-size:10.5px;font-weight:600;color:var(--indigo-bright);background:rgba(var(--accent-rgb),.10);border:1px solid rgba(var(--accent-rgb),.22);border-radius:5px;padding:1px 7px;letter-spacing:.02em}
+  /* Phase 3 — auto-task (mirrors an assignment) chip + prof note */
+  .task-assignment-label{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;font-size:10.5px;font-weight:600;color:var(--info);background:rgba(var(--info-rgb),.10);border:1px solid rgba(var(--info-rgb),.24);border-radius:5px;padding:1px 7px;letter-spacing:.02em}
+  .task-auto-note{font-size:11px;color:var(--muted);font-style:italic;flex-shrink:0}
 
   /* Phase 2 — milestones as team-context containers (no owner; rollup + progress) */
   .ms-new-row{display:flex;gap:8px;align-items:center;margin-bottom:16px}

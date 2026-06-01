@@ -229,11 +229,15 @@ export default function Tasks({ project, role }) {
         rows.map(t => {
           const busy = busyId === t.id;
           const mine = amAssignee(t);
+          // Auto-task (Phase 3): mirrors an assignment. Status is assignment-
+          // driven — no manual start/claim/status here. Submit (for the
+          // assignee) routes into the assignment submission flow.
+          const isAuto = !!t.assignment_id;
           const isLeader = t.assignee_mode === 'team_leader' && t.leader_id === myId;
           const canSubmit = !isProfessor && mine && (t.status === 'not_started' || t.status === 'in_progress');
-          const canStart = !isProfessor && mine && t.status === 'not_started';
-          const canClaim = !isProfessor && t.assignee_mode === 'self_pick' && !mine && t.status !== 'done';
-          const showLeaderAssign = (isLeader || isProfessor) && t.assignee_mode === 'team_leader' && t._assignees.length === 0;
+          const canStart = !isProfessor && mine && t.status === 'not_started' && !isAuto;
+          const canClaim = !isProfessor && t.assignee_mode === 'self_pick' && !mine && t.status !== 'done' && !isAuto;
+          const showLeaderAssign = !isAuto && (isLeader || isProfessor) && t.assignee_mode === 'team_leader' && t._assignees.length === 0;
           const msLabel = t.milestone?.title ?? (t.milestone_id ? msTitleById[t.milestone_id] : null) ?? null;
 
           return (
@@ -242,6 +246,7 @@ export default function Tasks({ project, role }) {
                 <div className="task-row-titlewrap">
                   <div className="task-row-title">{t.title}</div>
                   {msLabel && <span className="task-milestone-label" title="Part of milestone">◇ {msLabel}</span>}
+                  {isAuto && <span className="task-assignment-label" title="Mirrors an assignment — status flows from it">↪ Assignment</span>}
                 </div>
                 <StatusBadge status={t.status} />
               </div>
@@ -288,7 +293,7 @@ export default function Tasks({ project, role }) {
                       {members.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                     </select>
                   )}
-                  {isProfessor && (
+                  {isProfessor && !isAuto && (
                     <select
                       className="task-mini-select"
                       value={t.status}
@@ -298,6 +303,9 @@ export default function Tasks({ project, role }) {
                     >
                       {TASK_STATUS_LADDER.map(s => <option key={s} value={s}>{taskStatusLabel(s)}</option>)}
                     </select>
+                  )}
+                  {isProfessor && isAuto && (
+                    <span className="task-auto-note" title="Status flows from the assignment">assignment-driven</span>
                   )}
                 </div>
               </div>

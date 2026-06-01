@@ -81,6 +81,11 @@ export const DEMO_PROJECTS = [
       { id: 'demo-task-4', title: 'Create result visualizations',                  status: 'not_started', assignee_mode: 'team_leader', leader_id: 'demo-student-1', milestone_id: null, assignees: [] },
       { id: 'demo-task-5', title: 'Peer review pass',                              status: 'submitted',   assignee_mode: 'professor',   milestone_id: 'demo-ms-2', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
       { id: 'demo-task-6', title: 'Citation cleanup',                              status: 'done',        assignee_mode: 'professor',   milestone_id: 'demo-ms-2', assignees: [{ student: { id: 'demo-student-2', full_name: 'Priya Sharma', avatar_url: null, role: 'student' } }] },
+      // Phase 3 auto-tasks: mirror an assignment (assignment_id set). Status is
+      // assignment-driven; they show a "↪ Assignment" chip and route Submit
+      // into the assignment flow. Standalone (no milestone).
+      { id: 'demo-task-auto-1', title: 'Reading-week reflection memo', status: 'not_started', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-1c', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',  avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-auto-2', title: 'Methodology section v2',       status: 'done',        assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-1a', assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee', avatar_url: null, role: 'student' } }] },
     ],
     contributions: [
       { name: 'Alex Chen',    pct: 34 },

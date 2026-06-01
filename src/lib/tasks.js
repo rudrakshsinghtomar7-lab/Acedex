@@ -13,6 +13,7 @@
 // NOT here (Phase 2/3): milestones, assignment_id auto-linking, contribution %,
 // due-date logic.
 import { uploadPdfDocument } from './pdfs.js';
+import { submitAssignmentPdf } from './assignments.js';
 
 // Same three modes as assignments' distribution_mode (009).
 export const TASK_ASSIGNEE_MODES = [
@@ -158,6 +159,14 @@ export async function startTask(supabase, taskId) {
 // 'done'). assignmentId is passed through for when a task is later linked to a
 // milestone/assignment (Phase 3); null for standalone Phase 1 tasks.
 export async function submitTask(supabase, { teamId, taskId, userId, file, assignmentId = null }) {
+  // Auto-task (Phase 3): mirrors an assignment. Submit through the EXISTING
+  // assignment flow — the DB trigger then flips the mirror task to 'submitted'.
+  // (submit_task RPC refuses auto-tasks, so this is the only correct path.)
+  if (assignmentId) {
+    await submitAssignmentPdf(supabase, { teamId, assignmentId, submitterId: userId, file });
+    return getTask(supabase, taskId);
+  }
+  // Standalone Phase-1 task: upload the PDF, then flip status via the RPC.
   await uploadPdfDocument(supabase, { teamId, userId, assignmentId, file });
   const { error } = await supabase.rpc('submit_task', { p_task_id: taskId });
   if (error) throw error;
