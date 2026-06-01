@@ -127,21 +127,23 @@ export async function loadHomeStatsForStudent(supabase, studentId) {
 // FK cascade can't reach the PDF binaries in storage, so we clean those up
 // app-side (best-effort) after the row delete.
 export async function deleteProject(supabase, teamId) {
-  // Read the PDF storage paths BEFORE the cascade removes pdf_documents rows.
   const { data: pdfs } = await supabase
     .from('pdf_documents').select('storage_path').eq('team_id', teamId);
   const paths = (pdfs ?? []).map(p => p.storage_path).filter(Boolean);
 
-  // Delete the project. RLS gates this to prof/admin; the cascade does the rest.
+  // Remove the PDF binaries FIRST — while the pdf_documents rows still exist.
+  // The storage delete policy (storage_owns_pdf) authorizes via that row, so
+  // removing AFTER the team-delete cascade would be denied and orphan the
+  // files. Surface a storage error rather than silently leaking binaries.
+  if (paths.length) {
+    const { error: rmErr } = await supabase.storage.from('pdfs').remove(paths);
+    if (rmErr) throw rmErr;
+  }
+
+  // Now delete the project. RLS gates this to prof/admin; FK cascade removes
+  // every descendant row.
   const { error } = await supabase.from('teams').delete().eq('id', teamId);
   if (error) throw error;
-
-  // Best-effort: remove the now-orphaned PDF binaries from the bucket. A storage
-  // hiccup must not resurrect the (already deleted) project, so we swallow it.
-  if (paths.length) {
-    try { await supabase.storage.from('pdfs').remove(paths); }
-    catch { /* non-critical — rows are already gone */ }
-  }
 }
 
 export function adaptTeam(team, members) {
