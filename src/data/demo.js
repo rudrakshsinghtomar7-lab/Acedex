@@ -86,6 +86,10 @@ export const DEMO_PROJECTS = [
       // into the assignment flow. Standalone (no milestone).
       { id: 'demo-task-auto-1', title: 'Reading-week reflection memo', status: 'not_started', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-1c', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',  avatar_url: null, role: 'student' } }] },
       { id: 'demo-task-auto-2', title: 'Methodology section v2',       status: 'done',        assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-1a', assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee', avatar_url: null, role: 'student' } }] },
+      // Phase 3.1 subtask-tasks: mirror a team-assignment SUBTASK (subtask_id
+      // set). Labelled with the parent assignment title; assignment-driven.
+      { id: 'demo-task-sub-1', title: 'Data Analysis',  status: 'in_progress', assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1b-3', subtask: { id: 'demo-st-1b-3', status: 'in_progress', assignment: { id: 'demo-asgn-1b', title: 'Annotated hallucination dataset' } }, assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',  avatar_url: null, role: 'student' } }] },
+      { id: 'demo-task-sub-2', title: 'Conclusion',     status: 'submitted',   assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1b-4', subtask: { id: 'demo-st-1b-4', status: 'submitted',   assignment: { id: 'demo-asgn-1b', title: 'Annotated hallucination dataset' } }, assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee', avatar_url: null, role: 'student' } }] },
     ],
     contributions: [
       { name: 'Alex Chen',    pct: 34 },

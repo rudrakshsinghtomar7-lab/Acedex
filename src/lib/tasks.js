@@ -13,7 +13,7 @@
 // NOT here (Phase 2/3): milestones, assignment_id auto-linking, contribution %,
 // due-date logic.
 import { uploadPdfDocument } from './pdfs.js';
-import { submitAssignmentPdf } from './assignments.js';
+import { submitAssignmentPdf, updateSubtaskStatus } from './assignments.js';
 
 // Same three modes as assignments' distribution_mode (009).
 export const TASK_ASSIGNEE_MODES = [
@@ -37,13 +37,17 @@ export function taskStatusLabel(status) {
 }
 
 const TASK_SELECT = `
-  id, team_id, assignment_id, milestone_id, title, status, done, assignee_mode, leader_id,
+  id, team_id, assignment_id, subtask_id, milestone_id, title, status, done, assignee_mode, leader_id,
   created_by, created_at, updated_at,
   assignees:task_assignees(
     id, student_id, assigned_at,
     student:profiles!task_assignees_student_id_fkey(id, full_name, avatar_url, role)
   ),
-  milestone:milestones!tasks_milestone_id_fkey(id, title)
+  milestone:milestones!tasks_milestone_id_fkey(id, title),
+  subtask:assignment_subtasks!tasks_subtask_id_fkey(
+    id, status,
+    assignment:assignments!assignment_subtasks_assignment_id_fkey(id, title)
+  )
 `;
 
 // Team-wide list — every task in the team (not just the caller's). RLS
@@ -158,7 +162,15 @@ export async function startTask(supabase, taskId) {
 // task to 'submitted' via the security-definer RPC (which can never set
 // 'done'). assignmentId is passed through for when a task is later linked to a
 // milestone/assignment (Phase 3); null for standalone Phase 1 tasks.
-export async function submitTask(supabase, { teamId, taskId, userId, file, assignmentId = null }) {
+export async function submitTask(supabase, { teamId, taskId, userId, file, assignmentId = null, subtaskId = null }) {
+  // Subtask-task (Phase 3.1): mirrors a team-assignment subtask. Submit through
+  // the EXISTING subtask flow — upload the PDF, then set the subtask to
+  // 'submitted'; the DB trigger flips the mirror task to 'submitted'.
+  if (subtaskId) {
+    const pdf = await uploadPdfDocument(supabase, { teamId, userId, file });
+    await updateSubtaskStatus(supabase, { subtaskId, status: 'submitted', pdfDocumentId: pdf.id });
+    return getTask(supabase, taskId);
+  }
   // Auto-task (Phase 3): mirrors an assignment. Submit through the EXISTING
   // assignment flow — the DB trigger then flips the mirror task to 'submitted'.
   // (submit_task RPC refuses auto-tasks, so this is the only correct path.)
