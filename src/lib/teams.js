@@ -118,6 +118,32 @@ export async function loadHomeStatsForStudent(supabase, studentId) {
   return { projects: count ?? 0 };
 }
 
+// Permanent, full delete of a project (team) and everything under it.
+// Permissions are enforced at the DB: teams_delete allows only the course
+// professor or an admin; FK ON DELETE CASCADE removes every descendant
+// (team_members, assignments + subtasks/assignees/leaders, submissions,
+// tasks + task_assignees, milestones, pdf_documents + annotations/access_log,
+// ai_analyses/findings, resources, contributions, activity_events, invitations).
+// FK cascade can't reach the PDF binaries in storage, so we clean those up
+// app-side (best-effort) after the row delete.
+export async function deleteProject(supabase, teamId) {
+  // Read the PDF storage paths BEFORE the cascade removes pdf_documents rows.
+  const { data: pdfs } = await supabase
+    .from('pdf_documents').select('storage_path').eq('team_id', teamId);
+  const paths = (pdfs ?? []).map(p => p.storage_path).filter(Boolean);
+
+  // Delete the project. RLS gates this to prof/admin; the cascade does the rest.
+  const { error } = await supabase.from('teams').delete().eq('id', teamId);
+  if (error) throw error;
+
+  // Best-effort: remove the now-orphaned PDF binaries from the bucket. A storage
+  // hiccup must not resurrect the (already deleted) project, so we swallow it.
+  if (paths.length) {
+    try { await supabase.storage.from('pdfs').remove(paths); }
+    catch { /* non-critical — rows are already gone */ }
+  }
+}
+
 export function adaptTeam(team, members) {
   const course = team.course;
   const memberList = members ?? team.members ?? [];

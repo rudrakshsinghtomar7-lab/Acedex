@@ -1,5 +1,7 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DeleteProjectModal from '../../components/DeleteProjectModal.jsx';
 import Overview from './Overview.jsx';
 import Milestones from './Milestones.jsx';
 import Tasks from './Tasks.jsx';
@@ -11,17 +13,47 @@ import PDFs from './PDFs.jsx';
 import ProjectAI from './ProjectAI.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
 import { useDemoMode } from '../../hooks/useDemoMode.jsx';
-import { adaptTeam, getTeamDetail } from '../../lib/teams.js';
+import { adaptTeam, deleteProject, getTeamDetail } from '../../lib/teams.js';
 
 export default function ProjectDetail({id, role, onBack, apiKey, initialTab, initialPdfId, initialPage}) {
   const { supabase } = useAuth();
   const { demoMode, demoData } = useDemoMode();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState(initialTab || 'overview');
   const [refreshTick, setRefreshTick] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const refetch = () => setRefreshTick(n => n + 1);
+  const isDemo = typeof id === 'string' && id.startsWith('demo-');
+  const canDelete = role === 'professor' || role === 'admin';
+
+  // Permanent project delete. Real: deleteProject (RLS-gated, full cascade,
+  // storage cleanup). Demo: splice the in-memory project. Then leave the screen.
+  async function confirmDelete() {
+    if (isDemo) {
+      const arr = demoData?.DEMO_PROJECTS;
+      if (arr) {
+        const i = arr.findIndex(p => p.id === id);
+        if (i >= 0) arr.splice(i, 1);
+      }
+    } else {
+      await deleteProject(supabase, id);
+    }
+    navigate('/projects', { replace: true });
+  }
+
+  // Close the header menu on any outside click (deferred so the opening click
+  // doesn't immediately re-close it). Overlays here use no fixed backdrop —
+  // the phone-frame convention avoids position:fixed.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    const t = setTimeout(() => window.addEventListener('click', close), 0);
+    return () => { clearTimeout(t); window.removeEventListener('click', close); };
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!id) return;
@@ -98,7 +130,22 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
       <div className="sh-head">
         <button className="back" onClick={onBack}>←</button>
         <div className="sh-title">{project.title}</div>
-        <button className="icon-btn" style={{width:36,height:36}}>···</button>
+        {canDelete ? (
+          <div style={{ position: 'relative' }}>
+            <button className="icon-btn" style={{ width: 36, height: 36 }} aria-label="Project menu" aria-haspopup="menu" onClick={() => setMenuOpen(o => !o)}>···</button>
+            {menuOpen && (
+              <div role="menu" style={{ position: 'absolute', right: 0, top: 42, zIndex: 41, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-2)', minWidth: 160, overflow: 'hidden' }}>
+                <button
+                  type="button" role="menuitem"
+                  onClick={() => { setMenuOpen(false); setDeleting(true); }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', background: 'transparent', border: 'none', color: 'var(--error)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
+                >Delete project</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ width: 36, height: 36 }} aria-hidden />
+        )}
       </div>
       <DTabs tabs={tabs} active={tab} onChange={setTab} />
       <div style={{padding:'20px 24px'}}>
@@ -112,6 +159,13 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
         {tab==='insights' && role==='professor' && <Insights project={project}/>}
         {tab==='ai' && <ProjectAI project={project} role={role} apiKey={apiKey}/>}
       </div>
+      {deleting && (
+        <DeleteProjectModal
+          project={project}
+          onClose={() => setDeleting(false)}
+          onConfirm={confirmDelete}
+        />
+      )}
     </>
   );
 }
