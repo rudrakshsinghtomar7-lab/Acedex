@@ -1,11 +1,23 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 // Demo data — DEV-only.
 //
-// This file is imported via a dynamic `import('./demo.js')` from
-// `useDemoMode`, behind an `if (!DEV) return` guard. With Vite's static
-// analysis, the prod bundle never reaches the import, so this entire
-// module + its chunk are dead in production builds. Verified by inspecting
-// `dist/assets/` after `npm run build`.
+// Imported via dynamic import('./demo.js') from useDemoMode, behind a DEV/admin
+// guard, so the whole module is tree-shaken out of production builds.
+//
+// THREE curated pitch projects, each leaning into a different slice of the app
+// with no feature demonstrated identically twice:
+//   1. LLM Hallucination Study   — team research: milestones w/ task rollup,
+//      a team assignment per distribution mode (professor / team-leader /
+//      self-pick), PDFs + highlights/comments, balanced contributions.
+//   2. Individual Coursework     — individual track: per-student assignments
+//      through the full submit → review → grade → approve loop (grades stay on
+//      the prof/submission layer; tasks show status only). Auto-tasks.
+//   3. Mixed In-Progress Project — mid-flight: milestones at 60% / 25% / 0%,
+//      standalone + auto + subtask tasks across every status, and a deliberately
+//      uneven contribution split (the "who actually did what" story).
+//
+// Alex Chen (demo-student-1) is the signed-in demo persona and a member of all
+// three, so the student view is populated everywhere.
 
 const PROF = {
   id: 'demo-prof-1',
@@ -38,58 +50,55 @@ const memberRecord = (student, roleInTeam = 'member') => ({
   profile: { id: student.id, full_name: student.full_name, avatar_url: null, role: 'student' },
 });
 
+// Task assignee helper → matches the { student: {...} } join shape Tasks.jsx
+// and Milestones.jsx read (assignees[].student).
+const A = (student) => ({ student: { id: student.id, full_name: student.full_name, avatar_url: null, role: 'student' } });
+const S = DEMO_STUDENTS; // shorthand
+
 export const DEMO_PROJECTS = [
+  // ── PROJECT 1 — LLM Hallucination Study (team research) ───────────────────
   {
     id: 'demo-proj-1',
     title: 'LLM Hallucination Study',
-    description: 'Investigating ways to detect and mitigate factual errors in large language models. Building an evaluation suite over a curated dataset of common-knowledge questions.',
+    description: 'A four-person research team detecting and mitigating factual errors in large language models, building an evaluation suite over a curated dataset of common-knowledge questions.',
     course: 'CS 4890 · Advanced NLP',
     courseCode: 'CS 4890',
     courseName: 'Advanced NLP',
     status: 'active',
-    progress: 62,
+    progress: 58,
     dueDate: 'May 30',
     members: ['Alex Chen', 'Priya Sharma', 'Marcus Lee', 'Yuki Tanaka'],
     memberRecords: [
-      memberRecord(DEMO_STUDENTS[0], 'leader'),
-      memberRecord(DEMO_STUDENTS[1]),
-      memberRecord(DEMO_STUDENTS[2]),
-      memberRecord(DEMO_STUDENTS[3]),
+      memberRecord(S[0], 'leader'),
+      memberRecord(S[1]),
+      memberRecord(S[2]),
+      memberRecord(S[3]),
     ],
     professor: PROF,
-    // Phase 2 shape: string id + order_idx (used by the Milestones tab, whose
-    // status/progress roll up from linked tasks). Legacy status/owner/due/
-    // submissions fields are kept so the Overview/AI tabs keep rendering.
+    // Milestone rollup is DERIVED from linked tasks (milestone_id). These three
+    // are seeded to land on Done / In progress / Not started so the rollup
+    // badges + progress bars are all visible. Legacy status/owner/due kept for
+    // the Overview + AI tabs.
     milestones: [
-      { id: 'demo-ms-1', order_idx: 1, title: 'Project Proposal',     status: 'done',    due: 'Apr 1',  owner: 'Alex Chen',     submissions: 2 },
-      { id: 'demo-ms-2', order_idx: 2, title: 'Literature Review',    status: 'active',  due: 'Apr 14', owner: 'Priya Sharma',  submissions: 3 },
-      { id: 'demo-ms-3', order_idx: 3, title: 'Methodology Design',   status: 'active',  due: 'May 5',  owner: 'Marcus Lee',    submissions: 1 },
-      { id: 'demo-ms-4', order_idx: 4, title: 'Experiments & Results', status: 'pending', due: 'May 20', owner: 'Yuki Tanaka',  submissions: 0 },
-      { id: 'demo-ms-5', order_idx: 5, title: 'Final Paper',          status: 'pending', due: 'May 30', owner: 'All',           submissions: 0 },
+      { id: 'demo-ms1a', order_idx: 1, title: 'Project Proposal',   status: 'done',    due: 'Apr 1',  owner: 'Alex Chen',    submissions: 2 },
+      { id: 'demo-ms1b', order_idx: 2, title: 'Literature Review',  status: 'active',  due: 'Apr 18', owner: 'Priya Sharma', submissions: 3 },
+      { id: 'demo-ms1c', order_idx: 3, title: 'Methodology Design', status: 'pending', due: 'May 10', owner: 'Marcus Lee',   submissions: 0 },
     ],
-    // Phase 1 Tasks shape: status ladder + three assignee modes + assignees
-    // join (mirrors the DB). Alex Chen (demo-student-1) is the current demo
-    // student, so tasks assigned to / claimable by Alex are interactive.
-    // milestone_id links a task into a milestone (Phase 2). Tasks 3 & 4 stay
-    // standalone (no milestone label; addable to a milestone by the prof).
-    // Rollups: ms-3 = [t1 not_started, t2 in_progress] → Not started 0/2;
-    //          ms-2 = [t5 submitted, t6 done]          → In progress 1/2.
     tasks: [
-      { id: 'demo-task-1', title: 'Annotate hallucination dataset (1000 samples)', status: 'not_started', assignee_mode: 'professor',   milestone_id: 'demo-ms-3', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-2', title: 'Implement BERTScore evaluator',                 status: 'in_progress', assignee_mode: 'professor',   milestone_id: 'demo-ms-3', assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee',   avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-3', title: 'Write methods section draft',                   status: 'not_started', assignee_mode: 'self_pick',   milestone_id: null,        assignees: [] },
-      { id: 'demo-task-4', title: 'Create result visualizations',                  status: 'not_started', assignee_mode: 'team_leader', leader_id: 'demo-student-1', milestone_id: null, assignees: [] },
-      { id: 'demo-task-5', title: 'Peer review pass',                              status: 'submitted',   assignee_mode: 'professor',   milestone_id: 'demo-ms-2', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',    avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-6', title: 'Citation cleanup',                              status: 'done',        assignee_mode: 'professor',   milestone_id: 'demo-ms-2', assignees: [{ student: { id: 'demo-student-2', full_name: 'Priya Sharma', avatar_url: null, role: 'student' } }] },
-      // Phase 3 auto-tasks: mirror an assignment (assignment_id set). Status is
-      // assignment-driven; they show a "↪ Assignment" chip and route Submit
-      // into the assignment flow. Standalone (no milestone).
-      { id: 'demo-task-auto-1', title: 'Reading-week reflection memo', status: 'not_started', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-1c', assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',  avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-auto-2', title: 'Methodology section v2',       status: 'done',        assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-1a', assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee', avatar_url: null, role: 'student' } }] },
-      // Phase 3.1 subtask-tasks: mirror a team-assignment SUBTASK (subtask_id
-      // set). Labelled with the parent assignment title; assignment-driven.
-      { id: 'demo-task-sub-1', title: 'Data Analysis',  status: 'in_progress', assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1b-3', subtask: { id: 'demo-st-1b-3', status: 'in_progress', assignment: { id: 'demo-asgn-1b', title: 'Annotated hallucination dataset' } }, assignees: [{ student: { id: 'demo-student-1', full_name: 'Alex Chen',  avatar_url: null, role: 'student' } }] },
-      { id: 'demo-task-sub-2', title: 'Conclusion',     status: 'submitted',   assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1b-4', subtask: { id: 'demo-st-1b-4', status: 'submitted',   assignment: { id: 'demo-asgn-1b', title: 'Annotated hallucination dataset' } }, assignees: [{ student: { id: 'demo-student-3', full_name: 'Marcus Lee', avatar_url: null, role: 'student' } }] },
+      // Milestone tasks — also demonstrate all three assignee modes on
+      // standalone (Phase-1) tasks. ms1a → 2/2 done (Done); ms1b → 1/2 (In
+      // progress); ms1c → 0/2 (Not started).
+      { id: 'demo-t1-1', title: 'Define the research question',        status: 'done',        assignee_mode: 'professor',   milestone_id: 'demo-ms1a', assignees: [A(S[0])] },
+      { id: 'demo-t1-2', title: 'Draft the proposal document',         status: 'done',        assignee_mode: 'professor',   milestone_id: 'demo-ms1a', assignees: [A(S[1])] },
+      { id: 'demo-t1-3', title: 'Survey RAG mitigation methods',       status: 'done',        assignee_mode: 'self_pick',   milestone_id: 'demo-ms1b', assignees: [A(S[2])] },
+      { id: 'demo-t1-4', title: 'Synthesize the calibration section',  status: 'in_progress', assignee_mode: 'team_leader', leader_id: 'demo-student-1', milestone_id: 'demo-ms1b', assignees: [A(S[1])] },
+      { id: 'demo-t1-5', title: 'Define the annotation protocol',      status: 'not_started', assignee_mode: 'professor',   milestone_id: 'demo-ms1c', assignees: [A(S[3])] },
+      { id: 'demo-t1-6', title: 'Choose evaluation metrics',           status: 'not_started', assignee_mode: 'self_pick',   milestone_id: 'demo-ms1c', assignees: [] },
+      // Subtask-tasks — mirror a SUBTASK of each of the three team assignments
+      // below (one per distribution mode), labelled with the parent assignment.
+      { id: 'demo-t1-sub-a', title: 'Data analysis pass',  status: 'in_progress', assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1a-3', subtask: { id: 'demo-st-1a-3', status: 'in_progress', assignment: { id: 'demo-asgn-1a', title: 'Annotated hallucination dataset' } }, assignees: [A(S[1])] },
+      { id: 'demo-t1-sub-b', title: 'Metrics module',      status: 'in_progress', assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1b-1', subtask: { id: 'demo-st-1b-1', status: 'in_progress', assignment: { id: 'demo-asgn-1b', title: 'Evaluation harness' } }, assignees: [A(S[2])] },
+      { id: 'demo-t1-sub-c', title: 'Medical-domain error pass', status: 'submitted', assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-1c-1', subtask: { id: 'demo-st-1c-1', status: 'submitted', assignment: { id: 'demo-asgn-1c', title: 'Domain error taxonomy' } }, assignees: [A(S[0])] },
     ],
     contributions: [
       { name: 'Alex Chen',    pct: 34 },
@@ -98,214 +107,149 @@ export const DEMO_PROJECTS = [
       { name: 'Yuki Tanaka',  pct: 16 },
     ],
     activity: [
-      { text: '<strong>Marcus Lee</strong> uploaded methodology_draft_v2.pdf',  time: '2h ago' },
+      { text: '<strong>Marcus Lee</strong> uploaded Methodology Draft.pdf',     time: '2h ago' },
       { text: '<strong>Priya Sharma</strong> commented on Literature Review',   time: '5h ago' },
-      { text: '<strong>Alex Chen</strong> completed task: Peer review pass',    time: '1d ago' },
-      { text: '<strong>Yuki Tanaka</strong> joined the team',                   time: '6d ago' },
-      { text: '<strong>Claude AI</strong> flagged §2.1 for similarity review',  time: '1d ago' },
-      { text: '<strong>Priya Sharma</strong> submitted Literature Review v3',   time: '2d ago' },
+      { text: '<strong>Alex Chen</strong> completed task: Define research question', time: '1d ago' },
+      { text: '<strong>Claude AI</strong> flagged §2.1 for similarity review',   time: '1d ago' },
     ],
     insights: [
-      { id: 1, type: 'workflow',   title: 'Submission timing consistent across team', body: 'All four members submit drafts 24–48 hours before deadlines; no late-night-only patterns.', evidence: ['Median submission: 18:32 local', 'No submissions after 23:00', '0 last-minute submissions in last 4 milestones'], confidence: 4 },
-      { id: 2, type: 'similarity', title: 'Minor paragraph similarity to Smith et al. 2023', body: 'Methodology section §2.1 shares 14% phrasing with a published paper. Likely common-vocabulary, but worth a quick review.', evidence: ['Closest match: Smith et al. 2023, p.4', 'Similarity score: 14%', 'Domain-specific phrasing — common in this subfield'], confidence: 3 },
-      { id: 3, type: 'positive',   title: 'Exemplary balanced workload',                    body: 'All four members within 18 percentage points of each other.', evidence: ['34% / 28% / 22% / 16%', 'No member below 15%', 'All on track with personal milestones'], confidence: 5 },
+      { id: 1, type: 'workflow',   title: 'Submission timing consistent across team', body: 'All four members submit drafts 24–48 hours before deadlines; no last-minute crunch.', evidence: ['Median submission: 18:32 local', 'No submissions after 23:00', '0 last-minute submissions in last 4 milestones'], confidence: 4 },
+      { id: 2, type: 'similarity', title: 'Minor paragraph similarity to Smith et al. 2023', body: 'Methodology §2.1 shares 14% phrasing with a published paper — likely common vocabulary, but worth a quick review.', evidence: ['Closest match: Smith et al. 2023, p.4', 'Similarity score: 14%', 'Domain-specific phrasing — common in this subfield'], confidence: 3 },
+      { id: 3, type: 'positive',   title: 'Exemplary balanced workload', body: 'All four members within 18 percentage points of each other.', evidence: ['34% / 28% / 22% / 16%', 'No member below 15%', 'All on track with personal milestones'], confidence: 5 },
     ],
     pdfs: [
-      { id: 'demo-pdf-1', title: 'Project Proposal v2',  uploaded_by: 'Alex Chen',    uploaded_at: 'Apr 1',  pages: 5,  annotations: 7,  status: 'reviewed', file_size_bytes: 612400  },
-      { id: 'demo-pdf-2', title: 'Literature Review',    uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 14', pages: 12, annotations: 14, status: 'reviewed', file_size_bytes: 1432800 },
-      { id: 'demo-pdf-3', title: 'Methodology v1',       uploaded_by: 'Marcus Lee',   uploaded_at: 'May 1',  pages: 8,  annotations: 3,  status: 'pending',  file_size_bytes: 945200  },
+      { id: 'demo-pdf-1', title: 'Research Proposal v2', uploaded_by: 'Alex Chen',    uploaded_at: 'Apr 1',  pages: 5,  annotations: 6, status: 'reviewed', file_size_bytes: 612400  },
+      { id: 'demo-pdf-2', title: 'Literature Review',    uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 18', pages: 12, annotations: 3, status: 'reviewed', file_size_bytes: 1432800 },
+      { id: 'demo-pdf-3', title: 'Methodology Draft',    uploaded_by: 'Marcus Lee',   uploaded_at: 'May 2',  pages: 8,  annotations: 3, status: 'pending',  file_size_bytes: 945200  },
     ],
     aiVerdict: { kind: 'review', label: 'Review', confidence: 3, relevance: 92 },
     isDemo: true,
   },
+
+  // ── PROJECT 2 — Individual Coursework (individual track, grading) ─────────
   {
     id: 'demo-proj-2',
-    title: 'Distributed Systems Capstone',
-    description: 'Building a fault-tolerant key-value store with consensus. Focused on correctness under network partitions.',
-    course: 'CS 4980 · Capstone Project',
-    courseCode: 'CS 4980',
-    courseName: 'Capstone Project',
+    title: 'Individual Coursework',
+    description: 'Per-student assignments for the AI Ethics seminar — essays and problem sets that flow through the full submit → review → grade → approve loop. Grades stay private to the professor; the team sees status only.',
+    course: 'CS 4710 · AI Ethics & Society',
+    courseCode: 'CS 4710',
+    courseName: 'AI Ethics & Society',
     status: 'active',
-    progress: 41,
-    dueDate: 'Jun 10',
-    members: ['Priya Sharma', 'Marcus Lee', 'Jordan Kim'],
+    progress: 64,
+    dueDate: 'Jun 2',
+    members: ['Alex Chen', 'Priya Sharma', 'Marcus Lee'],
     memberRecords: [
-      memberRecord(DEMO_STUDENTS[1], 'leader'),
-      memberRecord(DEMO_STUDENTS[2]),
-      memberRecord(DEMO_STUDENTS[4]),
+      memberRecord(S[0]),
+      memberRecord(S[1]),
+      memberRecord(S[2]),
     ],
     professor: PROF,
-    milestones: [
-      { id: 1, title: 'Architecture Plan',     status: 'done',   due: 'Apr 5',  owner: 'Priya Sharma', submissions: 1 },
-      { id: 2, title: 'Consensus Prototype',   status: 'active', due: 'May 12', owner: 'Marcus Lee',   submissions: 2 },
-      { id: 3, title: 'Partition Test Suite',  status: 'pending', due: 'May 25', owner: 'Jordan Kim',  submissions: 0 },
-      { id: 4, title: 'Final Demo',            status: 'pending', due: 'Jun 10', owner: 'All',          submissions: 0 },
-    ],
+    milestones: [],
+    // Auto-tasks: each mirrors an individual assignment (assignment_id set).
+    // Status flows from the assignment's submission/review state — Submit
+    // routes into the assignment flow; no manual claim/start here.
     tasks: [
-      { id: 1, title: 'Raft leader election write-up',     done: true,  assignee: 'Priya Sharma', priority: 'high', due: 'Apr 18' },
-      { id: 2, title: 'Implement log replication',         done: false, assignee: 'Marcus Lee',   priority: 'high', due: 'May 8'  },
-      { id: 3, title: 'Set up Jepsen-style test harness',  done: false, assignee: 'Jordan Kim',   priority: 'high', due: 'May 14' },
-      { id: 4, title: 'Benchmark throughput vs etcd',      done: false, assignee: 'Priya Sharma', priority: 'med',  due: 'May 22' },
+      { id: 'demo-t2-auto-a', title: 'Essay 1 — AI & Authorship', status: 'done',        assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-2a', assignees: [A(S[0])] },
+      { id: 'demo-t2-auto-b', title: 'Problem Set 3 — Fairness metrics', status: 'submitted', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-2b', assignees: [A(S[0])] },
+      { id: 'demo-t2-auto-c', title: 'Reflection memo — Algorithmic bias', status: 'not_started', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-2c', assignees: [A(S[0])] },
+      { id: 'demo-t2-auto-d', title: 'Midterm paper — Accountability', status: 'submitted', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-2d', assignees: [A(S[0])] },
     ],
     contributions: [
-      { name: 'Priya Sharma', pct: 42 },
-      { name: 'Marcus Lee',   pct: 35 },
-      { name: 'Jordan Kim',   pct: 23 },
+      { name: 'Alex Chen',    pct: 38 },
+      { name: 'Priya Sharma', pct: 34 },
+      { name: 'Marcus Lee',   pct: 28 },
     ],
     activity: [
-      { text: '<strong>Marcus Lee</strong> pushed log_replication.rs',         time: '4h ago' },
-      { text: '<strong>Priya Sharma</strong> opened discussion: Raft variant', time: '1d ago' },
-      { text: '<strong>Claude AI</strong> highlighted consistent test patterns', time: '2d ago' },
+      { text: '<strong>Dr. Sarah Rivera</strong> approved Essay 1 · HD',        time: '3h ago' },
+      { text: '<strong>Alex Chen</strong> submitted Problem Set 3',             time: '8h ago' },
+      { text: '<strong>Dr. Sarah Rivera</strong> requested a resubmit on the Midterm paper', time: '1d ago' },
+      { text: '<strong>Claude AI</strong> ran an originality check on Essay 1 — clear', time: '3h ago' },
     ],
     insights: [
-      { id: 1, type: 'workflow', title: 'Strong code review hygiene', body: 'Every PR has at least two reviewer comments before merge.', evidence: ['Avg comments/PR: 3.4', 'No PRs merged without review'], confidence: 5 },
-      { id: 2, type: 'positive', title: 'Jordan Kim ramping fast',     body: 'Newest member is contributing at 23% by week 6 — typical for week 10.', evidence: ['Joined Apr 1', '5 PRs merged', 'Active on every milestone discussion'], confidence: 4 },
+      { id: 1, type: 'positive',   title: 'Originality check clear on Essay 1', body: 'No significant overlap with submitted or published sources; citation density is healthy.', evidence: ['Top match: 6% (common phrasing)', '14 citations across 1,800 words', 'No uncited verbatim spans'], confidence: 5 },
+      { id: 2, type: 'workflow',   title: 'Steady submission cadence', body: 'Alex submits 1–2 days before each deadline — no late-night-only edits.', evidence: ['3 of 4 submitted early', 'Median lead time: 31h'], confidence: 4 },
     ],
     pdfs: [
-      { id: 'demo-pdf-4', title: 'Architecture Plan v3', uploaded_by: 'Priya Sharma', uploaded_at: 'Apr 5', pages: 9, annotations: 11, status: 'reviewed', file_size_bytes: 1108400 },
-      { id: 'demo-pdf-5', title: 'Consensus Prototype',  uploaded_by: 'Marcus Lee',   uploaded_at: 'May 1', pages: 6, annotations: 4,  status: 'pending',  file_size_bytes: 728300  },
+      { id: 'demo-pdf-4', title: 'Essay 1 — AI & Authorship', uploaded_by: 'Alex Chen', uploaded_at: 'May 20', pages: 6, annotations: 4, status: 'reviewed', file_size_bytes: 712800 },
+      { id: 'demo-pdf-5', title: 'Problem Set 3 writeup',     uploaded_by: 'Alex Chen', uploaded_at: 'May 28', pages: 4, annotations: 1, status: 'pending',  file_size_bytes: 488200 },
     ],
-    aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 96 },
+    aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 95 },
     isDemo: true,
   },
+
+  // ── PROJECT 3 — Mixed In-Progress Project (live status + contributions) ───
   {
     id: 'demo-proj-3',
-    title: 'Climate Data Visualization',
-    description: 'Interactive visualization of 50 years of regional climate data. Public-facing dashboard for non-technical readers.',
+    title: 'Mixed In-Progress Project',
+    description: 'A climate-data dashboard mid-flight: milestones at varied completion, every task type and status in play, and a visibly uneven contribution split that surfaces who is actually carrying the work.',
     course: 'CS 3550 · Data Visualization',
     courseCode: 'CS 3550',
     courseName: 'Data Visualization',
     status: 'at_risk',
-    progress: 28,
-    dueDate: 'Jun 5',
-    members: ['Yuki Tanaka', 'Jordan Kim', 'Alex Chen'],
+    progress: 38,
+    dueDate: 'Jun 12',
+    members: ['Alex Chen', 'Yuki Tanaka', 'Jordan Kim'],
     memberRecords: [
-      memberRecord(DEMO_STUDENTS[3], 'leader'),
-      memberRecord(DEMO_STUDENTS[4]),
-      memberRecord(DEMO_STUDENTS[0]),
+      memberRecord(S[0], 'leader'),
+      memberRecord(S[3]),
+      memberRecord(S[4]),
     ],
     professor: PROF,
+    // Milestones seeded to land on 60% / 25% / 0% via done-fraction of their
+    // linked tasks (3/5, 1/4, 0/3).
     milestones: [
-      { id: 1, title: 'Data Sourcing',         status: 'done',    due: 'Apr 20', owner: 'Yuki Tanaka', submissions: 1 },
-      { id: 2, title: 'Cleaning Pipeline',     status: 'active',  due: 'May 8',  owner: 'Alex Chen',   submissions: 1 },
-      { id: 3, title: 'Visualization Designs', status: 'pending', due: 'May 22', owner: 'Yuki Tanaka', submissions: 0 },
-      { id: 4, title: 'Interactive Prototype', status: 'pending', due: 'Jun 5',  owner: 'All',          submissions: 0 },
+      { id: 'demo-ms3a', order_idx: 1, title: 'Data Pipeline', status: 'active',  due: 'May 10', owner: 'Alex Chen',   submissions: 3 },
+      { id: 'demo-ms3b', order_idx: 2, title: 'Modeling',      status: 'active',  due: 'May 28', owner: 'Yuki Tanaka', submissions: 1 },
+      { id: 'demo-ms3c', order_idx: 3, title: 'Writeup',       status: 'pending', due: 'Jun 12', owner: 'All',         submissions: 0 },
     ],
     tasks: [
-      { id: 1, title: 'NOAA dataset ingest script',  done: true,  assignee: 'Yuki Tanaka', priority: 'high', due: 'Apr 15' },
-      { id: 2, title: 'Handle missing-station data', done: false, assignee: 'Alex Chen',   priority: 'high', due: 'May 6'  },
-      { id: 3, title: 'Sketch 5 visualization options', done: false, assignee: 'Yuki Tanaka', priority: 'med', due: 'May 12' },
-      { id: 4, title: 'Accessibility audit',         done: false, assignee: 'Jordan Kim',  priority: 'med',  due: 'May 25' },
+      // ms3a → 3/5 done = 60%
+      { id: 'demo-t3-1', title: 'Ingest NOAA dataset',        status: 'done',        assignee_mode: 'professor', milestone_id: 'demo-ms3a', assignees: [A(S[0])] },
+      { id: 'demo-t3-2', title: 'Dedupe + normalize records', status: 'done',        assignee_mode: 'professor', milestone_id: 'demo-ms3a', assignees: [A(S[0])] },
+      { id: 'demo-t3-3', title: 'Missing-value imputation',   status: 'done',        assignee_mode: 'self_pick',  milestone_id: 'demo-ms3a', assignees: [A(S[3])] },
+      { id: 'demo-t3-4', title: 'Schema validation',          status: 'in_progress', assignee_mode: 'professor', milestone_id: 'demo-ms3a', assignees: [A(S[0])] },
+      { id: 'demo-t3-5', title: 'Pipeline tests',             status: 'not_started', assignee_mode: 'self_pick',  milestone_id: 'demo-ms3a', assignees: [] },
+      // ms3b → 1/4 done = 25%
+      { id: 'demo-t3-6', title: 'Baseline model',             status: 'done',        assignee_mode: 'professor', milestone_id: 'demo-ms3b', assignees: [A(S[3])] },
+      { id: 'demo-t3-7', title: 'Feature engineering',        status: 'submitted',   assignee_mode: 'professor', milestone_id: 'demo-ms3b', assignees: [A(S[0])] },
+      { id: 'demo-t3-8', title: 'Hyperparameter sweep',       status: 'in_progress', assignee_mode: 'team_leader', leader_id: 'demo-student-1', milestone_id: 'demo-ms3b', assignees: [A(S[4])] },
+      { id: 'demo-t3-9', title: 'Model card',                 status: 'not_started', assignee_mode: 'self_pick',  milestone_id: 'demo-ms3b', assignees: [] },
+      // ms3c → 0/3 done = 0%
+      { id: 'demo-t3-10', title: 'Results section', status: 'in_progress', assignee_mode: 'professor', milestone_id: 'demo-ms3c', assignees: [A(S[0])] },
+      { id: 'demo-t3-11', title: 'Discussion',      status: 'not_started', assignee_mode: 'professor', milestone_id: 'demo-ms3c', assignees: [A(S[3])] },
+      { id: 'demo-t3-12', title: 'Abstract',        status: 'not_started', assignee_mode: 'self_pick',  milestone_id: 'demo-ms3c', assignees: [] },
+      // Standalone task (no milestone, no assignment) — Phase-1 plain task.
+      { id: 'demo-t3-standalone', title: 'Set up CI for the dashboard repo', status: 'in_progress', assignee_mode: 'self_pick', milestone_id: null, assignees: [A(S[0])] },
+      // Auto-task — mirrors an individual assignment (assignment_id).
+      { id: 'demo-t3-auto', title: 'Weekly progress report', status: 'submitted', assignee_mode: 'professor', milestone_id: null, assignment_id: 'demo-asgn-3a', assignees: [A(S[0])] },
+      // Subtask-task — mirrors a team-assignment subtask (subtask_id).
+      { id: 'demo-t3-sub', title: 'Interactive viz prototype', status: 'not_started', assignee_mode: 'professor', milestone_id: null, subtask_id: 'demo-st-3b-1', subtask: { id: 'demo-st-3b-1', status: 'open', assignment: { id: 'demo-asgn-3b', title: 'Dashboard build' } }, assignees: [A(S[3])] },
     ],
     contributions: [
-      { name: 'Yuki Tanaka', pct: 48 },
-      { name: 'Alex Chen',   pct: 38 },
-      { name: 'Jordan Kim',  pct: 14 },
+      { name: 'Alex Chen',   pct: 58 },
+      { name: 'Yuki Tanaka', pct: 30 },
+      { name: 'Jordan Kim',  pct: 12 },
     ],
     activity: [
-      { text: '<strong>Yuki Tanaka</strong> raised concern about milestone slippage', time: '2d ago' },
-      { text: '<strong>Claude AI</strong> flagged contribution imbalance',            time: '1d ago' },
-      { text: '<strong>Alex Chen</strong> requested help with data cleaning',         time: '3d ago' },
+      { text: '<strong>Claude AI</strong> flagged a contribution imbalance', time: '6h ago' },
+      { text: '<strong>Alex Chen</strong> submitted Feature engineering',    time: '1d ago' },
+      { text: '<strong>Yuki Tanaka</strong> completed Baseline model',       time: '2d ago' },
+      { text: '<strong>Alex Chen</strong> raised a milestone-slippage concern', time: '2d ago' },
     ],
     insights: [
-      { id: 1, type: 'contribution_imbalance', title: 'Jordan Kim significantly behind expected contribution', body: 'Jordan is at 14% by week 6 — peers in similar role typically reach 25–30%. Worth a check-in.', evidence: ['Last commit: 8 days ago', 'No comments on last 2 milestones', '0 tasks marked done this sprint'], confidence: 4 },
-      { id: 2, type: 'timing_anomaly',         title: 'Milestone 2 likely to miss deadline',                  body: 'Current cleaning pipeline progress projects May 14 completion vs. May 8 deadline.', evidence: ['43% of expected commits by date', 'No PR opened for milestone 2 yet'], confidence: 3 },
+      { id: 1, type: 'contribution_imbalance', title: 'Jordan Kim well behind expected contribution', body: 'Jordan is at 12% by week 7 — peers in a similar role typically reach 25–30%. Worth a check-in.', evidence: ['Last commit: 9 days ago', 'No comments on the last 2 milestones', '0 tasks marked done this sprint'], confidence: 4 },
+      { id: 2, type: 'timing_anomaly',         title: 'Modeling milestone likely to slip', body: 'Current modeling progress projects a June 3 completion vs. the May 28 deadline.', evidence: ['25% of milestone tasks done by date', 'Hyperparameter sweep still in progress'], confidence: 3 },
     ],
     pdfs: [
-      { id: 'demo-pdf-6', title: 'Data Source Audit',      uploaded_by: 'Yuki Tanaka', uploaded_at: 'Apr 20', pages: 4, annotations: 6, status: 'reviewed', file_size_bytes: 487200 },
-      { id: 'demo-pdf-7', title: 'Cleaning Pipeline Spec', uploaded_by: 'Alex Chen',   uploaded_at: 'May 2',  pages: 7, annotations: 9, status: 'pending',  file_size_bytes: 836000 },
+      { id: 'demo-pdf-6', title: 'Pipeline Spec',  uploaded_by: 'Alex Chen',   uploaded_at: 'May 4', pages: 7, annotations: 3, status: 'reviewed', file_size_bytes: 836000 },
+      { id: 'demo-pdf-7', title: 'Modeling Notes', uploaded_by: 'Yuki Tanaka', uploaded_at: 'May 20', pages: 5, annotations: 2, status: 'pending',  file_size_bytes: 604800 },
     ],
     aiVerdict: { kind: 'flagged', label: 'Needs attention', confidence: 4, relevance: 88 },
     isDemo: true,
   },
-  {
-    id: 'demo-proj-4',
-    title: 'Mobile Reading App',
-    description: 'Cross-platform reading companion app focused on long-form articles, with offline support and shared annotation lists.',
-    course: 'CS 4250 · Software Engineering',
-    courseCode: 'CS 4250',
-    courseName: 'Software Engineering',
-    status: 'completed',
-    progress: 100,
-    dueDate: 'Apr 30',
-    members: ['Marcus Lee', 'Priya Sharma', 'Yuki Tanaka'],
-    memberRecords: [
-      memberRecord(DEMO_STUDENTS[2], 'leader'),
-      memberRecord(DEMO_STUDENTS[1]),
-      memberRecord(DEMO_STUDENTS[3]),
-    ],
-    professor: PROF,
-    milestones: [
-      { id: 1, title: 'Requirements',  status: 'done', due: 'Feb 10', owner: 'Marcus Lee',    submissions: 1 },
-      { id: 2, title: 'MVP Build',     status: 'done', due: 'Mar 15', owner: 'Priya Sharma',  submissions: 2 },
-      { id: 3, title: 'Usability Test', status: 'done', due: 'Apr 10', owner: 'Yuki Tanaka',   submissions: 1 },
-      { id: 4, title: 'Final Release', status: 'done', due: 'Apr 30', owner: 'All',            submissions: 1 },
-    ],
-    tasks: [],
-    contributions: [
-      { name: 'Marcus Lee',   pct: 34 },
-      { name: 'Priya Sharma', pct: 33 },
-      { name: 'Yuki Tanaka',  pct: 33 },
-    ],
-    activity: [
-      { text: '<strong>Marcus Lee</strong> archived the project',           time: 'May 1' },
-      { text: '<strong>Yuki Tanaka</strong> submitted final retrospective', time: 'Apr 30' },
-    ],
-    insights: [
-      { id: 1, type: 'positive', title: 'Exceptional balance and timing throughout', body: 'Three members within 1pp of each other; every milestone on or ahead of schedule.', evidence: ['Contribution stddev: 0.6', 'All milestones met early', 'Zero late submissions'], confidence: 5 },
-    ],
-    pdfs: [
-      { id: 'demo-pdf-8', title: 'Final Report',           uploaded_by: 'Marcus Lee',   uploaded_at: 'Apr 30', pages: 18, annotations: 22, status: 'reviewed', file_size_bytes: 2256000 },
-      { id: 'demo-pdf-9', title: 'Usability Test Results', uploaded_by: 'Yuki Tanaka', uploaded_at: 'Apr 15', pages: 10, annotations: 15, status: 'reviewed', file_size_bytes: 1232000 },
-    ],
-    aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 98 },
-    isDemo: true,
-  },
-  {
-    id: 'demo-proj-5',
-    title: 'Causal Inference Reading Group',
-    description: 'Independent study: working through Pearl & Mackenzie\'s "The Book of Why" with weekly writeups and applied problems.',
-    course: 'CS 4990 · Independent Study',
-    courseCode: 'CS 4990',
-    courseName: 'Independent Study',
-    status: 'active',
-    progress: 55,
-    dueDate: 'Jul 15',
-    members: ['Marcus Lee'],
-    memberRecords: [
-      memberRecord(DEMO_STUDENTS[2], 'leader'),
-    ],
-    professor: PROF,
-    milestones: [
-      { id: 1, title: 'Chapters 1–4 writeup', status: 'done',    due: 'Mar 30', owner: 'Marcus Lee', submissions: 1 },
-      { id: 2, title: 'Chapters 5–7 writeup', status: 'done',    due: 'Apr 30', owner: 'Marcus Lee', submissions: 1 },
-      { id: 3, title: 'Chapters 8–10 writeup', status: 'active', due: 'May 30', owner: 'Marcus Lee', submissions: 0 },
-      { id: 4, title: 'Final synthesis paper', status: 'pending', due: 'Jul 15', owner: 'Marcus Lee', submissions: 0 },
-    ],
-    tasks: [
-      { id: 1, title: 'Summarize Chapter 8: counterfactuals', done: false, assignee: 'Marcus Lee', priority: 'med', due: 'May 18' },
-      { id: 2, title: 'Work problem set 7',                   done: false, assignee: 'Marcus Lee', priority: 'med', due: 'May 22' },
-    ],
-    contributions: [
-      { name: 'Marcus Lee', pct: 100 },
-    ],
-    activity: [
-      { text: '<strong>Marcus Lee</strong> submitted Chapter 5–7 writeup',     time: '5d ago' },
-      { text: '<strong>Dr. Sarah Rivera</strong> left feedback on writeup',    time: '4d ago' },
-    ],
-    insights: [],
-    pdfs: [
-      { id: 'demo-pdf-10', title: 'Chapters 1–4 writeup', uploaded_by: 'Marcus Lee', uploaded_at: 'Mar 30', pages: 6, annotations: 4, status: 'reviewed', file_size_bytes: 712800 },
-      { id: 'demo-pdf-11', title: 'Chapters 5–7 writeup', uploaded_by: 'Marcus Lee', uploaded_at: 'Apr 30', pages: 7, annotations: 5, status: 'reviewed', file_size_bytes: 824400 },
-    ],
-    aiVerdict: { kind: 'clear', label: 'Clear', confidence: 5, relevance: 94 },
-    isDemo: true,
-  },
 ];
 
-// Flat view of all demo PDFs across projects, shaped like pdf_documents rows.
-// PDFs.jsx adapts directly from project.pdfs, but consumers that need a flat
-// lookup (notifications, search) can use this.
+// Flat pdf_documents-shaped view for any consumer needing a lookup.
 export const DEMO_PDFS = DEMO_PROJECTS.flatMap(p =>
   (p.pdfs || []).map(pdf => ({
     id: pdf.id,
@@ -319,88 +263,64 @@ export const DEMO_PDFS = DEMO_PROJECTS.flatMap(p =>
   }))
 );
 
-// Demo annotations shaped like pdf_annotations rows so PDFs.jsx can render
-// them without further adaptation. Keyed by document_id; author is a demo
-// student or the professor so Avatar resolves a name and the preview can
-// surface a professor badge.
 function demoAuthor(student) {
   return { id: student.id, full_name: student.full_name, avatar_url: null, role: 'student' };
 }
 function demoAuthorProf() {
   return { id: PROF.id, full_name: PROF.full_name, avatar_url: null, role: 'professor' };
 }
+function hoursAgo(h) { const d = new Date(); d.setHours(d.getHours() - h); return d.toISOString(); }
+function daysAgo(n)  { const d = new Date(); d.setDate(d.getDate() - n);   return d.toISOString(); }
 
-// Anchor a handful of preview comments to "now" so the list shows live
-// relative timestamps ("2h ago", "1d ago") regardless of when the demo is
-// opened. The remaining static dates give the impression of historical
-// review threads behind the freshest activity.
-function hoursAgo(h) {
-  const d = new Date();
-  d.setHours(d.getHours() - h);
-  return d.toISOString();
-}
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString();
-}
+const noBox = { x: 0, y: 0, w: 0, h: 0 };
+const cmt = (id, doc, page, content, author, opts = {}) => ({
+  id, document_id: doc, annotation_type: 'comment', page_number: page, content,
+  resolved: opts.resolved ?? false, color: null, bbox: noBox,
+  created_at: opts.created_at ?? hoursAgo(opts.hoursAgo ?? 6), author,
+});
+const hl = (id, doc, page, text, author, color = '#facc15', created_at = null) => ({
+  id, document_id: doc, annotation_type: 'highlight', page_number: page, content: text,
+  resolved: false, color, bbox: { ...noBox, text }, created_at: created_at ?? daysAgo(2), author,
+});
 
 export const DEMO_PDF_COMMENTS = [
-  // demo-pdf-1: Project Proposal v2 — preview pulls the prof comment + a fresh student reply.
-  { id: 'demo-c-1',  document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 1, content: 'Strong framing — consider moving the research question above the dataset description.', resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-02T14:12:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
-  { id: 'demo-c-2',  document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 2, content: 'Can we tighten the scope? Three eval domains feels ambitious for the timeline.',         resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-03T09:40:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
-  { id: 'demo-c-3',  document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 3, content: 'Add a sentence about ethical review — Dr. Rivera will ask.',                              resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-04T16:05:00Z', author: demoAuthor(DEMO_STUDENTS[3]) },
-  { id: 'demo-c-13', document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 1, content: 'Great work on the methodology section — your evaluation framing is the strongest part.', resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(3),          author: demoAuthorProf() },
-  { id: 'demo-c-14', document_id: 'demo-pdf-1', annotation_type: 'comment', page_number: 2, content: 'Should we add more citations for the §2 claims? A couple feel under-supported.',         resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(1),          author: demoAuthor(DEMO_STUDENTS[2]) },
-
-  // demo-pdf-2: Literature Review
-  { id: 'demo-c-4',  document_id: 'demo-pdf-2', annotation_type: 'comment', page_number: 4, content: 'Smith et al. 2023 belongs in §3, not §2 — different evaluation regime.',                 resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-15T11:20:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
-  { id: 'demo-c-5',  document_id: 'demo-pdf-2', annotation_type: 'comment', page_number: 7, content: 'Nice synthesis of the retrieval-vs-parametric debate.',                                   resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-16T13:55:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
-  { id: 'demo-c-15', document_id: 'demo-pdf-2', annotation_type: 'comment', page_number: 9, content: 'Could you expand the section on calibration failure modes? It\'s the most novel angle.', resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(7),          author: demoAuthorProf() },
-
-  // demo-pdf-3: Methodology v1
-  { id: 'demo-c-6',  document_id: 'demo-pdf-3', annotation_type: 'comment', page_number: 2, content: 'BERTScore alone won\'t catch factual errors — pair with NLI-based check?',                resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-05-02T10:10:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
-  { id: 'demo-c-7',  document_id: 'demo-pdf-3', annotation_type: 'comment', page_number: 5, content: 'Sample size justification needs a power calc.',                                           resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: hoursAgo(28),         author: demoAuthor(DEMO_STUDENTS[1]) },
-
-  // demo-pdf-4: Architecture Plan v3
-  { id: 'demo-c-8',  document_id: 'demo-pdf-4', annotation_type: 'comment', page_number: 3, content: 'Are we committing to Raft over Multi-Paxos? Worth a paragraph on the trade-off.',         resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-06T15:00:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
-  { id: 'demo-c-9',  document_id: 'demo-pdf-4', annotation_type: 'comment', page_number: 6, content: 'Storage layer diagram is clean — keep it.',                                               resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: daysAgo(2),           author: demoAuthor(DEMO_STUDENTS[4]) },
-
-  // demo-pdf-6: Data Source Audit
-  { id: 'demo-c-10', document_id: 'demo-pdf-6', annotation_type: 'comment', page_number: 1, content: 'NOAA license terms — link to the actual page, not the landing site.',                     resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-21T12:00:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
-  { id: 'demo-c-11', document_id: 'demo-pdf-6', annotation_type: 'comment', page_number: 3, content: 'Missing-station coverage map would help the reader.',                                     resolved: false, color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: daysAgo(1),           author: demoAuthor(DEMO_STUDENTS[4]) },
-
-  // demo-pdf-8: Final Report
-  { id: 'demo-c-12', document_id: 'demo-pdf-8', annotation_type: 'comment', page_number: 9, content: 'Usability section reads great — promote two of the quotes to the abstract.',              resolved: true,  color: null, bbox: { x: 0, y: 0, w: 0, h: 0 }, created_at: '2026-04-30T18:00:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+  // P1 demo-pdf-1 — Research Proposal (a fresh prof comment + student reply drive the preview)
+  cmt('demo-c-1', 'demo-pdf-1', 1, 'Strong framing — consider moving the research question above the dataset description.', demoAuthor(S[1]), { created_at: '2026-04-02T14:12:00Z', resolved: false }),
+  cmt('demo-c-2', 'demo-pdf-1', 2, 'Can we tighten scope? Three eval domains feels ambitious for the timeline.',          demoAuthor(S[2]), { created_at: '2026-04-03T09:40:00Z', resolved: true }),
+  cmt('demo-c-3', 'demo-pdf-1', 1, 'Great work on the methodology framing — that is the strongest part of the proposal.', demoAuthorProf(), { hoursAgo: 3 }),
+  cmt('demo-c-4', 'demo-pdf-1', 2, 'Should we add more citations for the §2 claims? A couple feel under-supported.',       demoAuthor(S[2]), { hoursAgo: 1 }),
+  // P1 demo-pdf-2 — Literature Review
+  cmt('demo-c-5', 'demo-pdf-2', 4, 'Smith et al. 2023 belongs in §3, not §2 — different evaluation regime.',               demoAuthor(S[0]), { created_at: '2026-04-19T11:20:00Z' }),
+  cmt('demo-c-6', 'demo-pdf-2', 9, 'Could you expand the calibration-failure section? It is the most novel angle here.',    demoAuthorProf(), { hoursAgo: 7 }),
+  // P1 demo-pdf-3 — Methodology Draft
+  cmt('demo-c-7', 'demo-pdf-3', 2, 'BERTScore alone will not catch factual errors — pair it with an NLI-based check?',      demoAuthor(S[0]), { created_at: '2026-05-03T10:10:00Z' }),
+  cmt('demo-c-8', 'demo-pdf-3', 5, 'Sample-size justification needs a power calculation.',                                  demoAuthor(S[1]), { hoursAgo: 28 }),
+  // P2 demo-pdf-4 — Essay 1 (prof review comments — integrity/grading feel)
+  cmt('demo-c-9',  'demo-pdf-4', 1, 'Clear thesis. Tie the authorship argument back to the Floridi reading in your intro.', demoAuthorProf(), { hoursAgo: 4 }),
+  cmt('demo-c-10', 'demo-pdf-4', 3, 'This paragraph is the crux — consider leading the section with it.',                    demoAuthor(S[1]), { hoursAgo: 30 }),
+  cmt('demo-c-11', 'demo-pdf-4', 5, 'Originality check came back clear; nice citation hygiene throughout.',                 demoAuthorProf(), { hoursAgo: 3, resolved: true }),
+  // P2 demo-pdf-5 — Problem Set 3
+  cmt('demo-c-12', 'demo-pdf-5', 2, 'Double-check the demographic-parity vs. equalized-odds distinction in Q2.',            demoAuthorProf(), { hoursAgo: 5 }),
+  // P3 demo-pdf-6 — Pipeline Spec
+  cmt('demo-c-13', 'demo-pdf-6', 1, 'Link the actual NOAA license page, not the landing site.',                            demoAuthor(S[3]), { created_at: '2026-05-05T12:00:00Z' }),
+  cmt('demo-c-14', 'demo-pdf-6', 3, 'A missing-station coverage map would really help the reader here.',                    demoAuthor(S[0]), { hoursAgo: 26 }),
+  // P3 demo-pdf-7 — Modeling Notes
+  cmt('demo-c-15', 'demo-pdf-7', 2, 'Lock the random seed before the hyperparameter sweep so results are reproducible.',    demoAuthor(S[0]), { hoursAgo: 9 }),
 ];
 
 export const DEMO_PDF_HIGHLIGHTS = [
-  // demo-pdf-1
-  { id: 'demo-h-1',  document_id: 'demo-pdf-1', annotation_type: 'highlight', page_number: 1, content: 'detect and mitigate factual errors in large language models', resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'detect and mitigate factual errors in large language models' }, created_at: '2026-04-02T14:13:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
-  { id: 'demo-h-2',  document_id: 'demo-pdf-1', annotation_type: 'highlight', page_number: 3, content: 'curated dataset of common-knowledge questions',                resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'curated dataset of common-knowledge questions' },                created_at: '2026-04-04T16:06:00Z', author: demoAuthor(DEMO_STUDENTS[3]) },
-
-  // demo-pdf-2
-  { id: 'demo-h-3',  document_id: 'demo-pdf-2', annotation_type: 'highlight', page_number: 4, content: 'retrieval-augmented generation reduces fabrication by 38%',     resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'retrieval-augmented generation reduces fabrication by 38%' }, created_at: '2026-04-15T11:21:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
-
-  // demo-pdf-3
-  { id: 'demo-h-4',  document_id: 'demo-pdf-3', annotation_type: 'highlight', page_number: 2, content: 'BERTScore evaluator',                                          resolved: false, color: '#fda4af', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'BERTScore evaluator' },                                          created_at: '2026-05-02T10:11:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
-  { id: 'demo-h-5',  document_id: 'demo-pdf-3', annotation_type: 'highlight', page_number: 5, content: 'n = 1000 questions across three domains',                       resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'n = 1000 questions across three domains' },                       created_at: '2026-05-03T08:31:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
-
-  // demo-pdf-4
-  { id: 'demo-h-6',  document_id: 'demo-pdf-4', annotation_type: 'highlight', page_number: 3, content: 'Raft consensus with single-leader election',                    resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'Raft consensus with single-leader election' },                    created_at: '2026-04-06T15:01:00Z', author: demoAuthor(DEMO_STUDENTS[2]) },
-
-  // demo-pdf-6
-  { id: 'demo-h-7',  document_id: 'demo-pdf-6', annotation_type: 'highlight', page_number: 1, content: 'NOAA Global Historical Climatology Network',                    resolved: false, color: '#facc15', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'NOAA Global Historical Climatology Network' },                    created_at: '2026-04-21T12:01:00Z', author: demoAuthor(DEMO_STUDENTS[0]) },
-
-  // demo-pdf-8
-  { id: 'demo-h-8',  document_id: 'demo-pdf-8', annotation_type: 'highlight', page_number: 9, content: 'all five participants completed the core task unaided',         resolved: false, color: '#86efac', bbox: { x: 0, y: 0, w: 0, h: 0, text: 'all five participants completed the core task unaided' },         created_at: '2026-04-30T18:01:00Z', author: demoAuthor(DEMO_STUDENTS[1]) },
+  hl('demo-h-1', 'demo-pdf-1', 1, 'detects and mitigates factual errors in large language', demoAuthor(S[1]), '#facc15', '2026-04-02T14:13:00Z'),
+  hl('demo-h-2', 'demo-pdf-1', 3, 'curated dataset of common knowledge questions',          demoAuthor(S[3]), '#86efac', '2026-04-04T16:06:00Z'),
+  hl('demo-h-3', 'demo-pdf-2', 4, 'retrieval augmented generation reduces fabrication',     demoAuthor(S[0]), '#facc15', '2026-04-19T11:21:00Z'),
+  hl('demo-h-4', 'demo-pdf-3', 2, 'across three evaluated domains',                          demoAuthor(S[0]), '#fda4af'),
+  hl('demo-h-5', 'demo-pdf-4', 1, 'careful human study',                                     demoAuthor(S[1]), '#86efac'),
+  hl('demo-h-6', 'demo-pdf-6', 1, 'consistent gains over the baseline approach',             demoAuthor(S[0]), '#facc15'),
+  hl('demo-h-7', 'demo-pdf-7', 2, 'reduces fabrication across three evaluated domains',      demoAuthor(S[3]), '#86efac'),
 ];
 
-// Demo assignments per project. Shape matches the canonical assignments row +
-// joined owner profile, with a synthetic .submissions array for the detail
-// modal. The Assignments tab reads project.assignments directly when isDemo.
+// ── Assignments ────────────────────────────────────────────────────────────
 function demoSub(student, status, opts = {}) {
-  const id = opts.id ?? `demo-sub-${student.id}-${Date.now() + Math.floor(Math.random()*1000)}`;
+  const id = opts.id ?? `demo-sub-${student.id}-${Date.now() + Math.floor(Math.random() * 1000)}`;
   return {
     id,
     assignment_id: opts.assignment_id ?? null,
@@ -422,258 +342,196 @@ function demoSub(student, status, opts = {}) {
     created_at: opts.created_at ?? (opts.submitted_at ?? hoursAgo(opts.submittedHoursAgo ?? 18)),
   };
 }
-
 const _PROF_AS_REVIEWER = { id: PROF.id, full_name: PROF.full_name, avatar_url: null, role: 'professor' };
+const subRow = (id, asg, title, desc, student, status, opts = {}) => ({
+  id, assignment_id: asg, title, description: desc,
+  assigned_to: student ? student.id : null,
+  assignee: student ? { id: student.id, full_name: student.full_name, avatar_url: null, role: 'student' } : null,
+  assigned_by: opts.assigned_by ?? null,
+  status, claimed_at: opts.claimed_at ?? null, created_at: opts.created_at ?? daysAgo(6),
+});
 
-// Attach assignments to each demo project so .assignments[] is read by the tab.
+// PROJECT 1 — three TEAM assignments, one per distribution mode.
 DEMO_PROJECTS[0].assignments = [
   {
     id: 'demo-asgn-1a', team_id: 'demo-proj-1',
-    title: 'Methodology section v2',
-    description: 'Revise §2.1 to address Dr. Rivera\'s feedback. Include power analysis and a paragraph on the BERTScore + NLI pairing.',
-    due_at: daysAgo(-3), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 1, created_at: daysAgo(7), updated_at: daysAgo(1),
-    submissions: [
-      demoSub(DEMO_STUDENTS[0], 'submitted', { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Alex.pdf', submittedHoursAgo: 6 }),
-      demoSub(DEMO_STUDENTS[2], 'approved',  { assignment_id: 'demo-asgn-1a', team_id: 'demo-proj-1', pdfTitle: 'Methodology v2 - Marcus.pdf', submittedHoursAgo: 32, feedback: 'Strong revision — power calc is exactly what I was after.', reviewed_at: hoursAgo(4), reviewer: _PROF_AS_REVIEWER, points_awarded: 88, letter_grade: 'HD' }),
-    ],
-  },
-  {
-    id: 'demo-asgn-1b', team_id: 'demo-proj-1',
     title: 'Annotated hallucination dataset',
-    description: '1,000 annotated samples across the three eval domains. Submit as a single PDF index linking to the JSONL files.',
-    due_at: daysAgo(10), owner_id: PROF.id, owner: _PROF_AS_REVIEWER, // already graded
-    status: 'active', order_idx: 2, created_at: daysAgo(20), updated_at: daysAgo(3),
+    description: '1,000 annotated samples across three eval domains. Subtasks land in an open pool — any member can claim one.',
+    due_at: daysAgo(-4), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 1, created_at: daysAgo(20), updated_at: daysAgo(2),
     assignment_type: 'team', distribution_mode: 'self_pick',
     max_points: 100, deadline_type: 'grace', grace_days: 3, ai_plagiarism_check: false,
-    // Phase 2 dual-grade demo. Team mark = 85/HD; Alex Chen's individual
-    // contribution graded separately at 80/D. Teammates' individual grades
-    // are intentionally absent from the assignees list passed to the client;
-    // the per-student RLS in prod would only return Alex's row anyway.
-    team_points_awarded: 85, team_letter_grade: 'HD',
-    team_feedback: 'Solid dataset. Methodology section is publishable as-is.',
-    assignees: [
-      { id: 'demo-asg-1b-alex', assignment_id: 'demo-asgn-1b', student_id: 'demo-student-1',
-        points_awarded: 80, letter_grade: 'D',
-        feedback: 'Strong analysis section. Push harder on the inter-rater discussion next time.',
-        graded_at: daysAgo(3) },
-    ],
+    team_points_awarded: null, team_letter_grade: null,
+    assignees: [],
     subtasks: [
-      { id: 'demo-st-1b-1', assignment_id: 'demo-asgn-1b', title: 'Literature Review', description: 'Survey existing hallucination eval methods.', assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(4) },
-      { id: 'demo-st-1b-2', assignment_id: 'demo-asgn-1b', title: 'Methodology Section', description: 'Define the annotation protocol and inter-rater steps.', assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(4) },
-      { id: 'demo-st-1b-3', assignment_id: 'demo-asgn-1b', title: 'Data Analysis',      description: 'Run BERTScore + NLI across the labeled set.',                    assigned_to: DEMO_STUDENTS[1].id, assignee: { id: DEMO_STUDENTS[1].id, full_name: DEMO_STUDENTS[1].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(2), created_at: daysAgo(4) },
-      { id: 'demo-st-1b-4', assignment_id: 'demo-asgn-1b', title: 'Conclusion',         description: 'Synthesize results, limitations, future work.',                    assigned_to: DEMO_STUDENTS[2].id, assignee: { id: DEMO_STUDENTS[2].id, full_name: DEMO_STUDENTS[2].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(1), created_at: daysAgo(4) },
+      subRow('demo-st-1a-1', 'demo-asgn-1a', 'Literature scan',  'Survey existing hallucination-eval methods.', null, 'open', { claimed_at: null }),
+      subRow('demo-st-1a-2', 'demo-asgn-1a', 'Annotation guide', 'Write the inter-rater protocol.',             null, 'open', { claimed_at: null }),
+      subRow('demo-st-1a-3', 'demo-asgn-1a', 'Data analysis pass', 'Run BERTScore + NLI across the labeled set.', S[1], 'in_progress', { claimed_at: daysAgo(2) }),
     ],
     leaders: [],
     submissions: [],
   },
-  // Phase 2 student-view demos — give Alex a "Not Started" and a "Late".
+  {
+    id: 'demo-asgn-1b', team_id: 'demo-proj-1',
+    title: 'Evaluation harness',
+    description: 'Reusable eval harness for the three domains. The team leader assigns each subtask.',
+    due_at: daysAgo(-9), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 2, created_at: daysAgo(16), updated_at: daysAgo(3),
+    assignment_type: 'team', distribution_mode: 'team_leader',
+    max_points: 100, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: true,
+    assignees: [],
+    subtasks: [
+      subRow('demo-st-1b-1', 'demo-asgn-1b', 'Metrics module',  'Implement BERTScore + NLI scorers.',  S[2], 'in_progress', { assigned_by: S[0].id, claimed_at: daysAgo(3) }),
+      subRow('demo-st-1b-2', 'demo-asgn-1b', 'Runner + caching', 'Batch runner with result caching.',  S[3], 'open',        { assigned_by: S[0].id }),
+    ],
+    leaders: [
+      { id: 'demo-lead-1b', assignment_id: 'demo-asgn-1b', leader_id: S[0].id, leader: { id: S[0].id, full_name: S[0].full_name, avatar_url: null, role: 'student' }, designated_by: PROF.id, designated_at: daysAgo(16) },
+    ],
+    submissions: [],
+  },
   {
     id: 'demo-asgn-1c', team_id: 'demo-proj-1',
-    title: 'Reading-week reflection memo',
-    description: 'One-pager: which of the three eval domains do you want to lead, and why? Due before our next sync.',
-    due_at: daysAgo(-5), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 3, created_at: daysAgo(2), updated_at: daysAgo(2),
+    title: 'Domain error taxonomy',
+    description: 'A per-domain taxonomy of error types. The professor assigns each subtask directly.',
+    due_at: daysAgo(-2), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 3, created_at: daysAgo(12), updated_at: daysAgo(1),
+    assignment_type: 'team', distribution_mode: 'professor',
+    max_points: 80, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: false,
+    assignees: [],
+    subtasks: [
+      subRow('demo-st-1c-1', 'demo-asgn-1c', 'Medical-domain error pass', 'Tag factual-error types in the medical split.', S[0], 'submitted',  { assigned_by: PROF.id }),
+      subRow('demo-st-1c-2', 'demo-asgn-1c', 'Legal-domain error pass',   'Tag factual-error types in the legal split.',   S[2], 'in_progress', { assigned_by: PROF.id }),
+    ],
+    leaders: [],
+    submissions: [],
+  },
+];
+
+// PROJECT 2 — INDIVIDUAL assignments through the full review/grade loop.
+DEMO_PROJECTS[1].assignments = [
+  {
+    // Done / graded — full approve.
+    id: 'demo-asgn-2a', team_id: 'demo-proj-2',
+    title: 'Essay 1 — AI & Authorship',
+    description: '1,800-word essay: when does AI assistance cross into co-authorship? Cite at least three course readings.',
+    due_at: daysAgo(6), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 1, created_at: daysAgo(20), updated_at: hoursAgo(3),
+    assignment_type: 'individual', max_points: 100, deadline_type: 'hard',
+    submissions: [
+      demoSub(S[0], 'approved', { assignment_id: 'demo-asgn-2a', team_id: 'demo-proj-2', pdfTitle: 'Essay 1 - Alex.pdf', submittedHoursAgo: 40, reviewed_at: hoursAgo(3), reviewer: _PROF_AS_REVIEWER, points_awarded: 91, letter_grade: 'HD', feedback: 'Excellent — the authorship-spectrum framing is original. Tighten the Floridi tie-in and this is publishable as an op-ed.' }),
+    ],
+    assignees: [],
+  },
+  {
+    // Submitted — awaiting review.
+    id: 'demo-asgn-2b', team_id: 'demo-proj-2',
+    title: 'Problem Set 3 — Fairness metrics',
+    description: 'Work the demographic-parity vs. equalized-odds problems; show your derivations.',
+    due_at: daysAgo(-1), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 2, created_at: daysAgo(8), updated_at: hoursAgo(8),
+    assignment_type: 'individual', max_points: 50, deadline_type: 'hard',
+    submissions: [
+      demoSub(S[0], 'submitted', { assignment_id: 'demo-asgn-2b', team_id: 'demo-proj-2', pdfTitle: 'Problem Set 3 - Alex.pdf', submittedHoursAgo: 8 }),
+    ],
+    assignees: [],
+  },
+  {
+    // Not started — no submission yet.
+    id: 'demo-asgn-2c', team_id: 'demo-proj-2',
+    title: 'Reflection memo — Algorithmic bias',
+    description: 'One-pager reflecting on a real-world algorithmic-bias case of your choosing.',
+    due_at: daysAgo(-6), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 3, created_at: daysAgo(3), updated_at: daysAgo(3),
     assignment_type: 'individual', max_points: 20, deadline_type: 'hard',
     submissions: [],
     assignees: [],
   },
   {
-    id: 'demo-asgn-1d', team_id: 'demo-proj-1',
-    title: 'Eval rubric draft',
-    description: 'First pass at a 5-point rubric per domain. Overdue — please get this in.',
-    due_at: daysAgo(2), owner_id: PROF.id, owner: _PROF_AS_REVIEWER, // 2 days past
-    status: 'active', order_idx: 4, created_at: daysAgo(9), updated_at: daysAgo(9),
-    assignment_type: 'individual', max_points: 30, deadline_type: 'hard',
-    submissions: [],
-    assignees: [],
-  },
-  // Phase 3 demos — resubmission flow.
-  //
-  // 1e: PENDING resubmit. v1 sits at resubmit_requested with the prof's
-  // feedback. Demonstrates the Resubmit Work button + amber callout +
-  // per-assignment scoping: this assignment shows the button, the four
-  // above (Submitted / Team / Not Started / Late) do not.
-  {
-    id: 'demo-asgn-1e', team_id: 'demo-proj-1',
-    title: 'Calibration failure modes draft',
-    description: 'Cover the temperature scaling vs. Platt scaling comparison and the failure-mode taxonomy from the lit review.',
-    due_at: daysAgo(-7), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 5, created_at: daysAgo(12), updated_at: hoursAgo(8),
-    assignment_type: 'individual', max_points: 40, deadline_type: 'hard',
+    // Review loop — resubmit requested on v1, approved on v2 (both in history).
+    id: 'demo-asgn-2d', team_id: 'demo-proj-2',
+    title: 'Midterm paper — Accountability',
+    description: '2,000-word paper on accountability gaps in automated decision systems.',
+    due_at: daysAgo(4), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 4, created_at: daysAgo(18), updated_at: hoursAgo(20),
+    assignment_type: 'individual', max_points: 100, deadline_type: 'hard',
     submissions: [
-      demoSub(DEMO_STUDENTS[0], 'resubmit_requested', {
-        id: 'demo-sub-1e-v1', assignment_id: 'demo-asgn-1e', team_id: 'demo-proj-1',
-        version: 1, pdfTitle: 'Calibration draft v1 - Alex.pdf',
-        submittedHoursAgo: 30, reviewed_at: hoursAgo(8), reviewer: _PROF_AS_REVIEWER,
-        feedback: 'The taxonomy section is good but §3 conflates temperature scaling with Platt scaling — please separate them clearly and add the calibration-failure example we discussed in office hours.',
-      }),
-    ],
-    assignees: [],
-  },
-  // 1f: COMPLETED LOOP. v1 was resubmit_requested with feedback, student
-  // submitted v2, prof approved with grade. Both versions visible in the
-  // history list; latest is the approved v2 so the Resubmit Work button
-  // is NOT shown (per-assignment scoping again).
-  {
-    id: 'demo-asgn-1f', team_id: 'demo-proj-1',
-    title: 'Pilot study writeup',
-    description: '1,200-word writeup of the pilot run. Methodology, results, threats to validity.',
-    due_at: daysAgo(8), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 6, created_at: daysAgo(18), updated_at: hoursAgo(3),
-    assignment_type: 'individual', max_points: 50, deadline_type: 'hard',
-    submissions: [
-      // v2 (latest) — approved with grade after the resubmission.
-      demoSub(DEMO_STUDENTS[0], 'approved', {
-        id: 'demo-sub-1f-v2', assignment_id: 'demo-asgn-1f', team_id: 'demo-proj-1',
-        version: 2, pdfTitle: 'Pilot writeup v2 - Alex.pdf',
-        submittedHoursAgo: 14, reviewed_at: hoursAgo(3), reviewer: _PROF_AS_REVIEWER,
-        points_awarded: 44, letter_grade: 'D',
-        feedback: 'Much better — threats-to-validity section now reads well. Promote the calibration paragraph to the abstract.',
-      }),
-      // v1 (history) — the resubmit_requested verdict that triggered the loop.
-      demoSub(DEMO_STUDENTS[0], 'resubmit_requested', {
-        id: 'demo-sub-1f-v1', assignment_id: 'demo-asgn-1f', team_id: 'demo-proj-1',
-        version: 1, pdfTitle: 'Pilot writeup v1 - Alex.pdf',
-        submittedHoursAgo: 72, reviewed_at: hoursAgo(40), reviewer: _PROF_AS_REVIEWER,
-        feedback: 'Methods section is thin and the results discussion misses the calibration comparison. Please revise and resubmit.',
-      }),
+      demoSub(S[0], 'submitted', { id: 'demo-sub-2d-v2', assignment_id: 'demo-asgn-2d', team_id: 'demo-proj-2', version: 2, pdfTitle: 'Midterm v2 - Alex.pdf', submittedHoursAgo: 20 }),
+      demoSub(S[0], 'resubmit_requested', { id: 'demo-sub-2d-v1', assignment_id: 'demo-asgn-2d', team_id: 'demo-proj-2', version: 1, pdfTitle: 'Midterm v1 - Alex.pdf', submittedHoursAgo: 72, reviewed_at: hoursAgo(48), reviewer: _PROF_AS_REVIEWER, feedback: 'Good core argument, but §3 needs the Mittelstadt framework and a concrete case. Please revise and resubmit.' }),
     ],
     assignees: [],
   },
 ];
 
-DEMO_PROJECTS[1].assignments = [
-  {
-    id: 'demo-asgn-2a', team_id: 'demo-proj-2',
-    title: 'Raft consensus prototype',
-    description: 'Working leader-election + log-replication implementation. Include a one-page architecture diagram.',
-    due_at: daysAgo(-5), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 1, created_at: daysAgo(10), updated_at: daysAgo(2),
-    assignment_type: 'team', distribution_mode: 'team_leader',
-    max_points: 100, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: true,
-    subtasks: [
-      { id: 'demo-st-2a-1', assignment_id: 'demo-asgn-2a', title: 'Leader election',   description: 'Implement the heartbeat + election timeout state machine.', assigned_to: DEMO_STUDENTS[1].id, assignee: { id: DEMO_STUDENTS[1].id, full_name: DEMO_STUDENTS[1].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(7), created_at: daysAgo(10) },
-      { id: 'demo-st-2a-2', assignment_id: 'demo-asgn-2a', title: 'Log replication',   description: 'AppendEntries RPC + commit index tracking.',                 assigned_to: DEMO_STUDENTS[2].id, assignee: { id: DEMO_STUDENTS[2].id, full_name: DEMO_STUDENTS[2].full_name, avatar_url: null, role: 'student' }, status: 'in_progress', claimed_at: daysAgo(7), created_at: daysAgo(10) },
-      { id: 'demo-st-2a-3', assignment_id: 'demo-asgn-2a', title: 'Failure-mode tests', description: 'Network partition + node-crash test harness.',               assigned_to: null, assignee: null, status: 'open', claimed_at: null, created_at: daysAgo(10) },
-    ],
-    leaders: [
-      { id: 'demo-lead-2a-1', assignment_id: 'demo-asgn-2a', leader_id: DEMO_STUDENTS[0].id, leader: { id: DEMO_STUDENTS[0].id, full_name: DEMO_STUDENTS[0].full_name, avatar_url: null, role: 'student' }, designated_by: PROF.id, designated_at: daysAgo(10) },
-    ],
-    submissions: [
-      demoSub(DEMO_STUDENTS[2], 'needs_resubmission', { assignment_id: 'demo-asgn-2a', team_id: 'demo-proj-2', pdfTitle: 'Raft prototype v1.pdf', submittedHoursAgo: 50, feedback: 'Logic is solid. Please add the failure-mode test cases we discussed.', reviewed_at: hoursAgo(20), reviewer: _PROF_AS_REVIEWER, version: 1 }),
-    ],
-  },
-];
-
+// PROJECT 3 — one INDIVIDUAL (→ auto-task) + one TEAM (→ subtask-task).
 DEMO_PROJECTS[2].assignments = [
   {
     id: 'demo-asgn-3a', team_id: 'demo-proj-3',
-    title: 'Cleaning pipeline spec',
-    description: 'Document handling of missing-station data + the NOAA license deltas surfaced last week.',
-    due_at: daysAgo(2), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,  // overdue → 'late'
-    status: 'active', order_idx: 1, created_at: daysAgo(14), updated_at: daysAgo(14),
+    title: 'Weekly progress report',
+    description: 'Short individual status report: what you shipped this week, blockers, next steps.',
+    due_at: daysAgo(-1), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 1, created_at: daysAgo(7), updated_at: hoursAgo(10),
+    assignment_type: 'individual', max_points: 10, deadline_type: 'hard',
+    submissions: [
+      demoSub(S[0], 'submitted', { assignment_id: 'demo-asgn-3a', team_id: 'demo-proj-3', pdfTitle: 'Progress report - Alex.pdf', submittedHoursAgo: 10 }),
+    ],
+    assignees: [],
+  },
+  {
+    id: 'demo-asgn-3b', team_id: 'demo-proj-3',
+    title: 'Dashboard build',
+    description: 'Build the interactive climate dashboard. Professor assigns the subtasks.',
+    due_at: daysAgo(-12), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
+    status: 'active', order_idx: 2, created_at: daysAgo(10), updated_at: daysAgo(2),
     assignment_type: 'team', distribution_mode: 'professor',
-    max_points: 80, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: false,
+    max_points: 100, deadline_type: 'hard', grace_days: null, ai_plagiarism_check: false,
+    assignees: [],
     subtasks: [
-      { id: 'demo-st-3a-1', assignment_id: 'demo-asgn-3a', title: 'NOAA license writeup', description: '1-page summary of changes since last term.', assigned_to: DEMO_STUDENTS[3].id, assignee: { id: DEMO_STUDENTS[3].id, full_name: DEMO_STUDENTS[3].full_name, avatar_url: null, role: 'student' }, assigned_by: PROF.id, status: 'in_progress', claimed_at: null, created_at: daysAgo(14) },
-      { id: 'demo-st-3a-2', assignment_id: 'demo-asgn-3a', title: 'Missing-station handling', description: 'Interpolation strategy + flag column.', assigned_to: DEMO_STUDENTS[0].id, assignee: { id: DEMO_STUDENTS[0].id, full_name: DEMO_STUDENTS[0].full_name, avatar_url: null, role: 'student' }, assigned_by: PROF.id, status: 'submitted', claimed_at: null, created_at: daysAgo(14) },
-      { id: 'demo-st-3a-3', assignment_id: 'demo-asgn-3a', title: 'Coverage map',           description: 'Visualize station coverage for the 50-yr window.', assigned_to: DEMO_STUDENTS[4].id, assignee: { id: DEMO_STUDENTS[4].id, full_name: DEMO_STUDENTS[4].full_name, avatar_url: null, role: 'student' }, assigned_by: PROF.id, status: 'in_progress', claimed_at: null, created_at: daysAgo(14) },
+      subRow('demo-st-3b-1', 'demo-asgn-3b', 'Interactive viz prototype', 'D3 prototype for the temperature series.', S[3], 'open',        { assigned_by: PROF.id }),
+      subRow('demo-st-3b-2', 'demo-asgn-3b', 'Accessibility pass',        'Colour-contrast + keyboard nav.',          S[4], 'in_progress', { assigned_by: PROF.id }),
     ],
     leaders: [],
     submissions: [],
   },
 ];
 
-DEMO_PROJECTS[3].assignments = [
-  {
-    id: 'demo-asgn-4a', team_id: 'demo-proj-4',
-    title: 'Final report + usability appendix',
-    description: 'Wrap-up artifact for the mobile reading app capstone.',
-    due_at: '2026-04-30T17:00:00Z', owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'done', order_idx: 1, created_at: '2026-04-01T00:00:00Z', updated_at: '2026-05-01T00:00:00Z',
-    submissions: [
-      demoSub(DEMO_STUDENTS[2], 'approved', { assignment_id: 'demo-asgn-4a', team_id: 'demo-proj-4', pdfTitle: 'Final Report.pdf', submitted_at: '2026-04-30T16:32:00Z', feedback: 'Excellent. Promote two of the usability quotes to the abstract.', reviewed_at: '2026-05-01T10:00:00Z', reviewer: _PROF_AS_REVIEWER, points_awarded: 92, letter_grade: 'HD' }),
-    ],
-  },
-];
-
-DEMO_PROJECTS[4].assignments = [
-  {
-    id: 'demo-asgn-5a', team_id: 'demo-proj-5',
-    title: 'Chapter 8–10 writeup',
-    description: 'Synthesize counterfactual reasoning chapters. Include problem-set 7 worked solutions.',
-    due_at: daysAgo(-25), owner_id: PROF.id, owner: _PROF_AS_REVIEWER,
-    status: 'active', order_idx: 1, created_at: daysAgo(6), updated_at: daysAgo(6),
-    submissions: [],
-  },
-];
-
-// Shaped to match the NOTIFICATION_SELECT projection the panel reads against
-// the live DB: created_at (ISO) drives relativeTime; link is what tapping a
-// row navigates to; related_team_id + team.name surface the team in the meta
-// line. Sorted newest-first.
+// ── Notifications ────────────────────────────────────────────────────────────
 const _PROJ1 = { id: 'demo-proj-1', name: 'LLM Hallucination Study' };
-const _PROJ2 = { id: 'demo-proj-2', name: 'Distributed Systems Capstone' };
-const _PROJ3 = { id: 'demo-proj-3', name: 'Climate Data Visualization' };
-const _PROJ5 = { id: 'demo-proj-5', name: 'Causal Inference Reading Group' };
+const _PROJ2 = { id: 'demo-proj-2', name: 'Individual Coursework' };
+const _PROJ3 = { id: 'demo-proj-3', name: 'Mixed In-Progress Project' };
 
 export const DEMO_NOTIFICATIONS = [
-  // Assignment flow — drives the assignments-tab + grade demo.
-  { id: 'demo-n-20', type: 'submission_reviewed', title: 'Submission approved',     body: 'Dr. Sarah Rivera approved your submission for "Methodology section v2" · HD (88/100) · Strong revision — power calc is exactly what I was after.', link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(2) },
-  { id: 'demo-n-21', type: 'subtask_assigned',    title: 'You picked up a subtask', body: 'Alex Chen assigned you "Failure-mode tests" on Raft consensus prototype.',                                                                                       link: '/projects/demo-proj-2', related_team_id: _PROJ2.id, team: _PROJ2, read: false, created_at: hoursAgo(4) },
-  { id: 'demo-n-22', type: 'submission_received', title: 'New submission',          body: 'Marcus Lee submitted v2 for "Methodology section v2".',                                                                                                            link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(5) },
-  { id: 'demo-n-23', type: 'deadline_reminder',   title: 'Due in 24h',              body: '"Annotated hallucination dataset" is due tomorrow — open subtasks remaining: Literature Review, Methodology Section.',                                              link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(8) },
-  { id: 'demo-n-24', type: 'assignment_created',  title: 'New assignment',          body: 'Dr. Sarah Rivera assigned you "Methodology section v2" in LLM Hallucination Study (due May 23).',                                                                  link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: true,  created_at: daysAgo(3) },
-
-  // PDF activity — drives the tap-to-open-viewer demo.
-  { id: 'demo-n-9',  type: 'pdf_comment',  title: 'New PDF comment',    body: 'Marcus Lee commented on Project Proposal v2: Should we add more citations for the §2 claims? A couple fee…', link: '/projects/demo-proj-1/pdfs/demo-pdf-1?page=2', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(1)   },
-  { id: 'demo-n-10', type: 'pdf_comment',  title: 'New PDF comment',    body: 'Dr. Sarah Rivera commented on Project Proposal v2: Great work on the methodology section — your evalu…',      link: '/projects/demo-proj-1/pdfs/demo-pdf-1?page=1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(3)   },
-  { id: 'demo-n-11', type: 'pdf_uploaded', title: 'New PDF uploaded',   body: 'Marcus Lee uploaded Methodology v1 to LLM Hallucination Study.',                                            link: '/projects/demo-proj-1/pdfs/demo-pdf-3',       related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(6)   },
-  { id: 'demo-n-12', type: 'pdf_comment',  title: 'New PDF comment',    body: 'Dr. Sarah Rivera commented on Literature Review: Could you expand the section on calibration failure mod…', link: '/projects/demo-proj-1/pdfs/demo-pdf-2?page=9', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(7)   },
-  { id: 'demo-n-13', type: 'pdf_uploaded', title: 'New PDF uploaded',   body: 'Priya Sharma uploaded Architecture Plan v3 to Distributed Systems Capstone.',                              link: '/projects/demo-proj-2/pdfs/demo-pdf-4',       related_team_id: _PROJ2.id, team: _PROJ2, read: true,  created_at: daysAgo(1)    },
-  { id: 'demo-n-14', type: 'pdf_uploaded', title: 'New PDF uploaded',   body: 'Yuki Tanaka uploaded Cleaning Pipeline Spec to Climate Data Visualization.',                              link: '/projects/demo-proj-3/pdfs/demo-pdf-7',       related_team_id: _PROJ3.id, team: _PROJ3, read: true,  created_at: daysAgo(3)    },
-
-  // Existing non-PDF activity — converted to the canonical shape.
-  { id: 'demo-n-1',  type: 'team_invite',         title: 'Dr. Sarah Rivera invited you to LLM Hallucination Study', body: 'You\'ve been invited to join a 4-person project for CS 4890.',  link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(3.5) },
-  { id: 'demo-n-2',  type: 'submission_received', title: 'Priya Sharma submitted Literature Review v3',             body: '12 pages, 3 sources flagged for review.',                        link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(5)   },
-  { id: 'demo-n-3',  type: 'ai_insight',          title: 'AI flagged contribution imbalance on Climate Data Viz',   body: 'Jordan Kim is 14% by week 6 — peers average 25–30%.',            link: null,                                          related_team_id: _PROJ3.id, team: _PROJ3, read: false, created_at: daysAgo(1)    },
-  { id: 'demo-n-4',  type: 'decision_required',   title: 'Review needed: 14% similarity in LLM Study §2.1',         body: 'Closest match: Smith et al. 2023. Likely common phrasing.',      link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: daysAgo(1)    },
-  { id: 'demo-n-5',  type: 'mention',             title: 'Marcus Lee mentioned you in a comment',                   body: '"@alex — should we drop the GPT-4 column from Table 3?"',        link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: true,  created_at: daysAgo(2)    },
-  { id: 'demo-n-6',  type: 'assignment_due',      title: 'Annotate hallucination dataset due in 2 days',            body: 'Milestone 3 of LLM Hallucination Study.',                        link: null,                                          related_team_id: _PROJ1.id, team: _PROJ1, read: true,  created_at: daysAgo(2)    },
-  { id: 'demo-n-7',  type: 'submission_received', title: 'Yuki Tanaka submitted Visualization Designs draft',       body: '5 design options for stakeholder review.',                       link: null,                                          related_team_id: _PROJ3.id, team: _PROJ3, read: true,  created_at: daysAgo(4)    },
-  { id: 'demo-n-8',  type: 'team_invite',         title: 'Marcus Lee invited you to Causal Inference Reading Group',body: 'Independent study, weekly writeups.',                            link: null,                                          related_team_id: _PROJ5.id, team: _PROJ5, read: true,  created_at: daysAgo(6)    },
+  { id: 'demo-n-1',  type: 'submission_reviewed', title: 'Submission approved', body: 'Dr. Sarah Rivera approved your "Essay 1 — AI & Authorship" · HD (91/100) · Excellent — the authorship-spectrum framing is original.', link: '/projects/demo-proj-2', related_team_id: _PROJ2.id, team: _PROJ2, read: false, created_at: hoursAgo(3) },
+  { id: 'demo-n-2',  type: 'pdf_comment',  title: 'New PDF comment',  body: 'Dr. Sarah Rivera commented on Research Proposal v2: Great work on the methodology framing — that is the str…', link: '/projects/demo-proj-1/pdfs/demo-pdf-1?page=1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(3) },
+  { id: 'demo-n-3',  type: 'ai_insight',   title: 'AI flagged a contribution imbalance', body: 'Jordan Kim is at 12% by week 7 on Mixed In-Progress Project — peers average 25–30%.', link: '/projects/demo-proj-3', related_team_id: _PROJ3.id, team: _PROJ3, read: false, created_at: hoursAgo(6) },
+  { id: 'demo-n-4',  type: 'submission_received', title: 'New submission', body: 'Alex Chen submitted Problem Set 3 — Fairness metrics.', link: '/projects/demo-proj-2', related_team_id: _PROJ2.id, team: _PROJ2, read: false, created_at: hoursAgo(8) },
+  { id: 'demo-n-5',  type: 'pdf_comment',  title: 'New PDF comment', body: 'Marcus Lee commented on Research Proposal v2: Should we add more citations for the §2 claims? A couple fe…', link: '/projects/demo-proj-1/pdfs/demo-pdf-1?page=2', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(1) },
+  { id: 'demo-n-6',  type: 'subtask_assigned', title: 'You were assigned a subtask', body: 'Dr. Sarah Rivera assigned you "Medical-domain error pass" on Domain error taxonomy.', link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: false, created_at: hoursAgo(9) },
+  { id: 'demo-n-7',  type: 'submission_reviewed', title: 'Resubmission requested', body: 'Dr. Sarah Rivera asked for a resubmit on "Midterm paper — Accountability": §3 needs the Mittelstadt framework.', link: '/projects/demo-proj-2', related_team_id: _PROJ2.id, team: _PROJ2, read: true, created_at: daysAgo(1) },
+  { id: 'demo-n-8',  type: 'pdf_uploaded', title: 'New PDF uploaded', body: 'Yuki Tanaka uploaded Modeling Notes to Mixed In-Progress Project.', link: '/projects/demo-proj-3/pdfs/demo-pdf-7', related_team_id: _PROJ3.id, team: _PROJ3, read: true, created_at: daysAgo(1) },
+  { id: 'demo-n-9',  type: 'deadline_reminder', title: 'Due soon', body: '"Annotated hallucination dataset" has open subtasks: Literature scan, Annotation guide.', link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: true, created_at: daysAgo(2) },
+  { id: 'demo-n-10', type: 'decision_required', title: 'Review needed: 14% similarity in LLM Study §2.1', body: 'Closest match: Smith et al. 2023. Likely common phrasing.', link: '/projects/demo-proj-1', related_team_id: _PROJ1.id, team: _PROJ1, read: true, created_at: daysAgo(2) },
 ];
 
-// Realistic contribution heatmap pattern — weekday-weighted, slight Tue/Wed peak,
-// no activity past last week, low weekend activity.
+// Weekday-weighted contribution heatmap (mid-week peak, quiet weekends, tapering recent weeks).
 function buildDemoHeatmap() {
   const pattern = [];
   for (let week = 0; week < 12; week++) {
     for (let day = 0; day < 7; day++) {
-      // weekends quiet, weekdays mid-week peak, older weeks slightly heavier
       const weekdayBoost = day >= 1 && day <= 4 ? 1 : 0;
       const peakDay = day === 2 || day === 3 ? 1 : 0;
       const recency = week >= 10 ? -1 : week >= 6 ? 0 : 1;
       const noise = (week * 7 + day) % 3;
-      const v = Math.max(0, Math.min(4, weekdayBoost + peakDay + recency + noise - 1));
-      pattern.push(v);
+      pattern.push(Math.max(0, Math.min(4, weekdayBoost + peakDay + recency + noise - 1)));
     }
   }
   return pattern;
 }
-
 export const DEMO_HEATMAP = buildDemoHeatmap();
 
-// The signed-in student is treated as this demo persona for filtering purposes.
-// Demo data isn't tied to a real auth account, so we pick a fixed persona
-// (Alex Chen) and surface only the demo projects that include her as a member.
 export const DEMO_CURRENT_STUDENT_ID = 'demo-student-1';
 
 export function getDemoProjectsForStudent(studentId, projects = DEMO_PROJECTS) {
-  return projects.filter(p =>
-    (p.memberRecords ?? []).some(m => m.profile?.id === studentId)
-  );
+  return projects.filter(p => (p.memberRecords ?? []).some(m => m.profile?.id === studentId));
 }
 
 export function findDemoProfileById(id) {
