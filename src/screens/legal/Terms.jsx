@@ -1,6 +1,6 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 // DRAFT — pending legal review. Not final legal text. See [LAWYER REVIEW] notes.
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const LAST_UPDATED = '2 June 2026';
 
@@ -27,10 +27,17 @@ function LR({ children }) { return <div style={lr}>⚖︎ [LAWYER REVIEW: {child
 
 export default function Terms() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Public, shareable URL — on a direct deep-link there's no history, so
+  // navigate(-1) would do nothing. Fall back to '/' (RootRedirect → home/login).
+  const onBack = () => {
+    if (location.key === 'default') navigate('/', { replace: true });
+    else navigate(-1);
+  };
   return (
     <>
       <div className="sh-head">
-        <button className="back" onClick={() => navigate(-1)}>←</button>
+        <button className="back" onClick={onBack}>←</button>
         <div className="sh-title">Terms of Service</div>
         <div style={{ width: 36, height: 36 }} aria-hidden />
       </div>
