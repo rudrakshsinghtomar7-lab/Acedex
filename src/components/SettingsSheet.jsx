@@ -1,10 +1,14 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
 
 export default function SettingsSheet({onClose, apiKey, setApiKey}) {
   const [draft, setDraft] = useState(apiKey || '');
   const { demoMode, setDemoMode, available: demoAvailable } = useDemoMode();
+  const navigate = useNavigate();
+
+  const goLegal = (path) => { onClose(); navigate(path); };
 
   const save = () => {
     setApiKey(draft.trim());
@@ -42,6 +46,12 @@ export default function SettingsSheet({onClose, apiKey, setApiKey}) {
             </label>
           </>
         )}
+
+        <div className="sh-h2" style={{fontSize:14,marginTop:8,marginBottom:10}}>Legal</div>
+        <div style={{display:'flex',flexDirection:'column',gap:2,marginBottom:18}}>
+          <button className="pdf-link-btn" style={{textAlign:'left',fontSize:13.5,padding:'6px 0'}} onClick={()=>goLegal('/legal/privacy')}>Privacy Policy</button>
+          <button className="pdf-link-btn" style={{textAlign:'left',fontSize:13.5,padding:'6px 0'}} onClick={()=>goLegal('/legal/terms')}>Terms of Service</button>
+        </div>
 
         <div style={{display:'flex',gap:10}}>
           {apiKey && <button className="btn btn-g" style={{flex:1}} onClick={clear}>Clear</button>}

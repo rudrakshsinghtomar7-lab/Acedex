@@ -56,6 +56,11 @@ export default function Login() {
         <div style={{textAlign:"center",fontSize:13,color:"var(--muted)",marginTop:10}}>
           New here? <Link to="/signup" style={{color:"var(--indigo-bright)",textDecoration:"none"}}>Create an account</Link>
         </div>
+        <div style={{textAlign:"center",fontSize:11.5,color:"var(--muted)",lineHeight:1.6,marginTop:22}}>
+          By continuing you agree to our{' '}
+          <Link to="/legal/terms" style={{color:"var(--indigo-bright)",textDecoration:"none"}}>Terms of Service</Link>{' '}
+          and <Link to="/legal/privacy" style={{color:"var(--indigo-bright)",textDecoration:"none"}}>Privacy Policy</Link>.
+        </div>
       </form>
     </>
   );

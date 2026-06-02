@@ -66,6 +66,11 @@ export default function Signup() {
         <div style={{textAlign:"center",fontSize:13,color:"var(--muted)",marginTop:18}}>
           Already have an account? <Link to="/login" style={{color:"var(--indigo-bright)",textDecoration:"none"}}>Sign in</Link>
         </div>
+        <div style={{textAlign:"center",fontSize:11.5,color:"var(--muted)",lineHeight:1.6,marginTop:22}}>
+          By continuing you agree to our{' '}
+          <Link to="/legal/terms" style={{color:"var(--indigo-bright)",textDecoration:"none"}}>Terms of Service</Link>{' '}
+          and <Link to="/legal/privacy" style={{color:"var(--indigo-bright)",textDecoration:"none"}}>Privacy Policy</Link>.
+        </div>
       </form>
     </>
   );

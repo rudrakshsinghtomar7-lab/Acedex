@@ -21,6 +21,8 @@ import Login from './screens/auth/Login.jsx';
 import Signup from './screens/auth/Signup.jsx';
 import Reset from './screens/auth/Reset.jsx';
 import UpdatePassword from './screens/auth/UpdatePassword.jsx';
+import Privacy from './screens/legal/Privacy.jsx';
+import Terms from './screens/legal/Terms.jsx';
 import { SessionProvider, useAuth } from './providers/SessionProvider.jsx';
 import { DemoModeProvider } from './hooks/useDemoMode.jsx';
 import { ThemeProvider } from './hooks/useTheme.jsx';
@@ -99,6 +101,9 @@ function AppShell() {
         <Route path="/signup"          element={<div className="screen"><Signup/></div>}/>
         <Route path="/reset"           element={<div className="screen"><Reset/></div>}/>
         <Route path="/update-password" element={<div className="screen"><UpdatePassword/></div>}/>
+
+        <Route path="/legal/privacy" element={<div className="screen"><Privacy/></div>}/>
+        <Route path="/legal/terms"   element={<div className="screen"><Terms/></div>}/>
 
         <Route element={<ProtectedRoute><Outlet/></ProtectedRoute>}>
           <Route path="/projects/create" element={<div className="screen"><ProjectCreate/></div>}/>
