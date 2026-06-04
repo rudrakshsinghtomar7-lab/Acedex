@@ -45,7 +45,7 @@ const SWIPE_MIN = 60;
 // must NOT toggle chrome (saved highlights, the selection bands/handles, the
 // floating toolbar, popovers, and any real control).
 const NO_TOGGLE_SEL =
-  '.pdf-hl-band, .pdf-mock-highlight, .pdf-highlight-popover, .pdf-sel-band, ' +
+  '.pdf-hl-band, .pdf-highlight-popover, .pdf-sel-band, ' +
   '.pdf-sel-handle, .pdf-fl-toolbar, button, a, input, textarea, select, [data-no-toggle]';
 
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
@@ -451,7 +451,14 @@ export default function PdfFullViewer({ isDemo, doc, projectId, supabase, user, 
   // selected words; storage is the existing addPdfHighlight (bbox JSON).
   async function saveHighlight(color) {
     const sel = selection;
-    if (!sel || !sel.normBands?.length) return;
+    if (!sel) return;
+    // Rects must exist or the highlight can't be placed — never persist a
+    // rect-less highlight; surface a non-blocking toast and bail.
+    if (!sel.normBands?.length) {
+      flashToast("Couldn't place highlight — try selecting again");
+      clearSelection();
+      return;
+    }
     const text = sel.text?.trim() || 'Highlighted passage';
     const rects = sel.normBands;
     if (isDemo) {

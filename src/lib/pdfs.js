@@ -144,11 +144,15 @@ export async function addPdfComment(supabase, { documentId, userId, pageNumber, 
 }
 
 export async function addPdfHighlight(supabase, { documentId, userId, pageNumber, text, color = '#facc15', rects = null }) {
-  // bbox is a freeform JSON column. New highlights store normalized
-  // word-range rects (0..1) so they render exactly over the selected words;
-  // x/y/w/h are kept for backward-compatible readers. No schema change.
-  const bbox = { x: 0, y: 0, w: 100, h: 20, text: text.trim() };
-  if (Array.isArray(rects) && rects.length) { bbox.rects = rects; bbox.v = 2; }
+  // A highlight must never be persisted without valid rects — there is one
+  // render path (rect-based bands) and a rect-less row would be invisible.
+  if (!Array.isArray(rects) || !rects.length) {
+    throw new Error('Cannot save a highlight without rects.');
+  }
+  // bbox is a freeform JSON column. Highlights store normalized word-range
+  // rects (0..1) so they render exactly over the selected words; x/y/w/h are
+  // kept for backward-compatible readers. No schema change.
+  const bbox = { x: 0, y: 0, w: 100, h: 20, text: text.trim(), rects, v: 2 };
   const { data, error } = await supabase
     .from('pdf_annotations')
     .insert({

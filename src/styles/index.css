@@ -899,10 +899,6 @@
   .pdf-mock-para [data-w]{margin-right:.32em}
   .pdf-mock-footer{position:absolute;left:0;right:0;bottom:24px;text-align:center;font-size:11px;color:#9a9ba2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
   .pdf-mock-overlay{position:absolute;inset:0;pointer-events:none}
-  .pdf-mock-highlight{position:absolute;left:56px;right:56px;pointer-events:auto;display:flex;align-items:center;padding:6px 10px;border:none;border-radius:3px;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1f;text-align:left;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.06);transition:transform .1s,filter .1s}
-  .pdf-mock-highlight:hover{filter:brightness(.96);transform:translateY(-1px)}
-  .pdf-mock-highlight.active{box-shadow:0 0 0 2px rgba(var(--accent-rgb),.65),0 6px 16px rgba(0,0,0,.25);transform:translateY(-1px)}
-  .pdf-mock-highlight-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ═══════════════════════════════════════════════════════════════════════
      FULL-PAGE PDF WORKSPACE (.pdfx)

@@ -278,9 +278,17 @@ const cmt = (id, doc, page, content, author, opts = {}) => ({
   resolved: opts.resolved ?? false, color: null, bbox: noBox,
   created_at: opts.created_at ?? hoursAgo(opts.hoursAgo ?? 6), author,
 });
-const hl = (id, doc, page, text, author, color = '#facc15', created_at = null) => ({
-  id, document_id: doc, annotation_type: 'highlight', page_number: page, content: text,
-  resolved: false, color, bbox: { ...noBox, text }, created_at: created_at ?? daysAgo(2), author,
+// Demo highlights store a word-index range [from, to] into the page's seeded
+// body text — NOT hand-authored rects. Rects are computed at render via the
+// same bandsForRange → normalizeBands path the live selection uses, so demo and
+// real highlights flow through the single HighlightBands render path. content
+// is derived from the actual rendered words at resolve time (never hardcoded,
+// so it can't drift from the seeded text). bandsForRange clamps out-of-range
+// indices, so a range is always safe for the page's word count.
+const hl = (id, doc, page, range, author, color = '#facc15', created_at = null) => ({
+  id, document_id: doc, annotation_type: 'highlight', page_number: page, content: null,
+  resolved: false, color, bbox: { range: { from: range[0], to: range[1] } },
+  created_at: created_at ?? daysAgo(2), author,
 });
 
 export const DEMO_PDF_COMMENTS = [
@@ -308,14 +316,15 @@ export const DEMO_PDF_COMMENTS = [
   cmt('demo-c-15', 'demo-pdf-7', 2, 'Lock the random seed before the hyperparameter sweep so results are reproducible.',    demoAuthor(S[0]), { hoursAgo: 9 }),
 ];
 
+// [from, to] = inclusive word-index range into the page's seeded body words.
 export const DEMO_PDF_HIGHLIGHTS = [
-  hl('demo-h-1', 'demo-pdf-1', 1, 'detects and mitigates factual errors in large language', demoAuthor(S[1]), '#facc15', '2026-04-02T14:13:00Z'),
-  hl('demo-h-2', 'demo-pdf-1', 3, 'curated dataset of common knowledge questions',          demoAuthor(S[3]), '#86efac', '2026-04-04T16:06:00Z'),
-  hl('demo-h-3', 'demo-pdf-2', 4, 'retrieval augmented generation reduces fabrication',     demoAuthor(S[0]), '#facc15', '2026-04-19T11:21:00Z'),
-  hl('demo-h-4', 'demo-pdf-3', 2, 'across three evaluated domains',                          demoAuthor(S[0]), '#fda4af'),
-  hl('demo-h-5', 'demo-pdf-4', 1, 'careful human study',                                     demoAuthor(S[1]), '#86efac'),
-  hl('demo-h-6', 'demo-pdf-6', 1, 'consistent gains over the baseline approach',             demoAuthor(S[0]), '#facc15'),
-  hl('demo-h-7', 'demo-pdf-7', 2, 'reduces fabrication across three evaluated domains',      demoAuthor(S[3]), '#86efac'),
+  hl('demo-h-1', 'demo-pdf-1', 1, [12, 19], demoAuthor(S[1]), '#facc15', '2026-04-02T14:13:00Z'),
+  hl('demo-h-2', 'demo-pdf-1', 3, [30, 35], demoAuthor(S[3]), '#86efac', '2026-04-04T16:06:00Z'),
+  hl('demo-h-3', 'demo-pdf-2', 4, [48, 55], demoAuthor(S[0]), '#facc15', '2026-04-19T11:21:00Z'),
+  hl('demo-h-4', 'demo-pdf-3', 2, [8, 12],  demoAuthor(S[0]), '#fda4af'),
+  hl('demo-h-5', 'demo-pdf-4', 1, [40, 45], demoAuthor(S[1]), '#86efac'),
+  hl('demo-h-6', 'demo-pdf-6', 1, [66, 72], demoAuthor(S[0]), '#facc15'),
+  hl('demo-h-7', 'demo-pdf-7', 2, [22, 29], demoAuthor(S[3]), '#86efac'),
 ];
 
 // ── Assignments ────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import SelectionLayer from './pdf/SelectionLayer.jsx';
 import HighlightBands from './pdf/HighlightBands.jsx';
-import { wordsFromDemoSpans, wordsFromTextLayer } from './pdf/words.js';
+import { wordsFromDemoSpans, wordsFromTextLayer, bandsForRange, normalizeBands } from './pdf/words.js';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -24,12 +24,6 @@ const RASTER_DPR = Math.min(
   typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
   2,
 );
-
-// Legacy fallback position for highlights with no real rects (old placeholder
-// bboxes). Deterministic per (page, index) so they don't reshuffle.
-function highlightTop(page, idx) {
-  return 130 + ((idx * 88 + page * 47) % 480);
-}
 
 // Deterministic placeholder prose for demo pages so the SAME word-selection
 // engine runs in demo and real. Not lorem-random — seeded by page so demo
@@ -96,8 +90,37 @@ function PdfPage({
     return () => window.removeEventListener('resize', onResize);
   }, [measure]);
 
-  const newHighlights = highlights.filter(h => Array.isArray(h.bbox?.rects) && h.bbox.rects.length);
-  const legacyHighlights = highlights.filter(h => !(Array.isArray(h.bbox?.rects) && h.bbox.rects.length));
+  // ONE highlight system: every highlight renders via HighlightBands from real
+  // rects. Highlights created by word-selection already carry rects. Demo
+  // highlights instead carry a word-index range (bbox.range) which we resolve
+  // into rects here through the SAME bandsForRange → normalizeBands path the
+  // live selection uses — feeding the engine valid input, not a second render
+  // branch. content is derived from the actual words so it can't drift.
+  const prepared = highlights.map(h => {
+    if (Array.isArray(h.bbox?.rects) && h.bbox.rects.length) return h;
+    const range = h.bbox?.range;
+    if (range && words.length) {
+      const bands = bandsForRange(words, range.from, range.to);
+      if (bands.length) {
+        const lo = Math.max(0, Math.min(range.from, range.to));
+        const hi = Math.min(words.length - 1, Math.max(range.from, range.to));
+        const text = words.slice(lo, hi + 1).map(w => w.text).join(' ');
+        return { ...h, content: h.content || text, bbox: { ...h.bbox, rects: normalizeBands(bands, pageW, pageH) } };
+      }
+    }
+    return h;
+  });
+
+  // Defense in depth (Step 4): only rect-bearing highlights render. Anything
+  // still rect-less is skipped + logged — except a demo range whose words just
+  // haven't been measured yet (transient on first paint), which resolves next
+  // render and must not spam warnings.
+  const renderHighlights = [];
+  for (const h of prepared) {
+    if (Array.isArray(h.bbox?.rects) && h.bbox.rects.length) { renderHighlights.push(h); continue; }
+    const awaitingMeasure = h.bbox?.range && !words.length;
+    if (!awaitingMeasure) console.warn(`[pdf] highlight ${h.id} has no rects — skipped`);
+  }
 
   return (
     <div
@@ -149,9 +172,9 @@ function PdfPage({
         )
       )}
 
-      {/* Saved highlights — new ones render as real bands over the words. */}
+      {/* Saved highlights — one path: real rect-based bands over the words. */}
       <div className="pdf-hl-layer" style={{ width: pageW, height: pageH }}>
-        {newHighlights.map(h => (
+        {renderHighlights.map(h => (
           <HighlightBands
             key={h.id}
             row={h}
@@ -162,33 +185,6 @@ function PdfPage({
             onDelete={onHighlightDelete}
           />
         ))}
-        {/* Legacy + demo-fixture highlights keep the chip rendering. */}
-        {legacyHighlights.map((h, idx) => {
-          const mockLine = h.bbox?.mock_line;
-          const top = mockLine != null ? (152 + mockLine * 19) * (isDemo ? 1 : zoom) : highlightTop(pageNumber, idx) * (isDemo ? 1 : zoom);
-          const author = h.author?.full_name || 'User';
-          const isActive = activeHighlightId === h.id;
-          return (
-            <button
-              key={h.id}
-              type="button"
-              className={`pdf-mock-highlight ${isActive ? 'active' : ''}`}
-              style={{ top, background: h.color || '#facc15' }}
-              onClick={e => { e.stopPropagation(); onHighlightClick?.(h); }}
-              aria-label={`Highlight by ${author}`}
-            >
-              <span className="pdf-mock-highlight-text">{h.content || h.bbox?.text || 'Highlight'}</span>
-              {isActive && (
-                <span className="pdf-highlight-popover" onClick={e => e.stopPropagation()} role="dialog">
-                  <span>Highlighted by <strong>{author}</strong></span>
-                  {onHighlightDelete && (
-                    <button type="button" className="pdf-link-btn pdf-link-btn-warn" onClick={() => onHighlightDelete(h)}>Delete</button>
-                  )}
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* Custom selection overlay (native selection suppressed via CSS). */}
