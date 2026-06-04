@@ -149,25 +149,17 @@
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
   }
-  /* Shared © footer pinned to the bottom of the phone frame.
-     - Default position sits flush with the safe-area inset, so on auth
-       screens (no bnav) it lands right under the form.
-     - When a .bnav is present, :has() shifts the footer above the
-       64px nav strip so the two never collide visually.
-     - Pointer-events disabled so taps fall through to nav / content.
-     - Hidden when a full-screen overlay is open (PDF reader / modal). */
+  /* Shared © footer. Rendered (via <Screen>) as the last in-flow child of
+     the .screen scroll container, so it always sits below the content and
+     scrolls with it — no overlap at any scroll position. The bnav is cleared
+     by .screen's padding-bottom, so no manual offset is needed.
+     Hidden when a full-screen overlay is open (PDF reader / modal). */
   .app-footer{
-    position:absolute;left:0;right:0;
-    bottom:calc(env(safe-area-inset-bottom,0) + 4px);
+    margin-top:24px;
     text-align:center;
     font-size:10px;font-weight:500;letter-spacing:.04em;
     color:var(--muted);opacity:.5;
     padding:4px 12px;
-    pointer-events:none;
-    z-index:0;
-  }
-  .phone:has(.bnav) .app-footer{
-    bottom:calc(env(safe-area-inset-bottom,0) + 70px);
   }
   .phone:has(.pdf-fullviewer) .app-footer,
   .phone:has(.pdfx) .app-footer,

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { PROJECTS } from './data/projects.js';
 import PhoneFrame from './components/PhoneFrame.jsx';
+import Screen from './components/Screen.jsx';
 import SettingsSheet from './components/SettingsSheet.jsx';
 import NotificationsPanel from './components/NotificationsPanel.jsx';
 import BottomNav from './components/BottomNav.jsx';
@@ -28,7 +29,7 @@ import { DemoModeProvider } from './hooks/useDemoMode.jsx';
 import { ThemeProvider } from './hooks/useTheme.jsx';
 
 function ScreenLayout() {
-  return <div className="screen"><Outlet/></div>;
+  return <Screen><Outlet/></Screen>;
 }
 
 function BottomNavLayout({role, insightBadgeCount}) {
@@ -97,27 +98,27 @@ function AppShell() {
     <PhoneFrame>
       <Routes>
         <Route path="/" element={<RootRedirect/>}/>
-        <Route path="/login"           element={<div className="screen"><Login/></div>}/>
-        <Route path="/signup"          element={<div className="screen"><Signup/></div>}/>
-        <Route path="/reset"           element={<div className="screen"><Reset/></div>}/>
-        <Route path="/update-password" element={<div className="screen"><UpdatePassword/></div>}/>
+        <Route path="/login"           element={<Screen><Login/></Screen>}/>
+        <Route path="/signup"          element={<Screen><Signup/></Screen>}/>
+        <Route path="/reset"           element={<Screen><Reset/></Screen>}/>
+        <Route path="/update-password" element={<Screen><UpdatePassword/></Screen>}/>
 
-        <Route path="/legal/privacy" element={<div className="screen"><Privacy/></div>}/>
-        <Route path="/legal/terms"   element={<div className="screen"><Terms/></div>}/>
+        <Route path="/legal/privacy" element={<Screen><Privacy/></Screen>}/>
+        <Route path="/legal/terms"   element={<Screen><Terms/></Screen>}/>
 
         <Route element={<ProtectedRoute><Outlet/></ProtectedRoute>}>
-          <Route path="/projects/create" element={<div className="screen"><ProjectCreate/></div>}/>
+          <Route path="/projects/create" element={<Screen><ProjectCreate/></Screen>}/>
           <Route path="/projects/:id"    element={
-            <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey}/></div>
+            <Screen><ProjectDetailRoute role={effectiveRole} apiKey={apiKey}/></Screen>
           }/>
           <Route path="/projects/:id/pdfs" element={
-            <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey} initialTab="pdfs"/></div>
+            <Screen><ProjectDetailRoute role={effectiveRole} apiKey={apiKey} initialTab="pdfs"/></Screen>
           }/>
           <Route path="/projects/:id/pdfs/:pdfId" element={
-            <div className="screen"><ProjectDetailRoute role={effectiveRole} apiKey={apiKey} initialTab="pdfs"/></div>
+            <Screen><ProjectDetailRoute role={effectiveRole} apiKey={apiKey} initialTab="pdfs"/></Screen>
           }/>
-          <Route path="/profile/edit" element={<div className="screen"><ProfileEdit/></div>}/>
-          <Route path="/profile/:id"  element={<div className="screen"><ProfileView/></div>}/>
+          <Route path="/profile/edit" element={<Screen><ProfileEdit/></Screen>}/>
+          <Route path="/profile/:id"  element={<Screen><ProfileView/></Screen>}/>
           <Route element={<BottomNavLayout role={effectiveRole} insightBadgeCount={totalInsights}/>}>
             <Route path="/ai" element={<AIScreen role={effectiveRole} projects={projects} apiKey={apiKey}/>}/>
             <Route element={<ScreenLayout/>}>
