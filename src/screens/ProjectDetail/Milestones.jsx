@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Avatar from '../../components/Avatar.jsx';
 import TaskCreateModal from '../../components/TaskCreateModal.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
+import { useDemoMode } from '../../hooks/useDemoMode.jsx';
 import {
   addTaskToMilestone,
   createMilestone,
@@ -27,8 +28,13 @@ function StatusBadge({ status }) {
 
 export default function Milestones({ project, role }) {
   const { supabase, user } = useAuth();
+  const { demoMode, demoRole } = useDemoMode();
   const isDemo = typeof project?.id === 'string' && project.id.startsWith('demo-');
   const isProfessor = role === 'professor';
+  // Demo-prof showcase: creating a milestone persists nothing (visual-only),
+  // even on a real project. Real professors are never in demo mode, so their
+  // createMilestone path is unchanged.
+  const noPersist = isDemo || (demoMode && demoRole === 'professor');
   const myId = isDemo ? (isProfessor ? 'demo-prof-1' : 'demo-student-1') : user?.id;
 
   const [milestones, setMilestones] = useState(null);
@@ -83,7 +89,7 @@ export default function Milestones({ project, role }) {
     const title = newTitle.trim();
     if (!title) return;
     await run(async () => {
-      if (isDemo) {
+      if (noPersist) {
         const row = { id: `demo-ms-${Date.now()}`, team_id: project.id, title, order_idx: (project.milestones?.length ?? 0) + 1 };
         project.milestones = [...(project.milestones || []), row];
       } else {

@@ -1,12 +1,18 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createTask, TASK_ASSIGNEE_MODES } from '../lib/tasks.js';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
 
 // Professor-only. Phase 1 fields: title + the three-mode assignee picker
 // (same vocabulary as assignments' distribution_mode). Status always starts at
 // 'not_started'. Reuses the assignment-create modal's classes so it matches the
 // rest of the project workspace in both themes.
 export default function TaskCreateModal({ project, ownerId, supabase, isDemo, onClose, onCreated, milestoneId = null }) {
+  const { demoMode, demoRole } = useDemoMode();
+  // Demo-prof showcase: creating a task persists nothing (visual-only), even on
+  // a real project. Real professors are never in demo mode, so their createTask
+  // path is byte-identical.
+  const noPersist = isDemo || (demoMode && demoRole === 'professor');
   const members = useMemo(
     () => (project.memberRecords ?? [])
       .map(m => m.profile)
@@ -48,7 +54,7 @@ export default function TaskCreateModal({ project, ownerId, supabase, isDemo, on
     setError(null);
     setBusy(true);
     try {
-      if (isDemo) {
+      if (noPersist) {
         const chosen = assigneeMode === 'professor'
           ? members.filter(m => assigneeIds.includes(m.id))
           : [];

@@ -1,6 +1,7 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createAssignment } from '../lib/assignments.js';
+import { useDemoMode } from '../hooks/useDemoMode.jsx';
 
 function uid() { return `t-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; }
 
@@ -22,6 +23,11 @@ function Segmented({ value, onChange, options }) {
 }
 
 export default function AssignmentCreateModal({ project, ownerId, supabase, isDemo, onClose, onCreated }) {
+  const { demoMode, demoRole } = useDemoMode();
+  // Demo-prof showcase: creating persists nothing (visual-only), even on a real
+  // project opened in showcase. A real professor is never in demo mode, so the
+  // real createAssignment path below is byte-identical for them.
+  const noPersist = isDemo || (demoMode && demoRole === 'professor');
   const members = useMemo(
     () => (project.memberRecords ?? [])
       .map(m => m.profile)
@@ -109,7 +115,7 @@ export default function AssignmentCreateModal({ project, ownerId, supabase, isDe
     setError(null);
     setBusy(true);
     try {
-      if (isDemo) {
+      if (noPersist) {
         const row = {
           id: `demo-asgn-${Date.now()}`,
           team_id: project.id,
