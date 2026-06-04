@@ -4,6 +4,7 @@ import AssignmentCreateModal from '../../components/AssignmentCreateModal.jsx';
 import AssignmentDetailModal from '../../components/AssignmentDetailModal.jsx';
 import FilterChips from '../../components/FilterChips.jsx';
 import { useAuth } from '../../providers/SessionProvider.jsx';
+import { useDemoMode, withDemoReviews } from '../../hooks/useDemoMode.jsx';
 import {
   effectiveAssignmentStatus,
   listOwnAssigneesForTeam,
@@ -109,6 +110,7 @@ function dueLabel(due) {
 
 export default function Assignments({ project, role }) {
   const { supabase, user } = useAuth();
+  const { demoReviews } = useDemoMode();
   const isDemo = typeof project?.id === 'string' && project.id.startsWith('demo-');
   const isProfessor = role === 'professor';
 
@@ -125,7 +127,13 @@ export default function Assignments({ project, role }) {
   async function load() {
     setError(null);
     if (isDemo) {
-      const list = (project.assignments ?? []).map(adaptDemoAssignment);
+      // Overlay ephemeral demo-prof review verdicts (visual-only, never
+      // persisted) so a showcase review moves the row into the Reviewed
+      // bucket without mutating the shared fixtures.
+      const list = (project.assignments ?? []).map(a => ({
+        ...adaptDemoAssignment(a),
+        submissions: withDemoReviews(a.submissions ?? [], demoReviews),
+      }));
       setRows(list);
       const map = {};
       const assigneeMap = {};
@@ -187,7 +195,7 @@ export default function Assignments({ project, role }) {
     load().catch(e => { if (!cancelled) setError(e.message || String(e)); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase, project?.id, isDemo, project?.assignments]);
+  }, [supabase, project?.id, isDemo, project?.assignments, demoReviews]);
 
   function onCreated(row) {
     setRows(prev => [...(prev ?? []), row]);

@@ -17,7 +17,7 @@ import { adaptTeam, deleteProject, getTeamDetail } from '../../lib/teams.js';
 
 export default function ProjectDetail({id, role, onBack, apiKey, initialTab, initialPdfId, initialPage}) {
   const { supabase } = useAuth();
-  const { demoMode, demoData } = useDemoMode();
+  const { demoMode, demoRole, demoData } = useDemoMode();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,19 +29,19 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
   const refetch = () => setRefreshTick(n => n + 1);
   const isDemo = typeof id === 'string' && id.startsWith('demo-');
   const canDelete = role === 'professor' || role === 'admin';
+  // Demo-prof showcase: delete is inert (no real cascade). True only inside
+  // demo mode with the professor view — a real professor always persists.
+  const demoShowcase = demoMode && demoRole === 'professor';
 
   // Permanent project delete. Real: deleteProject (RLS-gated, full cascade,
-  // storage cleanup). Demo: splice the in-memory project. Then leave the screen.
+  // storage cleanup). In demo / showcase it's inert — no Supabase call and no
+  // fixture mutation — so nothing persists and it resets with demo mode.
   async function confirmDelete() {
-    if (isDemo) {
-      const arr = demoData?.DEMO_PROJECTS;
-      if (arr) {
-        const i = arr.findIndex(p => p.id === id);
-        if (i >= 0) arr.splice(i, 1);
-      }
-    } else {
-      await deleteProject(supabase, id);
+    if (isDemo || demoShowcase) {
+      navigate('/projects', { replace: true });
+      return;
     }
+    await deleteProject(supabase, id);
     navigate('/projects', { replace: true });
   }
 

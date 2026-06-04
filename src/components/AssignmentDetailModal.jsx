@@ -15,6 +15,7 @@ import {
   submitAssignmentPdf,
 } from '../lib/assignments.js';
 import { formatRelativeTime, validatePdfFile } from '../lib/pdfs.js';
+import { useDemoMode, withDemoReviews } from '../hooks/useDemoMode.jsx';
 
 const REVIEW_VERDICTS = [
   { value: 'approved',           label: 'Approve',          tone: 'p' },
@@ -50,6 +51,12 @@ export default function AssignmentDetailModal({
   project, assignment, role, isDemo, supabase, user, onClose, onSubmissionChanged,
 }) {
   const isProfessor = role === 'professor';
+  const { demoMode, demoRole, demoReviews, applyDemoReview } = useDemoMode();
+  // Demo-prof showcase: prof actions are visual-only and never persist. True
+  // only inside demo mode with the professor view selected — a real professor
+  // (never in demo mode) always takes the real, persisting path below.
+  const demoShowcase = demoMode && demoRole === 'professor';
+  const noPersist = isDemo || demoShowcase;
   const isTeam = assignment.assignment_type === 'team';
   const dist = assignment.distribution_mode;
   const [subs, setSubs] = useState(null);
@@ -80,7 +87,7 @@ export default function AssignmentDetailModal({
   useEffect(() => {
     setError(null);
     if (isDemo) {
-      setSubs(assignment.submissions ?? []);
+      setSubs(withDemoReviews(assignment.submissions ?? [], demoReviews));
       setSubtasks(assignment.subtasks ?? []);
       setLeaders(assignment.leaders ?? []);
       const me = (assignment.assignees ?? []).find(x => x.student_id === 'demo-student-1');
@@ -99,14 +106,16 @@ export default function AssignmentDetailModal({
     ])
       .then(([s, st, le, asgMap]) => {
         if (cancelled) return;
-        setSubs(s);
+        // In showcase mode, overlay any ephemeral verdicts on the real reads
+        // so the prof sees their (non-persisted) review reflected.
+        setSubs(demoShowcase ? withDemoReviews(s, demoReviews) : s);
         setSubtasks(st);
         setLeaders(le);
         setMyAssignee(asgMap?.[assignment.id] ?? null);
       })
       .catch(e => { if (!cancelled) setError(e.message || String(e)); });
     return () => { cancelled = true; };
-  }, [supabase, assignment, isDemo, isTeam, isProfessor, user?.id]);
+  }, [supabase, assignment, isDemo, isTeam, isProfessor, user?.id, demoShowcase, demoReviews]);
 
   // Latest = first row per submitter (subs are sorted version desc).
   const myVersions = useMemo(
@@ -222,13 +231,15 @@ export default function AssignmentDetailModal({
     setError(null);
     setBusy(true);
     try {
-      if (isDemo) {
+      if (noPersist) {
+        // Visual-only showcase: update what the reviewer sees and record an
+        // ephemeral override (wiped when demo mode resets). Persists NOTHING —
+        // no Supabase write, and the shared demo fixtures stay untouched.
         const ptsNum = pts !== undefined && pts !== '' ? Number(pts) : null;
         const letter = ptsNum != null
           ? letterGradeFor(ptsNum, assignment.max_points)
           : null;
-        const next = {
-          ...submission,
+        const patch = {
           status: verdict,
           feedback: fb,
           reviewed_at: new Date().toISOString(),
@@ -236,10 +247,9 @@ export default function AssignmentDetailModal({
           points_awarded: ptsNum,
           letter_grade: letter,
         };
+        const next = { ...submission, ...patch };
         setSubs(cur => cur.map(s => s.id === submission.id ? next : s));
-        if (Array.isArray(assignment.submissions)) {
-          assignment.submissions = assignment.submissions.map(s => s.id === submission.id ? next : s);
-        }
+        applyDemoReview(submission.id, patch);
         onSubmissionChanged?.(next);
         setReviewState(prev => ({ ...prev, [submission.id]: { feedback: '', points: '', openId: null } }));
         return;

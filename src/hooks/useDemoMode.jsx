@@ -18,8 +18,20 @@ const DemoModeContext = createContext({
   demoRole: 'student',
   setDemoRole: () => {},
   demoData: null,
+  demoReviews: {},
+  applyDemoReview: () => {},
   available: false,
 });
+
+// Merge ephemeral demo-prof review verdicts onto a list of submissions. Pure —
+// returns new objects, never mutates the input (so the shared demo fixtures
+// stay pristine). Used wherever submissions are read so a showcase review is
+// visible in both the modal and the assignment list, yet vanishes the moment
+// demo mode resets (the overrides live only in DemoModeProvider state).
+export function withDemoReviews(submissions, demoReviews) {
+  if (!demoReviews || !submissions?.length) return submissions ?? [];
+  return submissions.map(s => (demoReviews[s.id] ? { ...s, ...demoReviews[s.id] } : s));
+}
 
 export function DemoModeProvider({ children }) {
   const { role } = useAuth() ?? {};
@@ -31,6 +43,11 @@ export function DemoModeProvider({ children }) {
   // and even for admins it does nothing while demoMode is off.
   const [demoRole, setRole] = useState('student');
   const [demoData, setDemoData] = useState(null);
+  // Ephemeral demo-prof review verdicts, keyed by submission id. Showcase-only:
+  // these are visual overrides that never touch Supabase or the demo fixtures,
+  // and they are wiped whenever demo mode turns off (see the effect below), so
+  // "review" actions reset cleanly with the rest of demo mode.
+  const [demoReviews, setDemoReviews] = useState({});
 
   // Honor the saved preferences, but only for admins. If the user isn't admin
   // (logged-out, regular user, or stale role) wipe any tampered flags so they
@@ -52,7 +69,11 @@ export function DemoModeProvider({ children }) {
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!demoMode) { setDemoData(null); return; }
+    if (!demoMode) {
+      setDemoData(null);
+      setDemoReviews({}); // showcase edits are ephemeral — reset with demo mode
+      return;
+    }
     let cancelled = false;
     loadDemo().then(m => {
       if (!cancelled && m) setDemoData(m);
@@ -86,8 +107,16 @@ export function DemoModeProvider({ children }) {
     } catch { /* ignore */ }
   };
 
+  // Record an ephemeral review verdict for a demo submission. Admin + demoMode
+  // gated; pure UI state, never persisted. Patch is merged onto the submission
+  // wherever it's displayed (see withDemoReviews).
+  const applyDemoReview = (submissionId, patch) => {
+    if (!isAdmin || !demoMode || !submissionId) return;
+    setDemoReviews(prev => ({ ...prev, [submissionId]: { ...prev[submissionId], ...patch } }));
+  };
+
   return (
-    <DemoModeContext.Provider value={{ demoMode, setDemoMode, demoRole, setDemoRole, demoData, available: isAdmin }}>
+    <DemoModeContext.Provider value={{ demoMode, setDemoMode, demoRole, setDemoRole, demoData, demoReviews, applyDemoReview, available: isAdmin }}>
       {children}
     </DemoModeContext.Provider>
   );
