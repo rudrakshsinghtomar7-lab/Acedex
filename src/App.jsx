@@ -25,7 +25,7 @@ import UpdatePassword from './screens/auth/UpdatePassword.jsx';
 import Privacy from './screens/legal/Privacy.jsx';
 import Terms from './screens/legal/Terms.jsx';
 import { SessionProvider, useAuth } from './providers/SessionProvider.jsx';
-import { DemoModeProvider } from './hooks/useDemoMode.jsx';
+import { DemoModeProvider, useDemoMode } from './hooks/useDemoMode.jsx';
 import { ThemeProvider } from './hooks/useTheme.jsx';
 
 function ScreenLayout() {
@@ -74,7 +74,11 @@ function RootRedirect() {
 
 function AppShell() {
   const { role, user, supabase } = useAuth();
-  const effectiveRole = role || 'student';
+  const { demoMode, demoRole } = useDemoMode();
+  // Strictly fenced to demo mode: demoRole only takes effect while demoMode is
+  // on. With demo off, this is exactly `role || 'student'` — demoRole has zero
+  // influence on a real user and strips cleanly with the rest of demo mode.
+  const effectiveRole = (demoMode && demoRole) ? demoRole : (role || 'student');
   const [showSettings, setShowSettings] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [notifUnread, setNotifUnread] = useState(0);

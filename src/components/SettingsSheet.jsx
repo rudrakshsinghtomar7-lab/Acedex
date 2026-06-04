@@ -5,7 +5,7 @@ import { useDemoMode } from '../hooks/useDemoMode.jsx';
 
 export default function SettingsSheet({onClose, apiKey, setApiKey}) {
   const [draft, setDraft] = useState(apiKey || '');
-  const { demoMode, setDemoMode, available: demoAvailable } = useDemoMode();
+  const { demoMode, setDemoMode, demoRole, setDemoRole, available: demoAvailable } = useDemoMode();
   const navigate = useNavigate();
 
   const goLegal = (path) => { onClose(); navigate(path); };
@@ -44,6 +44,17 @@ export default function SettingsSheet({onClose, apiKey, setApiKey}) {
               </div>
               <input type="checkbox" checked={demoMode} onChange={(e)=>setDemoMode(e.target.checked)} style={{width:18,height:18,cursor:'pointer'}}/>
             </label>
+
+            {/* Presentation-only role view for the demo. Inert until demo data
+                is on, so it's dimmed/disabled while demoMode is off. */}
+            <div style={{marginBottom:18,opacity:demoMode?1:0.45,pointerEvents:demoMode?'auto':'none'}}>
+              <div style={{fontSize:13.5,fontWeight:600}}>View demo as</div>
+              <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5,marginTop:2,marginBottom:10}}>Render the same demo fixtures through the student or professor view. Presentation only — no data changes.</div>
+              <div className="role-switch" style={{margin:0}}>
+                <div className={`role-opt ${demoRole==='student'?'active':''}`} onClick={()=>setDemoRole('student')}>Demo as Student</div>
+                <div className={`role-opt ${demoRole==='professor'?'active':''}`} onClick={()=>setDemoRole('professor')}>Demo as Professor</div>
+              </div>
+            </div>
           </>
         )}
 

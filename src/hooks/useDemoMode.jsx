@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '../providers/SessionProvider.jsx';
 
 const STORAGE_KEY = 'acedex.demoMode';
+const ROLE_STORAGE_KEY = 'acedex.demoRole';
 
 // Demo mode is gated on profile.role === 'admin' at the live-DB level. The
 // dynamic import below is code-split by Vite — the demo chunk only loads
@@ -14,6 +15,8 @@ const loadDemo = () => import('../data/demo.js');
 const DemoModeContext = createContext({
   demoMode: false,
   setDemoMode: () => {},
+  demoRole: 'student',
+  setDemoRole: () => {},
   demoData: null,
   available: false,
 });
@@ -22,19 +25,29 @@ export function DemoModeProvider({ children }) {
   const { role } = useAuth() ?? {};
   const isAdmin = role === 'admin';
   const [demoMode, setState] = useState(false);
+  // Which role the demo *presents* as. Purely cosmetic and read ONLY behind the
+  // demoMode gate (see App.jsx: effectiveRole). It never influences a real
+  // user — for non-admins it's forced back to 'student' and its storage wiped,
+  // and even for admins it does nothing while demoMode is off.
+  const [demoRole, setRole] = useState('student');
   const [demoData, setDemoData] = useState(null);
 
-  // Honor the saved preference, but only for admins. If the user isn't admin
-  // (logged-out, regular user, or stale role) wipe any tampered "true" flag
-  // so it can't auto-enable later when they switch accounts.
+  // Honor the saved preferences, but only for admins. If the user isn't admin
+  // (logged-out, regular user, or stale role) wipe any tampered flags so they
+  // can't auto-enable later when they switch accounts.
   useEffect(() => {
     if (!isAdmin) {
       setState(false);
-      try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+      setRole('student');
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(ROLE_STORAGE_KEY);
+      } catch { /* ignore */ }
       return;
     }
     try {
       if (localStorage.getItem(STORAGE_KEY) === 'true') setState(true);
+      if (localStorage.getItem(ROLE_STORAGE_KEY) === 'professor') setRole('professor');
     } catch { /* ignore */ }
   }, [isAdmin]);
 
@@ -61,8 +74,20 @@ export function DemoModeProvider({ children }) {
     } catch { /* ignore */ }
   };
 
+  // Admin-gated like setDemoMode. Only 'professor' persists; anything else
+  // normalizes to 'student'. The value is inert until demoMode is on.
+  const setDemoRole = (value) => {
+    if (!isAdmin) return;
+    const v = value === 'professor' ? 'professor' : 'student';
+    setRole(v);
+    try {
+      if (v === 'professor') localStorage.setItem(ROLE_STORAGE_KEY, 'professor');
+      else localStorage.removeItem(ROLE_STORAGE_KEY);
+    } catch { /* ignore */ }
+  };
+
   return (
-    <DemoModeContext.Provider value={{ demoMode, setDemoMode, demoData, available: isAdmin }}>
+    <DemoModeContext.Provider value={{ demoMode, setDemoMode, demoRole, setDemoRole, demoData, available: isAdmin }}>
       {children}
     </DemoModeContext.Provider>
   );
