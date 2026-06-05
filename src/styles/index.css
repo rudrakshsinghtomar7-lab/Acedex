@@ -91,16 +91,14 @@
   .demo-banner{margin:0 24px 16px;padding:10px 14px;background:var(--grad-soft);border:1px solid rgba(var(--accent-rgb),.2);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-2)}
   .demo-banner strong{color:var(--indigo-bright);font-weight:600}
 
-  /* Contained horizontal scroll row. Lives inside the 24px content margin like
-     every other row — NOT a full-bleed breakout. A previous version used
-     margin:0 -24px to bleed edge-to-edge, but .screen has overflow-x:hidden
-     (load-bearing: it kills page-level horizontal scroll), so that breakout was
-     clipped on both sides — slicing the first/last cards off the screen edges.
-     Keeping the row within the margin lets it scroll internally with the first
-     card flush to the content margin and nothing clipped against the bezel. */
-  .stats{display:flex;gap:12px;overflow-x:auto;margin:0 24px 28px;padding-bottom:4px;scroll-snap-type:x proximity;scroll-padding-left:0;-webkit-overflow-scrolling:touch}
-  .stats::-webkit-scrollbar{display:none}
-  .stat{flex-shrink:0;width:150px;padding:18px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);scroll-snap-align:start}
+  /* 2×2 grid — all 4 stat tiles visible at once, no horizontal scroll. Lives
+     inside the 24px content margin like every other row: NOT a full-bleed
+     breakout. .screen has overflow-x:hidden (load-bearing: it kills page-level
+     horizontal scroll), so a negative-margin breakout would be clipped at the
+     edges. Two equal 1fr columns keep cards sized to the viewport at phone
+     width, so nothing clips off either side. */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 24px 28px}
+  .stat{padding:18px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);min-width:0}
   .stat-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:14px;background:var(--grad-soft);border:1px solid rgba(var(--accent-rgb),.15);color:var(--indigo-bright)}
   .stat-v{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.03em}
   .stat-l{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:500}
