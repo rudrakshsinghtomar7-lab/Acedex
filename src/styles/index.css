@@ -5,42 +5,58 @@
      near the bottom of this file. Accent is a flat plum (no gradient, no indigo/
      violet). Semantic status colors + PDF highlight tints are functional and
      intentionally unchanged. */
+  /* ── LIBRARY (dark) — default. Warm plum night; never cold near-black.
+     Surfaces sit on depth (inset top "lit-from-above" line + soft warm
+     elevation), not borders. Status ladder + gold foil are semantic-only.
+     PDF highlight tints and grade medals are functional + unchanged. ── */
   :root {
     --font-display:'Spectral',Georgia,'Times New Roman',serif;
     --font-body:'Instrument Sans',-apple-system,system-ui,sans-serif;
 
-    --bg-0:#211C26; --bg-1:#241E2A; --bg-2:#2C2536; --bg-3:#352D40;
-    --border:#2C2633; --border-bright:#342D3C;
-    --text:#F2ECF0; --text-2:#C2BAC9; --muted:#A89FB0; --muted-2:#8E8499;
-    --indigo:#A98BD0; --indigo-bright:#A98BD0; --violet:#A98BD0;
-    --grad:linear-gradient(135deg,#A98BD0 0%,#A98BD0 100%);
+    --bg-0:#1C1722; --bg-1:#272030; --bg-2:#2F2839; --bg-3:#3A3145;
+    --border:#322A3D; --border-bright:#3E3549;
+    --text:#F3EDF1; --text-2:#CEC5D6; --muted:#A89FB0; --muted-2:#8B8298;
+    --indigo:#B79BDC; --indigo-bright:#C7AFE9; --violet:#B79BDC;
+    --grad:linear-gradient(135deg,#B79BDC 0%,#B79BDC 100%);
     --grad-soft:linear-gradient(135deg,rgba(var(--accent-rgb),.14) 0%,rgba(var(--accent-rgb),.07) 100%);
-    --success:#4ade80; --warn:#f5b56b; --info:#6bb5f5; --error:#f87171;
-    --shadow-1:0 1px 2px rgba(12,8,16,.4);
-    --shadow-2:0 4px 16px rgba(12,8,16,.5);
+    --success:#8BAE76; --warn:#E0AB57; --info:#9B93C9; --error:#E07A5F;
+    --shadow-1:0 1px 2px rgba(0,0,0,.40);
+    --shadow-2:0 10px 30px rgba(0,0,0,.48);
+    /* card depth — inset top highlight = "lit from above" */
+    --shadow-card:inset 0 1px 0 rgba(255,255,255,.05),0 2px 10px rgba(0,0,0,.32);
+    --shadow-card-deep:inset 0 1px 0 rgba(255,255,255,.06),0 6px 22px rgba(0,0,0,.42);
+    --shadow-card-hover:inset 0 1px 0 rgba(255,255,255,.08),0 14px 34px rgba(0,0,0,.52);
     --r-md:14px; --r-lg:18px; --r-xl:22px; --r-2xl:28px;
     --ease:cubic-bezier(.22,.61,.36,1);
     --t:160ms var(--ease);
-    --accent-rgb:169,139,208;
-    --accent-on:#211C26;
-    --success-rgb:74,222,128;
-    --warn-rgb:245,181,107;
-    --info-rgb:107,181,245;
-    --error-rgb:248,113,113;
-    --body-bg:#1B1720;
-    --phone-border:#15111A;
-    --phone-shadow:0 40px 100px rgba(8,5,12,.7),0 0 0 1px rgba(242,236,240,.05);
-    --scrim:rgba(20,14,26,.62);
-    --scrim-heavy:rgba(20,14,26,.80);
-    --pdf-frame-bg:#1B1720;
-    --pill-bg:#A98BD0;
+    --accent-rgb:183,155,220;
+    --accent-on:#1C1722;
+    --success-rgb:139,174,118;
+    --warn-rgb:224,171,87;
+    --info-rgb:155,147,201;
+    --error-rgb:224,122,95;
+    /* gold foil — positive/tracking meaning only */
+    --foil:#E0AB57; --foil-rgb:224,171,87;
+    /* status ladder — spine + pill colours (5 states) */
+    --st-active:#B79BDC;    --st-active-rgb:183,155,220;   --st-active-ink:#3A2A5A;
+    --st-approved:#8BAE76;  --st-approved-rgb:139,174,118; --st-approved-ink:#2E4022;
+    --st-attention:#E07A5F; --st-attention-rgb:224,122,95; --st-attention-ink:#5A2317;
+    --st-ontrack:#E0AB57;   --st-ontrack-rgb:224,171,87;   --st-ontrack-ink:#5A3F12;
+    --st-done:#5A5266;      --st-done-rgb:90,82,102;       --st-done-ink:#A89FB0;
+    --body-bg:#14101A;
+    --phone-border:#100C16;
+    --phone-shadow:0 40px 100px rgba(0,0,0,.72),0 0 0 1px rgba(243,237,241,.05);
+    --scrim:rgba(14,10,20,.64);
+    --scrim-heavy:rgba(14,10,20,.82);
+    --pdf-frame-bg:#14101A;
+    --pill-bg:#B79BDC;
     --pill-shadow:0 0 12px rgba(var(--accent-rgb),.30),0 2px 8px rgba(var(--accent-rgb),.20);
     --pill-shadow-lg:0 0 14px rgba(var(--accent-rgb),.32),0 4px 12px rgba(var(--accent-rgb),.20);
-    --nav-bg:linear-gradient(to top,rgba(33,28,38,.94) 0%,rgba(33,28,38,.78) 100%);
-    --nav-border:rgba(242,236,240,.08);
-    --nav-shadow:0 -2px 16px rgba(8,5,12,.45);
-    --nav-badge-border:rgba(33,28,38,.95);
-    --nav-badge-bg:#A98BD0;
+    --nav-bg:linear-gradient(to top,rgba(28,23,34,.94) 0%,rgba(28,23,34,.78) 100%);
+    --nav-border:rgba(243,237,241,.07);
+    --nav-shadow:0 -2px 16px rgba(0,0,0,.45);
+    --nav-badge-border:rgba(28,23,34,.95);
+    --nav-badge-bg:#B79BDC;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
   html,body{overscroll-behavior:none}
@@ -1045,37 +1061,67 @@
   .pdf-sel-hint{flex-direction:row !important;align-items:center;gap:8px}
 
   /* ═══════════════════════════════════════════════════════════════════════
+     DEPTH MODEL — surfaces float on warm elevation + an inset top
+     "lit-from-above" highlight line, never decorative borders. Hairline
+     borders survive only where structural (list-row dividers, inputs, nav,
+     sticky headers, selectable chips/controls). Tokens resolve the shadow
+     per theme, so one rule serves Library + Bookshelf.
+     ═══════════════════════════════════════════════════════════════════════ */
+  .card,.stat,.task,.task-row,.tile,.pstats,.set,.asgn-row,.asgn-grade-card,
+  .pdf-row,.pdf-upload,.pdf-toolbar,.pdf-viewer-shell,.pdf-side,.search,
+  .gstep,.role-switch{
+    border:none;
+    box-shadow:var(--shadow-card);
+  }
+  /* feature cards — deeper, more lifted elevation */
+  .welcome,.ms-card,.ins{
+    border:none;
+    box-shadow:var(--shadow-card-deep);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
      LIGHT THEME
      ═══════════════════════════════════════════════════════════════════════ */
+  /* ── BOOKSHELF (light) — warm paper page, cream cards. Same depth model:
+     inset top highlight + soft warm elevation, no decorative borders. ── */
   [data-theme="light"] {
-    --bg-0:#EFEAE3; --bg-1:#F7F3EE; --bg-2:#E8E2DA; --bg-3:#DDD6CD;
-    --border:#DBD3CB; --border-bright:#CABFB2;
-    --text:#272230; --text-2:#4A4350; --muted:#645C68; --muted-2:#8A8290;
+    --bg-0:#EBE4D8; --bg-1:#FCF8F2; --bg-2:#F2EBE0; --bg-3:#E5DCCE;
+    --border:#E0D7C9; --border-bright:#D0C5B4;
+    --text:#241E2B; --text-2:#4A4350; --muted:#6E6573; --muted-2:#8A8290;
     --indigo:#6E4F94; --indigo-bright:#5E4182; --violet:#6E4F94;
     --grad:linear-gradient(135deg,#6E4F94 0%,#6E4F94 100%);
     --grad-soft:linear-gradient(135deg,rgba(110,79,148,.08) 0%,rgba(110,79,148,.04) 100%);
-    --success:#16A34A; --warn:#D97706; --info:#2563EB; --error:#DC2626;
-    --shadow-1:0 1px 3px rgba(39,34,48,.06),0 1px 2px rgba(39,34,48,.04);
-    --shadow-2:0 4px 16px rgba(39,34,48,.08);
+    --success:#5E7D4F; --warn:#C9952E; --info:#5E579B; --error:#BF4B36;
+    --shadow-1:0 1px 3px rgba(60,42,28,.06),0 1px 2px rgba(60,42,28,.04);
+    --shadow-2:0 8px 24px rgba(60,42,28,.10);
+    --shadow-card:inset 0 1px 0 rgba(255,255,255,.05),0 2px 10px rgba(60,42,28,.07);
+    --shadow-card-deep:inset 0 1px 0 rgba(255,255,255,.55),0 8px 24px rgba(60,42,28,.12);
+    --shadow-card-hover:inset 0 1px 0 rgba(255,255,255,.65),0 14px 30px rgba(60,42,28,.16);
     --accent-rgb:110,79,148;
     --accent-on:#F6F2FA;
-    --success-rgb:22,163,74;
-    --warn-rgb:217,119,6;
-    --info-rgb:37,99,235;
-    --error-rgb:220,38,38;
-    --body-bg:#EFEAE3;
-    --phone-border:#DBD3CB;
-    --phone-shadow:0 20px 60px rgba(39,34,48,.08),0 0 0 1px rgba(39,34,48,.04);
-    --scrim:rgba(39,34,48,.25);
-    --scrim-heavy:rgba(39,34,48,.38);
-    --pdf-frame-bg:#E8E2DA;
+    --success-rgb:94,125,79;
+    --warn-rgb:201,149,46;
+    --info-rgb:94,87,155;
+    --error-rgb:191,75,54;
+    --foil:#C9952E; --foil-rgb:201,149,46;
+    --st-active:#6E4F94;    --st-active-rgb:110,79,148;  --st-active-ink:#4A2F72;
+    --st-approved:#5E7D4F;  --st-approved-rgb:94,125,79; --st-approved-ink:#3A5230;
+    --st-attention:#BF4B36; --st-attention-rgb:191,75,54;--st-attention-ink:#8A2E1E;
+    --st-ontrack:#C9952E;   --st-ontrack-rgb:201,149,46; --st-ontrack-ink:#7A5712;
+    --st-done:#A99F94;      --st-done-rgb:169,159,148;   --st-done-ink:#6E6573;
+    --body-bg:#EBE4D8;
+    --phone-border:#DDD3C4;
+    --phone-shadow:0 20px 60px rgba(60,42,28,.10),0 0 0 1px rgba(60,42,28,.04);
+    --scrim:rgba(60,42,28,.22);
+    --scrim-heavy:rgba(60,42,28,.36);
+    --pdf-frame-bg:#E5DCCE;
     --pill-bg:#6E4F94;
     --pill-shadow:0 2px 8px rgba(110,79,148,.25);
     --pill-shadow-lg:0 2px 8px rgba(110,79,148,.20);
-    --nav-bg:linear-gradient(to top,rgba(247,243,238,.94) 0%,rgba(247,243,238,.78) 100%);
-    --nav-border:rgba(39,34,48,.06);
-    --nav-shadow:0 -2px 16px rgba(39,34,48,.06);
-    --nav-badge-border:rgba(247,243,238,.95);
+    --nav-bg:linear-gradient(to top,rgba(252,248,242,.94) 0%,rgba(252,248,242,.80) 100%);
+    --nav-border:rgba(60,42,28,.07);
+    --nav-shadow:0 -2px 16px rgba(60,42,28,.07);
+    --nav-badge-border:rgba(252,248,242,.95);
     --nav-badge-bg:#6E4F94;
   }
 
