@@ -14,6 +14,8 @@ import {
   updateMilestone,
 } from '../../lib/milestones.js';
 import { listTeamTasks, taskStatusLabel } from '../../lib/tasks.js';
+import StatusTag from '../../components/StatusTag.jsx';
+import { spineClass, isDoneState } from '../../utils/status.js';
 
 function assigneesOf(t) {
   if (Array.isArray(t.assignees)) return t.assignees.map(a => a.student).filter(Boolean);
@@ -171,9 +173,7 @@ export default function Milestones({ project, role }) {
         <div className="empty">
           <div className="empty-i">◇</div>
           <div className="empty-h">{isProfessor ? 'Create your first milestone' : 'No milestones yet'}</div>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-            {isProfessor ? 'Group tasks into phases the whole team can track.' : 'Your professor hasn\'t set up milestones here yet.'}
-          </p>
+          <p className="empty-quote">{isProfessor ? 'Chapters give a long project its shape.' : 'No chapters have been drawn here yet.'}</p>
         </div>
       ) : (
         milestones.map((m) => {
@@ -181,7 +181,8 @@ export default function Milestones({ project, role }) {
           const roll = milestoneRollup(tasks);
           const addable = standalone; // tasks not in any milestone
           return (
-            <div key={m.id} className="ms-card">
+            <div key={m.id} className={`ms-card has-spine${isDoneState(roll.status)?' is-done':''}`}>
+              <span className={spineClass(roll.status)}/>
               <div className="ms-card-head">
                 {renaming === m.id ? (
                   <input
@@ -193,7 +194,7 @@ export default function Milestones({ project, role }) {
                 ) : (
                   <div className="ms-card-title">{m.title}</div>
                 )}
-                <StatusBadge status={roll.status} />
+                <StatusTag status={roll.status} />
               </div>
 
               <div className="ms-prog-line">

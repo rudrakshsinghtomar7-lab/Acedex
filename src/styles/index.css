@@ -1079,6 +1079,104 @@
     box-shadow:var(--shadow-card-deep);
   }
 
+  /* Hover-lift — desktop pointers only (~.18s). Touch devices skip it. */
+  @media (hover:hover) and (pointer:fine){
+    .card,.asgn-row,.pdf-row,.ins,.set{
+      transition:transform .18s var(--ease),box-shadow .18s var(--ease),background var(--t);
+    }
+    .card:hover,.asgn-row:hover,.pdf-row:hover,.ins:hover,.set:hover{
+      transform:translateY(-3px);
+      box-shadow:var(--shadow-card-hover);
+    }
+    /* keep the deeper feature elevation on hover */
+    .ins:hover{box-shadow:var(--shadow-card-hover)}
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     STATUS LADDER — five semantic states. A 5px spine bar (radius 4) marks
+     project / milestone / submission cards; a matching pill names the state.
+     Rendered as a real child <span class="spine s-…"/> so it coexists with
+     the stacked-page pseudo-elements. Light pills = soft tint + deep ink;
+     dark pills = solid colour + dark ink. "Done" recedes. Status colour
+     appears ONLY on these indicators — never as decoration.
+     ═══════════════════════════════════════════════════════════════════════ */
+  .has-spine{position:relative}
+  .spine{
+    position:absolute;left:0;top:12px;bottom:12px;width:5px;
+    border-radius:0 4px 4px 0;background:var(--st-active);
+    pointer-events:none;
+  }
+  .spine.s-active{background:var(--st-active)}
+  .spine.s-approved{background:var(--st-approved)}
+  .spine.s-attention{background:var(--st-attention)}
+  .spine.s-ontrack{background:var(--st-ontrack)}
+  .spine.s-done{background:var(--st-done)}
+  /* Done card recedes — flatter, dimmer. */
+  .has-spine.is-done{box-shadow:var(--shadow-1);opacity:.84}
+  /* dense submission rows — shift content clear of the spine, tighten inset */
+  .asgn-sub-row.has-spine{padding-left:14px}
+  .asgn-sub-row .spine{top:14px;bottom:14px}
+  /* a list-row spine shouldn't carry the card recede shadow */
+  .asgn-sub-row.has-spine.is-done{box-shadow:none}
+
+  /* Status pill — dark: solid colour + dark ink. */
+  .spill{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 11px;border-radius:99px;
+    font:700 11px/1.3 var(--font-body);letter-spacing:-.01em;
+    border:none;white-space:nowrap;
+  }
+  .spill-active{background:var(--st-active);color:var(--accent-on)}
+  .spill-approved{background:var(--st-approved);color:#16210E}
+  .spill-attention{background:var(--st-attention);color:#2A0E07}
+  .spill-ontrack{background:var(--st-ontrack);color:#2A1D04}
+  .spill-done{background:var(--bg-2);color:var(--muted)}
+  /* Light: soft tint bg + deep same-family ink. */
+  [data-theme="light"] .spill-active{background:rgba(var(--st-active-rgb),.14);color:var(--st-active-ink)}
+  [data-theme="light"] .spill-approved{background:rgba(var(--st-approved-rgb),.16);color:var(--st-approved-ink)}
+  [data-theme="light"] .spill-attention{background:rgba(var(--st-attention-rgb),.14);color:var(--st-attention-ink)}
+  [data-theme="light"] .spill-ontrack{background:rgba(var(--st-ontrack-rgb),.16);color:var(--st-ontrack-ink)}
+  [data-theme="light"] .spill-done{background:var(--bg-3);color:var(--muted)}
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     GOLD FOIL — thin gold hairline fading off, with an italic-Spectral
+     chapter-break label. Positive/tracking meaning only.
+     ═══════════════════════════════════════════════════════════════════════ */
+  .foil-div{display:flex;align-items:center;gap:14px;margin:26px 24px 16px}
+  .section > .foil-div{margin-left:0;margin-right:0}
+  .section > .foil-div:first-child{margin-top:0}
+  .foil-div::before,.foil-div::after{content:'';height:1px;flex:1}
+  .foil-div::before{background:linear-gradient(to right,transparent,rgba(var(--foil-rgb),.6))}
+  .foil-div::after{background:linear-gradient(to left,transparent,rgba(var(--foil-rgb),.6))}
+  .foil-div-label{
+    font-family:var(--font-display);font-style:italic;font-weight:500;
+    font-size:13.5px;color:var(--foil);letter-spacing:.01em;white-space:nowrap;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     STACKED-PAGE — 1–2 offset leaves behind a card that CONTAINS documents
+     (a project holds N PDFs). Subtle; never on single items.
+     ═══════════════════════════════════════════════════════════════════════ */
+  .stacked{position:relative}
+  .stacked::after,.stacked::before{
+    content:'';position:absolute;left:7px;right:7px;bottom:-4px;height:14px;
+    border-radius:0 0 var(--r-lg) var(--r-lg);
+    background:var(--bg-1);box-shadow:var(--shadow-card);z-index:0;
+  }
+  .stacked::before{left:13px;right:13px;bottom:-8px;background:var(--bg-2);opacity:.85}
+  .stacked > *{position:relative;z-index:1}
+
+  /* Spectral-italic, epigraph-style empty states (not gray boxes). */
+  .empty-h{font-family:var(--font-display);font-weight:600}
+  .empty-quote{
+    font-family:var(--font-display);font-style:italic;font-weight:400;
+    font-size:15px;line-height:1.6;color:var(--muted);
+    max-width:32ch;margin:0 auto;
+  }
+
+  /* Monogram avatars — Spectral initials in a plum-family circle. */
+  .av{font-family:var(--font-display);font-weight:600;letter-spacing:0}
+
   /* ═══════════════════════════════════════════════════════════════════════
      LIGHT THEME
      ═══════════════════════════════════════════════════════════════════════ */

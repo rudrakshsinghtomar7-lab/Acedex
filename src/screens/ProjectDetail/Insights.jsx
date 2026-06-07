@@ -4,7 +4,7 @@ import Confidence from '../../components/Confidence.jsx';
 
 export default function Insights({project}) {
   const [decided, setDecided] = useState({});
-  if (project.insights.length===0) return <div className="empty"><div className="empty-i">✦</div><div className="empty-h">No insights surfaced</div></div>;
+  if (project.insights.length===0) return <div className="empty"><div className="empty-i">✦</div><div className="empty-h">No insights surfaced</div><p className="empty-quote">Claude is still reading between the lines.</p></div>;
   return (
     <>
       <div className="alert" style={{marginBottom:20}}>

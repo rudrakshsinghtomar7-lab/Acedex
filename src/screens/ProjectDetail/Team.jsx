@@ -98,7 +98,7 @@ export default function Team({ project, role, onMembersChanged }) {
       })}
 
       {total === 0 && (
-        <div className="empty"><div className="empty-h">No members yet</div></div>
+        <div className="empty"><div className="empty-h">No members yet</div><p className="empty-quote">A collaboration of one, for now.</p></div>
       )}
 
       {modal && (

@@ -7,6 +7,7 @@ import Bell from '../components/Bell.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 import StatusTag from '../components/StatusTag.jsx';
+import { spineClass, isDoneState } from '../utils/status.js';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import {
@@ -184,12 +185,11 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
           <div className="empty">
             <div className="empty-i">⊞</div>
             <div className="empty-h">No projects yet</div>
-            <p style={{fontSize:13,color:'var(--muted)'}}>
-              {isProf ? 'Create your first project from the Projects tab.' : 'You haven\'t been added to any projects yet.'}
-            </p>
+            <p className="empty-quote">{isProf ? 'A shelf awaiting its first volume.' : 'No projects have found their way to you yet.'}</p>
           </div>
         ) : allProjects.map(p => (
-          <div key={p.id} className="card" onClick={() => onOpenProject(p)}>
+          <div key={p.id} className={`card has-spine stacked${isDoneState(p.status)?' is-done':''}`} onClick={() => onOpenProject(p)}>
+            <span className={spineClass(p.status)}/>
             <div className="card-head">
               <div style={{flex:1,minWidth:0}}>
                 <div className="card-title">{p.title}</div>
@@ -216,7 +216,7 @@ export default function Home({role, openSettings, openNotif, notifUnread}) {
 
       {!isProf && demoOn && (
         <div className="section">
-          <div className="section-head"><h3>Your activity</h3></div>
+          <div className="foil-div"><span className="foil-div-label">Your activity</span></div>
           <div className="card" style={{padding:18,cursor:'default'}}>
             <div className="heat">
               {demoData.DEMO_HEATMAP.slice(0,70).map((v,i) => <div key={i} className="h-c" style={{background:heatColor(v)}}/>)}

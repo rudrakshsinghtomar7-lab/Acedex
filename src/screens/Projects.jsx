@@ -6,6 +6,7 @@ import FilterChips from '../components/FilterChips.jsx';
 import ProgBar from '../components/ProgBar.jsx';
 import ProgCircle from '../components/ProgCircle.jsx';
 import StatusTag from '../components/StatusTag.jsx';
+import { spineClass, isDoneState } from '../utils/status.js';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import { adaptTeam, listTeamsForUser } from '../lib/teams.js';
@@ -91,15 +92,14 @@ export default function Projects({role}) {
         <div className="empty">
           <div className="empty-i">⊞</div>
           <div className="empty-h">No projects yet</div>
-          <p style={{fontSize:13,color:'var(--muted)'}}>
-            Create your first project to get started.
-          </p>
+          <p className="empty-quote">Every collaboration begins with a single, blank page.</p>
           <Link to="/projects/create" className="btn btn-p btn-bl" style={{display:'inline-block',marginTop:16,textDecoration:'none'}}>Create project</Link>
         </div>
       ) : (
         <div className="section">
           {filtered.map(p => (
-            <div key={p.id} className="card" onClick={()=>onOpenProject(p)}>
+            <div key={p.id} className={`card has-spine stacked${isDoneState(p.status)?' is-done':''}`} onClick={()=>onOpenProject(p)}>
+              <span className={spineClass(p.status)}/>
               <div className="card-head">
                 <div style={{flex:1,minWidth:0}}>
                   <div className="card-title">{p.title}</div>
@@ -120,6 +120,7 @@ export default function Projects({role}) {
             <div className="empty">
               <div className="empty-i">⌕</div>
               <div className="empty-h">No matches</div>
+              <p className="empty-quote">Nothing here by that name.</p>
             </div>
           )}
         </div>

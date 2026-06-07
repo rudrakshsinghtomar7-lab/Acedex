@@ -222,8 +222,8 @@ export default function Tasks({ project, role }) {
         <div className="empty">
           <div className="empty-i">☑</div>
           <div className="empty-h">{isProfessor ? 'Create your first task' : 'No tasks yet'}</div>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-            {isProfessor ? 'Add a task and assign it to the team.' : 'Your professor hasn\'t added any tasks here yet.'}
+          <p className="empty-quote">
+            {isProfessor ? 'Every great work is a sum of small, assigned parts.' : 'Your professor hasn\'t added any tasks here yet.'}
           </p>
         </div>
       ) : (

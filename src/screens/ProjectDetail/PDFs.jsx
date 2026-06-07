@@ -192,7 +192,7 @@ export default function PDFs({ project, initialPdfId, initialPage }) {
         <div className="empty">
           <div className="empty-i">▧</div>
           <div className="empty-h">No PDFs yet</div>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+          <p className="empty-quote">
             {isDemo
               ? 'This demo project has no sample PDFs.'
               : 'Upload a project PDF to start review comments and highlights.'}

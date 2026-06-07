@@ -77,7 +77,7 @@ export default function Activity({ project }) {
   }
 
   if (rows.length === 0) {
-    return <div className="empty"><div className="empty-i">◐</div><div className="empty-h">No activity yet</div></div>;
+    return <div className="empty"><div className="empty-i">◐</div><div className="empty-h">No activity yet</div><p className="empty-quote">The record opens when the first page turns.</p></div>;
   }
 
   return (

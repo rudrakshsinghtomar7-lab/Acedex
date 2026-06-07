@@ -270,9 +270,9 @@ export default function Assignments({ project, role }) {
         <div className="empty">
           <div className="empty-i">▤</div>
           <div className="empty-h">{isProfessor ? 'Create your first assignment' : 'No assignments yet'}</div>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+          <p className="empty-quote">
             {isProfessor
-              ? 'Post an assignment so students can submit their work.'
+              ? 'Set the brief; the submissions will follow.'
               : 'Your professor hasn\'t posted anything here yet.'}
           </p>
         </div>
@@ -280,7 +280,7 @@ export default function Assignments({ project, role }) {
         <div className="empty">
           <div className="empty-i">⌕</div>
           <div className="empty-h">No matches</div>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+          <p className="empty-quote">
             Nothing in the "{(isProfessor ? FILTERS : STUDENT_FILTERS).find(([k]) => k === (isProfessor ? filter : studentFilter))?.[1] ?? '—'}" bucket.
           </p>
         </div>

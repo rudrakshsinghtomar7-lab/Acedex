@@ -1,6 +1,8 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Avatar from './Avatar.jsx';
+import StatusTag from './StatusTag.jsx';
+import { spineClass, isDoneState } from '../utils/status.js';
 import {
   assignSubtaskTo,
   claimSubtask,
@@ -506,7 +508,8 @@ export default function AssignmentDetailModal({
             const isLatest = latestIds.has(s.id);
             const open = reviewState[s.id]?.openId === s.id;
             return (
-              <div key={s.id} className={`asgn-sub-row${isLatest ? '' : ' asgn-sub-history'}`}>
+              <div key={s.id} className={`asgn-sub-row has-spine${isLatest ? '' : ' asgn-sub-history'}${isDoneState(s.status) ? ' is-done' : ''}`}>
+                <span className={spineClass(s.status)}/>
                 <Avatar name={s.submitter?.full_name || 'Student'} size={28}/>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="asgn-sub-meta">
@@ -519,7 +522,7 @@ export default function AssignmentDetailModal({
                   </div>
                   {s.pdf?.title && <div className="asgn-sub-file">📄 {s.pdf.title}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <div className={`asgn-sub-status asgn-sub-status-${s.status}`}>{submissionStatusLabel(s.status)}</div>
+                    <StatusTag status={s.status}/>
                     {/* Grade badge — hidden from students looking at a
                         teammate's row. Privacy: dual-grade model keeps
                         individual marks per-student; surfacing the legacy
