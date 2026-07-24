@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
+import { isDoneState } from '../utils/status.js';
 import SectionLabel from '../components/study/SectionLabel.jsx';
 import StatusDot from '../components/study/StatusDot.jsx';
 import ProjectItem from '../components/study/ProjectItem.jsx';
 import ActivityRow from '../components/study/ActivityRow.jsx';
+import SegmentedPill from '../components/study/SegmentedPill.jsx';
 import {
   adaptTeam, listTeamsForUser,
   loadHomeStatsForProfessor, loadHomeStatsForStudent,
@@ -33,6 +35,9 @@ export default function Home({ role, openSettings, openNotif, notifUnread }) {
   const [realProjects, setRealProjects] = useState([]);
   const [dataError, setDataError] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
+  // Project scope: 'need' hides finished projects (the focused default); 'all'
+  // reveals them too. The sliding pill animates between the two.
+  const [view, setView] = useState('need');
 
   useEffect(() => {
     if (!user?.id || !role) return;
@@ -74,6 +79,8 @@ export default function Home({ role, openSettings, openNotif, notifUnread }) {
   const need = needCount(projects);
   const dueSoon = buildDueSoon(projects);
   const recent = buildRecent(projects);
+  const doneCount = projects.filter(p => isDoneState(p.status)).length;
+  const shownProjects = view === 'all' ? projects : projects.filter(p => !isDoneState(p.status));
   // Streak is real only in demo (no live source yet) — degrade silently.
   const streak = demoOn && !isProf ? 12 : null;
 
@@ -124,6 +131,18 @@ export default function Home({ role, openSettings, openNotif, notifUnread }) {
         <div className="study-note"><span style={{ color: 'var(--sd-gold)' }}>✦</span> Demo data mixed with your projects</div>
       )}
 
+      {/* Scope toggle — sliding pill. Shown once projects have loaded. */}
+      {!hardError && !loadingOnly && projects.length > 0 && (
+        <SegmentedPill
+          value={view}
+          onChange={setView}
+          options={[
+            { value: 'need', label: 'Needs you' },
+            { value: 'all', label: doneCount > 0 ? `All · ${projects.length}` : 'All' },
+          ]}
+        />
+      )}
+
       {/* DUE SOON */}
       {dueSoon.length > 0 && (
         <div className="study-section">
@@ -149,8 +168,10 @@ export default function Home({ role, openSettings, openNotif, notifUnread }) {
           <div className="study-empty">
             {isProf ? 'No supervised projects yet.' : 'No projects have found their way to you yet.'}
           </div>
+        ) : shownProjects.length === 0 ? (
+          <div className="study-empty">Nothing needs you right now — everything's wrapped up.</div>
         ) : (
-          projects.map(p => <ProjectItem key={p.id} project={p} onOpen={onOpenProject} />)
+          shownProjects.map(p => <ProjectItem key={p.id} project={p} onOpen={onOpenProject} />)
         )}
         {dataError && demoOn && (
           <div className="study-note">Showing demo data only — couldn't reach live projects.</div>
