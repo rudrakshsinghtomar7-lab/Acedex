@@ -57,6 +57,19 @@
     --nav-shadow:0 -2px 16px rgba(0,0,0,.45);
     --nav-badge-border:rgba(28,23,34,.95);
     --nav-badge-bg:#B79BDC;
+
+    /* ── STUDY design system — app-wide standard (dark: warm, never cold black).
+       Namespaced --sd-* so every screen can inherit them. Light set lives in the
+       [data-theme="light"] block. Status colours drive both StatusDot + the
+       ProjectItem spine/bar fill. Whisper shadow keeps items grounded, NOT
+       floating. ── */
+    --sd-page:#1F1A24; --sd-fill:#29222F; --sd-recede:#241E29;
+    --sd-text:#EEE8F0; --sd-muted:#9089A0; --sd-faint:#7E7690;
+    --sd-hair:#2E2836; --sd-track:#342D3C;
+    --sd-plum:#B79BDC; --sd-gold:#E0AB57;
+    --sd-active:#B79BDC; --sd-ontrack:#E0AB57; --sd-attention:#E07A5F;
+    --sd-approved:#8BAE76; --sd-done:#5A5266;
+    --sd-whisper:0 1px 3px rgba(0,0,0,.22);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
   html,body{overscroll-behavior:none}
@@ -1221,6 +1234,15 @@
     --nav-shadow:0 -2px 16px rgba(60,42,28,.07);
     --nav-badge-border:rgba(252,248,242,.95);
     --nav-badge-bg:#6E4F94;
+
+    /* ── STUDY design system — light set (warm paper). ── */
+    --sd-page:#F2EDE4; --sd-fill:#FAF6EF; --sd-recede:#F5F1E9;
+    --sd-text:#2E2833; --sd-muted:#8B8578; --sd-faint:#A89E8C;
+    --sd-hair:#E5DED1; --sd-track:#EBE4D6;
+    --sd-plum:#6E4F94; --sd-gold:#B5862E;
+    --sd-active:#6E4F94; --sd-ontrack:#B5862E; --sd-attention:#BF4B36;
+    --sd-approved:#5E7D4F; --sd-done:#B7B1A3;
+    --sd-whisper:0 1px 2px rgba(70,50,32,.04);
   }
 
   [data-theme="light"] .display .accent{
@@ -1267,3 +1289,129 @@
   [data-theme="light"] .nav.active .nav-label{
     color:var(--indigo-bright);
   }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     STUDY DESIGN SYSTEM — reusable components (app-wide standard).
+     One vertical rhythm: section gap 20px · row padding 9–11px · label 6px above
+     its content. Everything flush; no orphan whitespace. Items are grounded with
+     a whisper shadow (NOT floating cards) and carry a 4px status spine.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  .study-home{
+    background:var(--sd-page);color:var(--sd-text);
+    font-family:var(--font-body);
+    min-height:100%;
+    padding:0 0 28px;
+  }
+
+  /* — Header: greeting + subtitle, quiet trailing icons — */
+  .study-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 22px 0}
+  .study-greet{font-family:var(--font-display);font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.2;color:var(--sd-text)}
+  .study-greet .nm{color:var(--sd-plum)}
+  .study-sub{font-size:13px;color:var(--sd-muted);font-weight:500;line-height:1.5;margin-top:6px;padding:0 22px}
+  .study-sub .gold{color:var(--sd-gold)}
+  .study-sub .plum{color:var(--sd-plum);font-weight:600}
+
+  .study-icons{display:flex;gap:2px;flex-shrink:0;margin-top:2px}
+  .study-ico{
+    width:34px;height:34px;border-radius:10px;
+    background:transparent;border:none;color:var(--sd-faint);
+    font-size:17px;cursor:pointer;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    transition:color var(--t);font-family:inherit;
+  }
+  .study-ico:active{color:var(--sd-plum)}
+  .study-ico-bdg{
+    position:absolute;top:2px;right:1px;
+    min-width:15px;height:15px;padding:0 4px;border-radius:99px;
+    background:var(--sd-attention);color:#fff;
+    font-size:9px;font-weight:700;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* — Section + SectionLabel — */
+  .study-section{padding:0 22px;margin-top:20px}
+  .study-label{
+    font-family:var(--font-body);
+    font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.14em;
+    color:var(--sd-faint);
+    margin-bottom:6px;
+  }
+
+  /* — StatusDot — */
+  .study-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
+  .study-dot.s-active{background:var(--sd-active)}
+  .study-dot.s-ontrack{background:var(--sd-ontrack)}
+  .study-dot.s-attention{background:var(--sd-attention)}
+  .study-dot.s-approved{background:var(--sd-approved)}
+  .study-dot.s-done{background:var(--sd-done)}
+
+  /* — Due-soon row — */
+  .study-due{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--sd-hair)}
+  .study-due:last-child{border-bottom:none}
+  .study-due-name{flex:1;min-width:0;font-size:14px;font-weight:500;color:var(--sd-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .study-due-when{font-size:12.5px;color:var(--sd-muted);font-weight:500;flex-shrink:0}
+
+  /* — ProjectItem: subtle fill + 4px status spine + Spectral title + right meta
+       + faint course line + 3px status-coloured progress bar. Whisper shadow
+       only — grounded, not floating. A done item recedes (no bar). — */
+  .study-proj{
+    position:relative;display:block;width:100%;text-align:left;
+    background:var(--sd-fill);border:none;
+    border-radius:11px;
+    padding:11px 15px 12px 17px;
+    margin-bottom:8px;
+    cursor:pointer;overflow:hidden;
+    box-shadow:var(--sd-whisper);
+    font-family:inherit;color:inherit;
+    transition:transform var(--t);
+  }
+  .study-proj:last-child{margin-bottom:0}
+  .study-proj:active{transform:scale(.994)}
+  .study-proj::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+  .study-proj.s-active::before{background:var(--sd-active)}
+  .study-proj.s-ontrack::before{background:var(--sd-ontrack)}
+  .study-proj.s-attention::before{background:var(--sd-attention)}
+  .study-proj.s-approved::before{background:var(--sd-approved)}
+  .study-proj.s-done::before{background:var(--sd-done)}
+
+  .study-proj-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .study-proj-title{
+    font-family:var(--font-display);font-size:16px;font-weight:600;
+    letter-spacing:-.01em;color:var(--sd-text);
+    min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .study-proj-meta{
+    font-family:var(--font-display);font-size:14px;font-weight:600;
+    color:var(--sd-muted);flex-shrink:0;
+    font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+  }
+  .study-proj-course{
+    font-size:12px;color:var(--sd-faint);font-weight:500;
+    margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .study-proj-bar{height:3px;background:var(--sd-track);border-radius:99px;overflow:hidden;margin-top:10px}
+  .study-proj-bar span{display:block;height:100%;border-radius:99px;transition:width 600ms var(--ease)}
+  .study-proj.s-active   .study-proj-bar span{background:var(--sd-active)}
+  .study-proj.s-ontrack  .study-proj-bar span{background:var(--sd-ontrack)}
+  .study-proj.s-attention .study-proj-bar span{background:var(--sd-attention)}
+  .study-proj.s-approved .study-proj-bar span{background:var(--sd-approved)}
+
+  .study-proj.is-done{background:var(--sd-recede);box-shadow:none}
+  .study-proj.is-done .study-proj-title,
+  .study-proj.is-done .study-proj-meta{color:var(--sd-faint)}
+  .study-proj.is-done .study-proj-course{opacity:.85}
+
+  /* — ActivityRow: plain line, one accent-coloured noun — */
+  .study-act{padding:9px 0;border-bottom:1px solid var(--sd-hair);font-size:13.5px;line-height:1.5;color:var(--sd-muted);font-weight:500}
+  .study-act:last-child{border-bottom:none}
+  .study-act .lnk{color:var(--sd-plum);font-weight:600}
+  .study-act .apr{color:var(--sd-approved);font-weight:600}
+
+  /* — Closing line — */
+  .study-close{font-family:var(--font-display);font-style:italic;font-size:14px;color:var(--sd-faint);padding:0 22px;margin-top:22px}
+
+  /* — Quiet states — */
+  .study-note{font-size:11.5px;color:var(--sd-faint);font-weight:500;padding:8px 22px 0;letter-spacing:.01em}
+  .study-empty{padding:0 22px;margin-top:20px;font-size:13.5px;color:var(--sd-muted);line-height:1.5}
