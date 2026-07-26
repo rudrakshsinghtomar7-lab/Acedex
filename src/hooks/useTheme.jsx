@@ -16,7 +16,7 @@ function resolveTheme(mode) {
 function applyTheme(resolved) {
   document.documentElement.setAttribute('data-theme', resolved);
   document.querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', resolved === 'light' ? '#EBE4D8' : '#1C1722');
+    ?.setAttribute('content', resolved === 'light' ? '#F2EDE4' : '#1F1A24');
 }
 
 const ThemeContext = createContext({ mode: 'light', theme: 'light', cycle: () => {} });

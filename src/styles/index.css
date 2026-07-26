@@ -83,7 +83,7 @@
      Home Screen) — content slides below the dynamic island instead of
      sitting under it. env(safe-area-inset-top) is 0 on non-notched devices
      and inside browser tabs, so the desktop preview is unaffected. */
-  .phone{width:390px;height:844px;background:var(--bg-0);border-radius:50px;border:11px solid var(--phone-border);box-shadow:var(--phone-shadow);overflow:hidden;position:relative;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+  .phone{width:390px;height:844px;background:var(--bg-0);border-radius:50px;border:11px solid var(--phone-border);box-shadow:var(--phone-shadow);overflow:hidden;position:relative;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
   /* On phone/tablet sizes, the .phone container fills the screen and is the
      fixed frame — .screen inside it is the single scroll container. Setting
      .phone to overflow:auto here would create a competing scroll context and
@@ -180,7 +180,7 @@
   .bnav{
     position:absolute;bottom:0;left:0;right:0;
     display:flex;align-items:flex-start;
-    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0));
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));
     min-height:64px;
     background:var(--nav-bg);
     backdrop-filter:blur(20px) saturate(180%);
@@ -1581,3 +1581,35 @@
   .dtab-pill,.chip-pill{background:var(--sd-plum);box-shadow:0 2px 8px rgba(var(--accent-rgb),.22)}
   .dtab.active{color:var(--accent-on)}
   .chips{margin-top:2px}
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     iOS SAFE AREAS — standalone PWA (Dynamic Island + home indicator).
+     Requires <meta viewport-fit=cover> (set in index.html) for env(safe-area-*)
+     to be non-zero. The .phone frame fills the screen edge-to-edge with warm
+     Study paper; its safe-area padding insets the CONTENT while the background
+     fills the island + home-indicator zones (no white/black bars). Fallbacks
+     use 0px (not 0) so the calc()s stay valid where the inset is undefined.
+     ══════════════════════════════════════════════════════════════════════════ */
+  @media(max-width:768px){
+    /* Outer frame: background fills edge-to-edge; padding insets content.
+       Top = Dynamic Island; left/right = landscape rounded corners. */
+    .phone{
+      background:var(--sd-page);
+      padding-top:env(safe-area-inset-top,0px);
+      padding-left:env(safe-area-inset-left,0px);
+      padding-right:env(safe-area-inset-right,0px);
+    }
+    /* Any edge the frame doesn't cover (overscroll) shows app paper, not body. */
+    html,body{background:var(--sd-page)}
+    /* Scroll content clears the bottom nav AND the home indicator. */
+    .screen{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+    /* Bottom nav lifts its icons/labels above the home indicator; its frosted
+       background fills the inset zone. The sliding pill is top-anchored
+       (top:11px), so it stays aligned after the extra bottom padding. */
+    .bnav{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+    /* Onboarding overlay (position:absolute inset:0) — its own top/bottom chrome. */
+    .ob-c{padding-top:calc(30px + env(safe-area-inset-top,0px))}
+    .ob-foot{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+    /* Bottom sheets clear the home indicator. */
+    .sheet{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+  }
