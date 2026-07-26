@@ -1315,8 +1315,8 @@
   .study-icons{display:flex;gap:2px;flex-shrink:0;margin-top:2px}
   .study-ico{
     width:34px;height:34px;border-radius:10px;
-    background:transparent;border:none;color:var(--sd-faint);
-    font-size:17px;cursor:pointer;position:relative;
+    background:transparent;border:none;color:var(--sd-muted);
+    font-size:18px;font-weight:600;cursor:pointer;position:relative;
     display:flex;align-items:center;justify-content:center;
     transition:color var(--t);font-family:inherit;
   }
