@@ -1,12 +1,8 @@
 // © 2026 Rudraksh Singh Tomar. All rights reserved.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Avatar from '../components/Avatar.jsx';
 import FilterChips from '../components/FilterChips.jsx';
-import ProgBar from '../components/ProgBar.jsx';
-import ProgCircle from '../components/ProgCircle.jsx';
-import StatusTag from '../components/StatusTag.jsx';
-import { spineClass, isDoneState } from '../utils/status.js';
+import ProjectItem from '../components/study/ProjectItem.jsx';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import { adaptTeam, listTeamsForUser } from '../lib/teams.js';
@@ -98,23 +94,7 @@ export default function Projects({role}) {
       ) : (
         <div className="section">
           {filtered.map(p => (
-            <div key={p.id} className={`card has-spine stacked${isDoneState(p.status)?' is-done':''}`} onClick={()=>onOpenProject(p)}>
-              <span className={spineClass(p.status)}/>
-              <div className="card-head">
-                <div style={{flex:1,minWidth:0}}>
-                  <div className="card-title">{p.title}</div>
-                  <div className="card-sub">{p.course}</div>
-                </div>
-                <ProgCircle value={p.progress}/>
-              </div>
-              <ProgBar value={p.progress}/>
-              <div className="card-meta">
-                <div className="av-s">{p.members.slice(0,3).map(m => <Avatar key={m} name={m} size={24}/>)}</div>
-                <div style={{display:'flex',gap:7,alignItems:'center'}}>
-                  <StatusTag status={p.status}/>
-                </div>
-              </div>
-            </div>
+            <ProjectItem key={p.id} project={p} onOpen={onOpenProject} />
           ))}
           {filtered.length === 0 && (
             <div className="empty">

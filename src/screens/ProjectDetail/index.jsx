@@ -148,7 +148,7 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
         )}
       </div>
       <DTabs tabs={tabs} active={tab} onChange={setTab} />
-      <div style={{padding:'20px 24px'}}>
+      <div style={{padding:'18px 22px'}}>
         {tab==='overview' && <Overview project={project} role={role}/>}
         {tab==='milestones' && <Milestones project={project} role={role}/>}
         {tab==='tasks' && <Tasks project={project} role={role}/>}

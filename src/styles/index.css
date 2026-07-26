@@ -1480,3 +1480,104 @@
     transition:left .36s cubic-bezier(.34,1.3,.44,1),opacity .25s ease-out;
     box-shadow:0 2px 10px rgba(var(--accent-rgb),.26);
   }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     STUDY DESIGN SYSTEM — PART 3: app-wide rollout.
+     Retunes the shared surface/status/tab classes onto the --sd-* system so
+     every screen speaks one language: warm paper, grounded (non-floating)
+     surfaces, quiet dot+text status, thin status bars, one spacing rhythm.
+     Later-in-file rules intentionally override the originals above.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  /* Page + sticky chrome sit on warm Study paper (light + dark). */
+  .phone{background:var(--sd-page)}
+  .header,.sh-head,.dtabs{background:var(--sd-page)}
+  .sh-head{border-bottom-color:var(--sd-hair)}
+
+  /* One horizontal rhythm (22px) + calmer headers. */
+  .header{padding:14px 22px 14px}
+  .section{padding:0 22px;margin-bottom:24px}
+  .search{margin:0 22px 16px;background:var(--sd-fill);border-color:transparent;box-shadow:var(--sd-whisper)}
+  .role-switch{margin:0 22px 20px}
+  .demo-banner{margin:0 22px 14px}
+  .chips{padding:0 22px 16px}
+  .display{font-size:25px}
+  .greeting{color:var(--sd-muted)}
+  .sh-title{font-family:var(--font-display);font-weight:600;color:var(--sd-text)}
+
+  /* Grounded surfaces — subtle fill + whisper shadow, no floating borders. */
+  .card,.task-row,.ms-card,.set,.ins,.pdf-toolbar,.pdf-row,.pdf-upload,
+  .pdf-side,.pdf-viewer-shell,.pstats,.tile,.row3 > .tile{
+    background:var(--sd-fill);
+    border-color:transparent;
+    box-shadow:var(--sd-whisper);
+  }
+  .card,.task-row,.ms-card{overflow:hidden}
+  .card:active,.set:active{background:var(--sd-recede);border-color:transparent}
+  .ms-task,.task,.pdf-card-uploader{background:var(--sd-recede);border-color:transparent;box-shadow:none}
+
+  /* Titles + numbers in Spectral to match the dashboard. */
+  .card-title,.pdf-title,.ms-card-title,.task-row-title,.set-t,
+  .pstat .v,.tv,.stat-v,.ms-task-title{font-family:var(--font-display);letter-spacing:-.01em;color:var(--sd-text)}
+  .ms-task-title{font-weight:500}
+
+  /* Section header bar (Tasks/Milestones/PDFs/Assignments) — calm + spaced. */
+  .pdf-toolbar{margin-bottom:16px;padding:12px 14px}
+  .pdf-kicker{color:var(--sd-faint);letter-spacing:.14em}
+  .pdf-title{font-size:16px;font-weight:600;color:var(--sd-text)}
+
+  /* Quiet status — dot + small muted text (replaces loud pills app-wide). */
+  .spill,.task-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:none;border:none;padding:0;
+    font:600 12px/1.3 var(--font-body);letter-spacing:0;text-transform:none;
+    color:var(--sd-muted);
+  }
+  .spill::before,.task-badge::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--sd-muted)}
+  .spill-active::before,.task-badge-in_progress::before{background:var(--sd-active)}
+  .spill-ontrack::before,.task-badge-not_started::before,.task-badge-submitted::before{background:var(--sd-ontrack)}
+  .spill-attention::before{background:var(--sd-attention)}
+  .spill-approved::before{background:var(--sd-approved)}
+  .spill-done::before,.task-badge-done::before{background:var(--sd-done)}
+  [data-theme="light"] .spill-active,[data-theme="light"] .spill-approved,
+  [data-theme="light"] .spill-attention,[data-theme="light"] .spill-ontrack,
+  [data-theme="light"] .spill-done{background:none;color:var(--sd-muted)}
+
+  /* Thin 3px status bars on the Study track. */
+  .pb{height:3px;background:var(--sd-track)}
+  .pb-fill{background:var(--sd-plum)}
+  .ms-prog{height:3px;background:var(--sd-track)}
+  .ms-prog-fill{background:var(--sd-plum)}
+
+  /* Row rhythm — tighter items, consistent gaps. */
+  .task-row{padding:11px 14px;margin-bottom:8px}
+  .task-row-foot{margin-top:9px}
+  .ms-card{padding:14px;margin-bottom:10px}
+  .ms-task{padding:9px 11px}
+  .ms-tasks{gap:8px}
+  .set{padding:12px 14px;margin-bottom:8px}
+
+  /* 4px full-height Study spine + status colours. */
+  .spine{width:4px;border-radius:0;top:0;bottom:0}
+  .spine.s-active{background:var(--sd-active)}
+  .spine.s-approved{background:var(--sd-approved)}
+  .spine.s-attention{background:var(--sd-attention)}
+  .spine.s-ontrack{background:var(--sd-ontrack)}
+  .spine.s-done{background:var(--sd-done)}
+
+  /* Done/completed items recede: receded fill, greyed title, no bar. */
+  .has-spine.is-done{box-shadow:var(--sd-whisper);opacity:1;background:var(--sd-recede)}
+  .has-spine.is-done .card-title,.has-spine.is-done .ms-card-title{color:var(--sd-faint)}
+  .ms-card.is-done .ms-prog-line{display:none}
+
+  /* Drop floating flourishes (stacked-page leaves, foil dividers). */
+  .stacked::after,.stacked::before{display:none}
+  .foil-div{display:none}
+
+  /* — Project tab row: even gaps, contained, last tab fully reachable — */
+  .dtabs{padding:12px 22px;gap:8px;scroll-padding-inline:22px;border-bottom-color:var(--sd-hair)}
+  .dtabs::after{content:'';flex:0 0 4px}
+  .dtab{padding:8px 14px;flex-shrink:0}
+  .dtab-pill,.chip-pill{background:var(--sd-plum);box-shadow:0 2px 8px rgba(var(--accent-rgb),.22)}
+  .dtab.active{color:var(--accent-on)}
+  .chips{margin-top:2px}

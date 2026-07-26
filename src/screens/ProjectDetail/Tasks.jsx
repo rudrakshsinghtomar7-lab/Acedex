@@ -194,24 +194,15 @@ export default function Tasks({ project, role }) {
         <div>
           <div className="pdf-kicker">Tasks</div>
           <div className="pdf-title">
-            {rows?.length ? `${rows.length} task${rows.length === 1 ? '' : 's'}` : 'Nothing yet'}
+            {rows?.length
+              ? `${rows.length} task${rows.length === 1 ? '' : 's'} · ${openCount} open · ${doneCount} done`
+              : 'Nothing yet'}
           </div>
         </div>
         {isProfessor && (
           <button className="btn btn-p btn-sm" onClick={() => setCreating(true)}>+ New</button>
         )}
       </div>
-
-      {rows && rows.length > 0 && (
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-          <div style={{ flex: 1, background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: 14, textAlign: 'center' }}>
-            <div className="tv a">{openCount}</div><div className="tl">Open</div>
-          </div>
-          <div style={{ flex: 1, background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: 14, textAlign: 'center' }}>
-            <div className="tv s">{doneCount}</div><div className="tl">Done</div>
-          </div>
-        </div>
-      )}
 
       {flash && <div className="task-flash" role="status">{flash}</div>}
       {error && <div className="alert" style={{ marginBottom: 14 }}><span>◇</span><div>{error}</div></div>}
@@ -252,7 +243,10 @@ export default function Tasks({ project, role }) {
                   {msLabel && <span className="task-milestone-label" title="Part of milestone">◇ {msLabel}</span>}
                   {autoLabel && <span className="task-assignment-label" title="Mirrors an assignment — status flows from it">↪ {autoLabel}</span>}
                 </div>
-                <StatusBadge status={t.status} />
+                {/* One status per row: the professor's editable status <select>
+                    is the status control for their rows, so the read-only badge
+                    is shown only where that select isn't (students + auto rows). */}
+                {!(isProfessor && !isAuto) && <StatusBadge status={t.status} />}
               </div>
 
               <div className="task-row-foot">
