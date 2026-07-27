@@ -34,5 +34,4 @@ export function ladder(status) {
   return MAP[status] || { state: 'active', label: cap(status) };
 }
 export const spineClass = (status) => `spine s-${ladder(status).state}`;
-export const spillClass = (status) => `spill spill-${ladder(status).state}`;
 export const isDoneState = (status) => ladder(status).state === 'done';

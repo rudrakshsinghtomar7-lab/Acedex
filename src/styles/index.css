@@ -42,7 +42,7 @@
     --st-approved:#8BAE76;  --st-approved-rgb:139,174,118; --st-approved-ink:#2E4022;
     --st-attention:#E07A5F; --st-attention-rgb:224,122,95; --st-attention-ink:#5A2317;
     --st-ontrack:#E0AB57;   --st-ontrack-rgb:224,171,87;   --st-ontrack-ink:#5A3F12;
-    --st-done:#5A5266;      --st-done-rgb:90,82,102;       --st-done-ink:#A89FB0;
+    --st-done:#5A5266;
     --body-bg:#14101A;
     --phone-border:#100C16;
     --phone-shadow:0 40px 100px rgba(0,0,0,.72),0 0 0 1px rgba(243,237,241,.05);
@@ -121,12 +121,6 @@
   .role-opt{flex:1;padding:10px 12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;transition:all 220ms var(--ease);color:var(--muted)}
   .role-opt.active{background:var(--grad);color:var(--accent-on);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.18),0 8px 32px rgba(var(--accent-rgb),.18)}
 
-  .welcome{margin:0 24px 28px;padding:22px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-xl);position:relative;overflow:hidden;box-shadow:var(--shadow-2)}
-  .welcome::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(var(--accent-rgb),.18),transparent 65%);pointer-events:none}
-  .welcome-eye{font-size:11px;font-weight:600;color:var(--indigo-bright);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;position:relative}
-  .welcome-t{font-size:18px;font-weight:700;line-height:1.3;margin-bottom:6px;position:relative;letter-spacing:-.02em}
-  .welcome-s{font-size:13.5px;color:var(--text-2);line-height:1.5;position:relative}
-
   .demo-banner{margin:0 24px 16px;padding:10px 14px;background:var(--grad-soft);border:1px solid rgba(var(--accent-rgb),.2);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-2)}
   .demo-banner strong{color:var(--indigo-bright);font-weight:600}
 
@@ -137,19 +131,9 @@
      edges. Two equal 1fr columns keep cards sized to the viewport at phone
      width, so nothing clips off either side. */
   .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 24px 28px}
-  .stat{padding:18px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);min-width:0}
-  .stat-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:14px;background:var(--grad-soft);border:1px solid rgba(var(--accent-rgb),.15);color:var(--indigo-bright)}
-  .stat-v{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.03em}
-  .stat-l{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:500}
-
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
   .card{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:12px;cursor:pointer;transition:all var(--t);box-shadow:var(--shadow-1)}
   .card:active{transform:scale(.99);border-color:var(--border-bright);background:var(--bg-2)}
-  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
-  .card-title{font-weight:600;font-size:15px;line-height:1.35;letter-spacing:-.015em}
-  .card-sub{font-size:12.5px;color:var(--muted);margin-top:4px;font-weight:500}
-  .card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
 
   .pb{height:6px;background:var(--bg-3);border-radius:99px;overflow:hidden}
   .pb-fill{height:100%;border-radius:99px;background:var(--grad);transition:width 600ms var(--ease)}
@@ -159,15 +143,10 @@
   .pc .pct{font-size:11px;font-weight:700;letter-spacing:-.02em}
 
   .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;color:#fff;letter-spacing:-.02em}
-  .av-s{display:flex}
-  .av-s .av{border:2px solid var(--bg-1);margin-left:-8px}
-  .av-s .av:first-child{margin-left:0}
 
   .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:-.01em;border:1px solid transparent}
   .tag-a{background:rgba(var(--accent-rgb),.12);color:var(--indigo-bright);border-color:rgba(var(--accent-rgb),.18)}
   .tag-s{background:rgba(var(--success-rgb),.1);color:var(--success);border-color:rgba(var(--success-rgb),.15)}
-  .tag-w{background:rgba(var(--warn-rgb),.1);color:var(--warn);border-color:rgba(var(--warn-rgb),.15)}
-  .tag-i{background:rgba(var(--info-rgb),.1);color:var(--info);border-color:rgba(var(--info-rgb),.15)}
   .tag-m{background:var(--bg-3);color:var(--muted);border-color:var(--border)}
 
   /* — Premium bottom nav ----------------------------------------------------
@@ -282,9 +261,6 @@
     .nav.active:hover{transform:scale(1.04)}
   }
 
-  .fab{position:absolute;bottom:100px;right:24px;width:56px;height:56px;border-radius:18px;border:none;cursor:pointer;background:var(--grad);color:var(--accent-on);font-size:24px;font-weight:300;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(var(--accent-rgb),.35);transition:all var(--t);z-index:30}
-  .fab:active{transform:scale(.92)}
-
   .sh-head{padding:14px 20px 14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--bg-0);position:sticky;top:0;z-index:5}
   .back{width:40px;height:40px;border-radius:12px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;flex-shrink:0;transition:all var(--t);color:var(--text-2);border:none;font-family:inherit}
   .back:active{background:var(--bg-3);transform:scale(.94)}
@@ -389,8 +365,6 @@
   .ms-del-btn:hover{border-color:var(--error);color:var(--error);background:rgba(var(--error-rgb),.08)}
 
   .heat{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-  .h-c{aspect-ratio:1;border-radius:4px;background:var(--bg-3);min-width:0}
-
   .ctb{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
   .ctb:last-child{border-bottom:none}
 
@@ -552,8 +526,6 @@
   .set-t{font-size:14px;font-weight:600;letter-spacing:-.015em}
   .set-s{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
   .chev{color:var(--muted-2);font-size:18px}
-  .glow{box-shadow:0 0 0 1px rgba(var(--accent-rgb),.25),0 6px 20px rgba(var(--accent-rgb),.18)}
-
   .ob{position:absolute;inset:0;background:var(--bg-0);z-index:200;display:flex;flex-direction:column;animation:fade 250ms var(--ease)}
   .ob-c{flex:1;overflow-y:auto;padding:30px 28px 40px}
   .ob-c::-webkit-scrollbar{display:none}
@@ -582,15 +554,8 @@
   .pdf-row-main{min-width:0;flex:1}
   .pdf-row-title{font-size:13px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pdf-row-meta{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px}
-  .pdf-viewer-shell{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
-  .pdf-viewer-controls{display:flex;gap:8px;align-items:center;overflow-x:auto;padding:10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);font-weight:700}
-  .pdf-viewer-controls span{white-space:nowrap;margin-right:auto}
-  .pdf-document-frame{min-height:360px;max-height:480px;overflow:auto;background:var(--pdf-frame-bg);display:flex;justify-content:center;padding:12px}
-  .pdf-document-frame canvas{max-width:none;border-radius:4px;box-shadow:var(--shadow-2)}
-  .pdf-side{background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-md);padding:14px}
   .pdf-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   .pdf-section-head h3{font-size:14px;font-weight:700;letter-spacing:-.02em}
-  .pdf-comment-box{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
   .pdf-comment{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
   .pdf-comment.resolved{opacity:.58}
   .pdf-comment-meta{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:4px}
@@ -598,8 +563,6 @@
   .pdf-comment-body{font-size:13px;color:var(--text-2);line-height:1.45;white-space:pre-wrap}
   .pdf-link-btn{margin-top:7px;background:none;border:none;color:var(--indigo-bright);font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0}
   .pdf-muted{font-size:12.5px;color:var(--muted);padding:8px 0}
-  .pdf-highlight-row{display:flex;gap:9px;align-items:flex-start;border-bottom:1px solid var(--border);padding:9px 0;font-size:12.5px;color:var(--text-2);line-height:1.45}
-  .pdf-highlight-row span{width:12px;height:12px;border-radius:4px;margin-top:3px;flex-shrink:0}
 
   .pdf-grid{display:grid;grid-template-columns:1fr;gap:10px}
   .pdf-row-grid{width:auto;flex-direction:column;align-items:stretch;gap:0;white-space:normal}
@@ -630,8 +593,6 @@
 
   .btn-icon-x{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);color:var(--text-2);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--t)}
   .btn-icon-x:hover{background:var(--bg-3);color:var(--text)}
-  .btn-active{background:rgba(var(--accent-rgb),.18) !important;border-color:rgba(var(--accent-rgb),.55) !important;color:var(--indigo-bright) !important}
-
   /* — Assignments ----------------------------------------------------------- */
   .asgn-workspace{display:flex;flex-direction:column;gap:14px}
   .asgn-grid{display:grid;grid-template-columns:1fr;gap:10px}
@@ -880,37 +841,10 @@
   .pdf-fullviewer-head{display:flex;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg-1);flex-shrink:0;position:sticky;top:0;z-index:5;min-height:0}
   .pdf-fullviewer-titleblock{flex:1;min-width:0}
   .pdf-fullviewer-titleblock .pdf-title{font-size:13px}
-  .pdf-fullviewer-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
 
-  .pdf-mode-banner{display:flex;flex-direction:column;gap:8px;padding:10px 14px;background:rgba(var(--accent-rgb),.08);border-bottom:1px solid rgba(var(--accent-rgb),.25);font-size:12px;color:var(--text-2);flex-shrink:0}
-  .pdf-mode-banner-hint{font-weight:600}
-  .pdf-color-picker{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .pdf-color-swatch{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:0;transition:transform .1s,border-color .1s}
-  .pdf-color-swatch:hover:not(:disabled){transform:scale(1.1);border-color:var(--border-bright)}
-  .pdf-color-swatch:disabled{opacity:.45;cursor:not-allowed}
-
-  .pdf-fullviewer-err{margin:10px 14px 0}
-  .pdf-fullviewer-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-  /* 70/30 split on mobile-sized viewport; the comments drawer at the bottom
-     stays scrollable with its own overflow context. touch-action keeps
-     vertical scrolling natural while letting our onTouchStart/End swipe
-     handler grab horizontal gestures for page navigation. */
-  .pdf-fullviewer-doc{display:flex;flex-direction:column;flex:1 1 70%;min-height:0;border-bottom:1px solid var(--border);touch-action:pan-y pinch-zoom}
-  .pdf-fullviewer-doc .pdf-document-frame{flex:1;max-height:none;min-height:0;border:none;border-radius:0}
-  .pdf-fullviewer-doc .pdf-viewer-controls{position:sticky;top:0;z-index:4;background:var(--bg-1)}
-  .pdf-fullviewer-side{flex:1 1 30%;min-height:0;overflow-y:auto;padding:12px 14px;background:var(--bg-1);border-radius:18px 18px 0 0;box-shadow:var(--shadow-2)}
-  .pdf-fullviewer-side::before{content:'';display:block;width:36px;height:4px;border-radius:99px;background:var(--border-bright);margin:0 auto 10px}
-
-  /* 44px-min touch targets for page nav + zoom inside the full viewer. */
-  .pdf-fullviewer .pdf-viewer-controls{padding:8px 10px;gap:6px}
-  .pdf-fullviewer .pdf-viewer-controls .btn{min-width:44px;min-height:44px;padding:8px 12px;font-size:13px;border-radius:12px}
+  /* 44px-min touch targets for buttons inside the full viewer head. */
   .pdf-fullviewer-head .btn{min-height:40px;padding:9px 14px;font-size:13px}
   .pdf-fullviewer-head .btn-icon-x{width:40px;height:40px;font-size:20px}
-  .pdf-fullviewer-side::-webkit-scrollbar{width:6px}
-  .pdf-fullviewer-side::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:99px}
-
-  .pdf-document-frame-lg{min-height:0}
-  .pdf-comment-box-actions{display:flex;gap:8px}
 
   .pdf-link-btn-warn{color:var(--error) !important}
 
@@ -1071,8 +1005,6 @@
   .pdf-fl-swatch{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);margin:2px;cursor:pointer;padding:0}
   .pdf-fl-swatch:active{transform:scale(.9)}
 
-  .pdf-sel-hint{flex-direction:row !important;align-items:center;gap:8px}
-
   /* ═══════════════════════════════════════════════════════════════════════
      DEPTH MODEL — surfaces float on warm elevation + an inset top
      "lit-from-above" highlight line, never decorative borders. Hairline
@@ -1080,14 +1012,14 @@
      sticky headers, selectable chips/controls). Tokens resolve the shadow
      per theme, so one rule serves Library + Bookshelf.
      ═══════════════════════════════════════════════════════════════════════ */
-  .card,.stat,.task,.task-row,.tile,.pstats,.set,.asgn-row,.asgn-grade-card,
-  .pdf-row,.pdf-upload,.pdf-toolbar,.pdf-viewer-shell,.pdf-side,.search,
+  .card,.task,.task-row,.tile,.pstats,.set,.asgn-row,.asgn-grade-card,
+  .pdf-row,.pdf-upload,.pdf-toolbar,.search,
   .gstep,.role-switch{
     border:none;
     box-shadow:var(--shadow-card);
   }
   /* feature cards — deeper, more lifted elevation */
-  .welcome,.ms-card,.ins{
+  .ms-card,.ins{
     border:none;
     box-shadow:var(--shadow-card-deep);
   }
@@ -1151,34 +1083,6 @@
   [data-theme="light"] .spill-ontrack{background:rgba(var(--st-ontrack-rgb),.16);color:var(--st-ontrack-ink)}
   [data-theme="light"] .spill-done{background:var(--bg-3);color:var(--muted)}
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     GOLD FOIL — thin gold hairline fading off, with an italic-Spectral
-     chapter-break label. Positive/tracking meaning only.
-     ═══════════════════════════════════════════════════════════════════════ */
-  .foil-div{display:flex;align-items:center;gap:14px;margin:26px 24px 16px}
-  .section > .foil-div{margin-left:0;margin-right:0}
-  .section > .foil-div:first-child{margin-top:0}
-  .foil-div::before,.foil-div::after{content:'';height:1px;flex:1}
-  .foil-div::before{background:linear-gradient(to right,transparent,rgba(var(--foil-rgb),.6))}
-  .foil-div::after{background:linear-gradient(to left,transparent,rgba(var(--foil-rgb),.6))}
-  .foil-div-label{
-    font-family:var(--font-display);font-style:italic;font-weight:500;
-    font-size:13.5px;color:var(--foil);letter-spacing:.01em;white-space:nowrap;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════
-     STACKED-PAGE — 1–2 offset leaves behind a card that CONTAINS documents
-     (a project holds N PDFs). Subtle; never on single items.
-     ═══════════════════════════════════════════════════════════════════════ */
-  .stacked{position:relative}
-  .stacked::after,.stacked::before{
-    content:'';position:absolute;left:7px;right:7px;bottom:-4px;height:14px;
-    border-radius:0 0 var(--r-lg) var(--r-lg);
-    background:var(--bg-1);box-shadow:var(--shadow-card);z-index:0;
-  }
-  .stacked::before{left:13px;right:13px;bottom:-8px;background:var(--bg-2);opacity:.85}
-  .stacked > *{position:relative;z-index:1}
-
   /* Spectral-italic, epigraph-style empty states (not gray boxes). */
   .empty-h{font-family:var(--font-display);font-weight:600}
   .empty-quote{
@@ -1219,7 +1123,7 @@
     --st-approved:#5E7D4F;  --st-approved-rgb:94,125,79; --st-approved-ink:#3A5230;
     --st-attention:#BF4B36; --st-attention-rgb:191,75,54;--st-attention-ink:#8A2E1E;
     --st-ontrack:#C9952E;   --st-ontrack-rgb:201,149,46; --st-ontrack-ink:#7A5712;
-    --st-done:#A99F94;      --st-done-rgb:169,159,148;   --st-done-ink:#6E6573;
+    --st-done:#A99F94;
     --body-bg:#EBE4D8;
     --phone-border:#DDD3C4;
     --phone-shadow:0 20px 60px rgba(60,42,28,.10),0 0 0 1px rgba(60,42,28,.04);
@@ -1247,14 +1151,6 @@
 
   [data-theme="light"] .display .accent{
     -webkit-text-fill-color:var(--indigo);color:var(--indigo);
-  }
-
-  [data-theme="light"] .fab{
-    box-shadow:0 8px 24px rgba(var(--accent-rgb),.25);
-  }
-
-  [data-theme="light"] .welcome::before{
-    background:radial-gradient(circle,rgba(var(--accent-rgb),.10),transparent 65%);
   }
 
   [data-theme="light"] .msg.ai .spin{
@@ -1507,7 +1403,7 @@
 
   /* Grounded surfaces — subtle fill + whisper shadow, no floating borders. */
   .card,.task-row,.ms-card,.set,.ins,.pdf-toolbar,.pdf-row,.pdf-upload,
-  .pdf-side,.pdf-viewer-shell,.pstats,.tile,.row3 > .tile{
+  .pstats,.tile,.row3 > .tile{
     background:var(--sd-fill);
     border-color:transparent;
     box-shadow:var(--sd-whisper);
@@ -1517,8 +1413,8 @@
   .ms-task,.task,.pdf-card-uploader{background:var(--sd-recede);border-color:transparent;box-shadow:none}
 
   /* Titles + numbers in Spectral to match the dashboard. */
-  .card-title,.pdf-title,.ms-card-title,.task-row-title,.set-t,
-  .pstat .v,.tv,.stat-v,.ms-task-title{font-family:var(--font-display);letter-spacing:-.01em;color:var(--sd-text)}
+  .pdf-title,.ms-card-title,.task-row-title,.set-t,
+  .pstat .v,.tv,.ms-task-title{font-family:var(--font-display);letter-spacing:-.01em;color:var(--sd-text)}
   .ms-task-title{font-weight:500}
 
   /* Section header bar (Tasks/Milestones/PDFs/Assignments) — calm + spaced. */
@@ -1567,12 +1463,8 @@
 
   /* Done/completed items recede: receded fill, greyed title, no bar. */
   .has-spine.is-done{box-shadow:var(--sd-whisper);opacity:1;background:var(--sd-recede)}
-  .has-spine.is-done .card-title,.has-spine.is-done .ms-card-title{color:var(--sd-faint)}
+  .has-spine.is-done .ms-card-title{color:var(--sd-faint)}
   .ms-card.is-done .ms-prog-line{display:none}
-
-  /* Drop floating flourishes (stacked-page leaves, foil dividers). */
-  .stacked::after,.stacked::before{display:none}
-  .foil-div{display:none}
 
   /* — Project tab row: even gaps, contained, last tab fully reachable — */
   .dtabs{padding:12px 22px;gap:8px;scroll-padding-inline:22px;border-bottom-color:var(--sd-hair)}

@@ -90,17 +90,6 @@ export default function Profile({role, projects, openSettings}) {
           </div>
           <span className="chev">›</span>
         </div>
-        {[
-          {i:"🔔",t:"Notifications",s:"Manage alerts"},
-          {i:"🔒",t:"Privacy & security",s:"Account and data"},
-          {i:"💬",t:"Help & support",s:"Documentation"}
-        ].map((it,i) => (
-          <div key={i} className="set">
-            <div className="set-i">{it.i}</div>
-            <div className="set-info"><div className="set-t">{it.t}</div><div className="set-s">{it.s}</div></div>
-            <span className="chev">›</span>
-          </div>
-        ))}
         <button className="btn btn-bl btn-g" style={{marginTop:16}} onClick={onSignOut}>Sign out</button>
       </div>
     </>
