@@ -13,7 +13,7 @@
 // NOT here (Phase 3+): assignment→task auto-link, contribution %, due-date logic.
 
 const MILESTONE_SELECT = `
-  id, team_id, title, order_idx, created_by, created_at, updated_at,
+  id, team_id, title, due_at, order_idx, created_by, created_at, updated_at,
   tasks:tasks!tasks_milestone_id_fkey(
     id, team_id, milestone_id, title, status, done, assignee_mode, leader_id, created_at,
     assignees:task_assignees(
@@ -45,11 +45,12 @@ export async function listTeamMilestones(supabase, teamId) {
   return data ?? [];
 }
 
-// Professor-only (RLS: milestones_prof_write).
-export async function createMilestone(supabase, { teamId, createdBy, title, orderIdx = 0 }) {
+// Professor-only (RLS: milestones_prof_write). `dueAt` is the professor's
+// deadline (ISO string) or null — the AI draft never sets it.
+export async function createMilestone(supabase, { teamId, createdBy, title, orderIdx = 0, dueAt = null }) {
   const { data, error } = await supabase
     .from('milestones')
-    .insert({ team_id: teamId, created_by: createdBy, title: title.trim(), order_idx: orderIdx })
+    .insert({ team_id: teamId, created_by: createdBy, title: title.trim(), order_idx: orderIdx, due_at: dueAt || null })
     .select(MILESTONE_SELECT)
     .single();
   if (error) throw error;

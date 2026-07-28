@@ -1507,3 +1507,57 @@
     /* Bottom sheets clear the home indicator. */
     .sheet{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     AI BRIEF-TO-DRAFT (create-project review surface) — Study system: --sd
+     tokens, hairlines, whisper shadow, one spacing rhythm, quiet status. Entry
+     animations touch opacity/transform only. Themes via --sd (light + dark).
+     ═══════════════════════════════════════════════════════════════════════ */
+  .bd-brief{margin-bottom:22px}
+  .bd-brief-hint{font-size:12.5px;color:var(--sd-muted);line-height:1.5;margin:6px 0 10px}
+  .bd-brief-input{min-height:92px}
+  .bd-brief-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+  .bd-brief-count{font-size:11.5px;color:var(--sd-faint);font-variant-numeric:tabular-nums}
+  .bd-brief-count.is-max{color:var(--sd-attention)}
+  .bd-brief-msg{margin-top:10px;font-size:12.5px;color:var(--sd-attention);line-height:1.5}
+
+  .bd-review{margin:4px 0 14px}
+  .bd-review-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .bd-streaming{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--sd-muted);letter-spacing:.02em}
+  .bd-streaming-dot{width:6px;height:6px;border-radius:50%;background:var(--sd-plum);animation:bd-pulse 1s ease-in-out infinite}
+
+  .bd-ms{background:var(--sd-fill);border:1px solid var(--sd-hair);border-radius:14px;box-shadow:var(--sd-whisper);padding:14px;margin-bottom:12px;animation:bd-in .22s var(--ease) both}
+  .bd-ms-top{display:flex;align-items:center;gap:8px}
+  .bd-ms-name{flex:1;min-width:0;background:transparent;border:none;outline:none;color:var(--sd-text);font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:-.01em;padding:2px 0}
+  .bd-ms-name::placeholder{color:var(--sd-faint)}
+  .bd-ms-ctrls{display:flex;gap:4px;flex-shrink:0}
+  .bd-ictrl{width:28px;height:28px;border-radius:8px;border:1px solid var(--sd-hair);background:var(--sd-recede);color:var(--sd-muted);font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s var(--ease),color .1s,background .1s}
+  .bd-ictrl:active{transform:scale(.9)}
+  .bd-ictrl:disabled{opacity:.35;cursor:default}
+  .bd-ictrl-del{color:var(--sd-attention)}
+
+  .bd-date{display:flex;align-items:center;gap:10px;margin:12px 0;padding-top:12px;border-top:1px solid var(--sd-hair)}
+  .bd-date-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--sd-faint);font-weight:600}
+  .bd-date-input{background:var(--sd-recede);border:1px solid var(--sd-hair);border-radius:9px;padding:7px 10px;color:var(--sd-text);font-family:inherit;font-size:13px;outline:none;color-scheme:light dark}
+  .bd-date-input:focus{border-color:var(--sd-plum)}
+
+  .bd-tasks{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+  .bd-task{display:flex;align-items:flex-start;gap:8px;animation:bd-in .2s var(--ease) both}
+  .bd-task-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding:8px 10px;background:var(--sd-recede);border:1px solid var(--sd-hair);border-radius:10px}
+  .bd-task-name{background:transparent;border:none;outline:none;color:var(--sd-text);font-size:13.5px;font-weight:600;padding:0}
+  .bd-task-desc{background:transparent;border:none;outline:none;color:var(--sd-muted);font-size:12px;padding:0}
+  .bd-task-name::placeholder,.bd-task-desc::placeholder{color:var(--sd-faint)}
+  .bd-task .bd-ictrl{margin-top:6px}
+
+  .bd-add{align-self:flex-start;background:transparent;border:none;color:var(--sd-plum);font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 2px;transition:opacity .1s}
+  .bd-add:active{opacity:.6}
+  .bd-add-ms{margin:2px 0 8px}
+  .bd-discard{display:block;width:100%;background:transparent;border:1px dashed var(--sd-hair);color:var(--sd-muted);border-radius:10px;padding:9px;font-size:12.5px;font-weight:500;cursor:pointer;margin-bottom:16px;transition:color .1s,border-color .1s}
+  .bd-discard:active{color:var(--sd-text)}
+
+  @keyframes bd-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes bd-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  @media (prefers-reduced-motion: reduce){
+    .bd-ms,.bd-task{animation:none}
+    .bd-streaming-dot{animation:none}
+  }

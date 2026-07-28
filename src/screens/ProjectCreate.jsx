@@ -3,6 +3,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../providers/SessionProvider.jsx';
 import { createCourse, createTeam, listProfessorCourses } from '../lib/teams.js';
+import { createMilestone } from '../lib/milestones.js';
+import { createTask } from '../lib/tasks.js';
+import { useBriefDraft } from '../hooks/useBriefDraft.js';
+import { getDraftFixture } from '../data/aiDraftFixture.js';
+import { MAX_BRIEF_CHARS } from '../lib/aiDraft.js';
+import BriefDraftReview from '../components/BriefDraftReview.jsx';
+import SectionLabel from '../components/study/SectionLabel.jsx';
 
 const TERM_OPTIONS = ['Spring', 'Summer', 'Fall'];
 
@@ -32,6 +39,21 @@ export default function ProjectCreate() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // Brief-to-draft (Step 1: fixture-backed, no API). Optional and non-blocking —
+  // if it's never used or is discarded, the form below creates the project
+  // exactly as it did before.
+  const [brief, setBrief] = useState('');
+  const draft = useBriefDraft();
+
+  function draftFromBrief() {
+    // Deliberate trigger only — never auto-fires on paste/change.
+    draft.startDraft(getDraftFixture, {
+      // Pre-fill the description field, but never stomp on what the professor
+      // has already typed there.
+      onDescription: (d) => setDescription((cur) => (cur.trim() ? cur : d)),
+    });
+  }
 
   useEffect(() => {
     if (!user?.id) return;
@@ -104,6 +126,38 @@ export default function ProjectCreate() {
         description: description.trim() || null,
         created_by: user.id,
       });
+
+      // If a drafted plan is present, write its milestones + tasks through the
+      // EXISTING creation functions. Sequential because each task needs its
+      // milestone's real id. Empty-named rows are skipped defensively. This runs
+      // only when hasPlan — otherwise creation is byte-for-byte the old flow.
+      //
+      // Non-blocking by design: the project (team) already exists at this point,
+      // so a failure writing the plan must NOT strand the professor on an error.
+      // We log it and still navigate into the created project, where the plan can
+      // be finished by hand. (Best-effort, like the course rollback above — true
+      // atomicity would need an RPC.)
+      if (draft.hasPlan) {
+        try {
+          const plan = draft.milestones;
+          for (let i = 0; i < plan.length; i += 1) {
+            const m = plan[i];
+            if (!m.name.trim()) continue;
+            const milestone = await createMilestone(supabase, {
+              teamId: team.id, createdBy: user.id, title: m.name, orderIdx: i, dueAt: m.dueAt || null,
+            });
+            for (const t of m.tasks) {
+              if (!t.name.trim()) continue;
+              await createTask(supabase, {
+                teamId: team.id, createdBy: user.id, title: t.name, description: t.description, milestoneId: milestone.id,
+              });
+            }
+          }
+        } catch (planErr) {
+          console.error('Draft plan write failed (project still created):', planErr);
+        }
+      }
+
       navigate(`/projects/${team.id}`, { replace: true });
     } catch (e2) {
       // Best-effort rollback: if we just created a course but the team insert
@@ -135,6 +189,33 @@ export default function ProjectCreate() {
       </div>
 
       <form onSubmit={submit} style={{padding:'12px 24px 24px'}}>
+        {/* Brief-to-draft: seen BEFORE manual entry, framed as an alternative. */}
+        <div className="bd-brief">
+          <SectionLabel>Start from your assignment brief</SectionLabel>
+          <p className="bd-brief-hint">Paste your brief and let AI draft the milestones and tasks — or skip this and fill the form in yourself.</p>
+          <textarea
+            className="textarea bd-brief-input"
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            maxLength={MAX_BRIEF_CHARS}
+            placeholder="Paste your assignment brief here…"
+          />
+          <div className="bd-brief-foot">
+            <span className={`bd-brief-count${brief.length >= MAX_BRIEF_CHARS ? ' is-max' : ''}`}>
+              {brief.length >= MAX_BRIEF_CHARS ? `Capped at ${MAX_BRIEF_CHARS.toLocaleString()} characters` : `${brief.length.toLocaleString()} / ${MAX_BRIEF_CHARS.toLocaleString()}`}
+            </span>
+            <button
+              type="button"
+              className="btn btn-p btn-sm"
+              onClick={draftFromBrief}
+              disabled={!brief.trim() || draft.status === 'drafting'}
+            >
+              {draft.status === 'drafting' ? <span className="spin"/> : (draft.hasPlan ? 'Re-draft from brief' : 'Draft from brief')}
+            </button>
+          </div>
+          {draft.error && <div className="bd-brief-msg">{draft.error}</div>}
+        </div>
+
         <div className="field">
           <label>Title</label>
           <input className="input" type="text" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="e.g. LLM Hallucination Study" required/>
@@ -191,10 +272,20 @@ export default function ProjectCreate() {
           </div>
         )}
 
+        {/* Drafted plan sits AFTER the details a professor fills regardless, so
+            the paste step reads as a shortcut for the rest of setup. The review's
+            own "Drafted plan" header is the section divider — no extra label. */}
+        {draft.hasPlan && (
+          <>
+            <BriefDraftReview milestones={draft.milestones} status={draft.status} actions={draft.actions} />
+            <button type="button" className="bd-discard" onClick={draft.discard}>Discard draft &amp; fill in manually</button>
+          </>
+        )}
+
         {error && <div className="alert" style={{marginBottom:14}}><span>{error}</span></div>}
 
-        <button type="submit" className="btn btn-p btn-bl" disabled={saving} style={{marginTop:8}}>
-          {saving ? <span className="spin"/> : 'Create project'}
+        <button type="submit" className="btn btn-p btn-bl" disabled={saving || draft.status === 'drafting'} style={{marginTop:8}}>
+          {saving ? <span className="spin"/> : (draft.hasPlan ? 'Create project & plan' : 'Create project')}
         </button>
       </form>
     </>

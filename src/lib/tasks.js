@@ -37,7 +37,7 @@ export function taskStatusLabel(status) {
 }
 
 const TASK_SELECT = `
-  id, team_id, assignment_id, subtask_id, milestone_id, title, status, done, assignee_mode, leader_id,
+  id, team_id, assignment_id, subtask_id, milestone_id, title, description, status, done, assignee_mode, leader_id,
   created_by, created_at, updated_at,
   assignees:task_assignees(
     id, student_id, assigned_at,
@@ -77,14 +77,16 @@ export async function getTask(supabase, taskId) {
 // professor mode — writes the chosen assignees. team_leader mode stores the
 // leader so that person can assign later; self_pick leaves the pool open.
 export async function createTask(supabase, {
-  teamId, createdBy, title,
+  teamId, createdBy, title, description = null,
   assigneeMode = 'professor', assigneeIds = [], leaderId = null,
   milestoneId = null,
 }) {
+  const desc = typeof description === 'string' ? description.trim() : '';
   const payload = {
     team_id: teamId,
     created_by: createdBy,
     title: title.trim(),
+    description: desc || null,
     assignee_mode: assigneeMode,
     leader_id: assigneeMode === 'team_leader' ? (leaderId || null) : null,
     milestone_id: milestoneId || null,
