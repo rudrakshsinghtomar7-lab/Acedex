@@ -6,7 +6,7 @@
 // already streamed in is never clobbered by later arrivals. Discarding cancels
 // pending emissions. Nothing here is persisted; confirm happens in the caller.
 import { useCallback, useEffect, useReducer, useRef } from 'react';
-import { parseDraft, streamDraft, nextCid } from '../lib/aiDraft.js';
+import { nextCid } from '../lib/aiDraft.js';
 
 const emptyMilestone = () => ({ cid: nextCid('m'), name: '', dueAt: null, tasks: [] });
 const emptyTask = () => ({ cid: nextCid('t'), name: '', description: '' });
@@ -82,6 +82,9 @@ export function useBriefDraft() {
   const setStatus = (s) => { statusRef.current = s; force(); };
   const cancelRef = useRef(null);
   const errRef = useRef(null);
+  const doneRef = useRef(false);
+  const planLenRef = useRef(0);
+  planLenRef.current = state.milestones.length; // mirror for use inside async callbacks
   const mounted = useRef(true);
 
   useEffect(() => () => {
@@ -96,34 +99,47 @@ export function useBriefDraft() {
     setStatus('idle');
   }, []);
 
-  const startDraft = useCallback(async (source, { onDescription } = {}) => {
+  // `driver` is `(handlers, signal) => Promise` (see lib/draftStream.js). The
+  // hook stays transport-agnostic: it builds the handlers, owns the Abort
+  // controller, and decides the final status — network or fixture, same code.
+  const startDraft = useCallback(async (driver, { onDescription } = {}) => {
     if (cancelRef.current) cancelRef.current();
     errRef.current = null;
+    doneRef.current = false;
     dispatch({ type: 'RESET' });
     setStatus('drafting');
-    let plan;
-    try {
-      const raw = await source();
-      plan = parseDraft(raw); // defensive: never throws on shape
-    } catch (e) {
-      if (!mounted.current) return;
-      errRef.current = e?.message || 'Could not draft from the brief.';
-      setStatus('idle');
-      return;
-    }
-    if (!mounted.current) return;
-    if (plan.milestones.length === 0) {
-      // Nothing usable came back — fall back to manual entry, non-blocking.
-      errRef.current = 'The draft came back empty. Fill in the plan manually.';
-      setStatus('idle');
-      return;
-    }
-    cancelRef.current = streamDraft(plan, {
+
+    const controller = new AbortController();
+    const userAbort = { discarded: false };
+    cancelRef.current = () => { userAbort.discarded = true; controller.abort(); };
+
+    const handlers = {
       onDescription: (d) => { if (mounted.current && onDescription) onDescription(d); },
       onMilestone: (m) => { if (mounted.current) dispatch({ type: 'APPEND_MILESTONE', milestone: m }); },
       onTask: (mCid, t) => { if (mounted.current) dispatch({ type: 'APPEND_TASK', mCid, task: t }); },
-      onDone: () => { if (mounted.current) { cancelRef.current = null; setStatus('ready'); } },
-    });
+      onDone: () => { doneRef.current = true; },
+      onError: (e) => { if (mounted.current && !errRef.current) errRef.current = e?.message || 'Something went wrong while drafting.'; },
+    };
+
+    try {
+      await driver(handlers, controller.signal);
+    } catch (e) {
+      if (userAbort.discarded || e?.name === 'AbortError') return; // user cancelled — silent
+      if (mounted.current && !errRef.current) errRef.current = e?.message || 'The draft service is unavailable. Fill in the plan manually.';
+    } finally {
+      // Skip if the user discarded — discard() already reset to idle.
+      if (mounted.current && !userAbort.discarded) {
+        cancelRef.current = null;
+        const hasPlan = planLenRef.current > 0;
+        // Stream ended without a `done` frame but rows already rendered = a drop.
+        // Keep the partial plan usable; just surface what happened.
+        if (!doneRef.current && hasPlan && !errRef.current) {
+          errRef.current = 'The draft stopped early. Finish the plan by hand, or try again.';
+        }
+        // Any plan (full or partial) → ready; nothing usable → back to manual.
+        setStatus(hasPlan ? 'ready' : 'idle');
+      }
+    }
   }, []);
 
   const actions = {

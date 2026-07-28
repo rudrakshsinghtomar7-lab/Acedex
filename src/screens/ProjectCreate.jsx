@@ -6,8 +6,10 @@ import { createCourse, createTeam, listProfessorCourses } from '../lib/teams.js'
 import { createMilestone } from '../lib/milestones.js';
 import { createTask } from '../lib/tasks.js';
 import { useBriefDraft } from '../hooks/useBriefDraft.js';
-import { getDraftFixture } from '../data/aiDraftFixture.js';
+import { serverDraftDriver } from '../lib/draftStream.js';
 import { MAX_BRIEF_CHARS } from '../lib/aiDraft.js';
+// fixtureDraftDriver (also in lib/draftStream.js) remains the local dev/offline
+// fallback and keeps data/aiDraftFixture.js in use.
 import BriefDraftReview from '../components/BriefDraftReview.jsx';
 import SectionLabel from '../components/study/SectionLabel.jsx';
 
@@ -21,7 +23,7 @@ function defaultTerm() {
 }
 
 export default function ProjectCreate() {
-  const { supabase, user, profile } = useAuth();
+  const { supabase, user, profile, session } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -47,12 +49,23 @@ export default function ProjectCreate() {
   const draft = useBriefDraft();
 
   function draftFromBrief() {
-    // Deliberate trigger only — never auto-fires on paste/change.
-    draft.startDraft(getDraftFixture, {
-      // Pre-fill the description field, but never stomp on what the professor
-      // has already typed there.
-      onDescription: (d) => setDescription((cur) => (cur.trim() ? cur : d)),
-    });
+    // Deliberate trigger only — never auto-fires on paste/change. Streams from
+    // the draft-from-brief Edge Function; parseDraft-grade defensive coercion
+    // runs on every event inside the driver (network response is untrusted).
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/draft-from-brief`;
+    draft.startDraft(
+      serverDraftDriver({
+        url,
+        token: session?.access_token,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        brief,
+      }),
+      {
+        // Pre-fill the description field, but never stomp on what the professor
+        // has already typed there.
+        onDescription: (d) => setDescription((cur) => (cur.trim() ? cur : d)),
+      },
+    );
   }
 
   useEffect(() => {

@@ -1519,7 +1519,9 @@
   .bd-brief-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
   .bd-brief-count{font-size:11.5px;color:var(--sd-faint);font-variant-numeric:tabular-nums}
   .bd-brief-count.is-max{color:var(--sd-attention)}
-  .bd-brief-msg{margin-top:10px;font-size:12.5px;color:var(--sd-attention);line-height:1.5}
+  /* Quiet, italic-Spectral error/rate-limit line — surfaces the function's own
+     message (auth · empty · too long · rate limited · dropped · timeout). */
+  .bd-brief-msg{margin-top:10px;font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--sd-attention);line-height:1.55}
 
   .bd-review{margin:4px 0 14px}
   .bd-review-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}

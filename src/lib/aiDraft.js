@@ -30,6 +30,13 @@ const asString = (v) => (typeof v === 'string' ? v : '');
 const clamp = (s, n) => asString(s).replace(/\s+/g, ' ').trim().slice(0, n);
 const asArray = (v) => (Array.isArray(v) ? v : []);
 
+// Per-item coercion shared by parseDraft (whole-blob) and the streaming client
+// (one event at a time). Both paths clamp the SAME way so a real network stream
+// gets the identical defensive treatment as the fixture.
+export const safeName = (s) => clamp(s, MAX_NAME);
+export const safeDesc = (s) => clamp(s, MAX_DESC);
+export const safeDescription = (s) => clamp(s, MAX_PROJECT_DESC);
+
 function normalizeTask(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const name = clamp(raw.name, MAX_NAME);
