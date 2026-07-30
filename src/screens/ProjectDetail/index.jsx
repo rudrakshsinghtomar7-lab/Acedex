@@ -17,7 +17,7 @@ import { adaptTeam, deleteProject, getTeamDetail } from '../../lib/teams.js';
 
 export default function ProjectDetail({id, role, onBack, apiKey, initialTab, initialPdfId, initialPage}) {
   const { supabase } = useAuth();
-  const { demoMode, demoRole, demoData } = useDemoMode();
+  const { demoMode, demoData } = useDemoMode();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,15 +29,14 @@ export default function ProjectDetail({id, role, onBack, apiKey, initialTab, ini
   const refetch = () => setRefreshTick(n => n + 1);
   const isDemo = typeof id === 'string' && id.startsWith('demo-');
   const canDelete = role === 'professor' || role === 'admin';
-  // Demo-prof showcase: delete is inert (no real cascade). True only inside
-  // demo mode with the professor view — a real professor always persists.
-  const demoShowcase = demoMode && demoRole === 'professor';
 
-  // Permanent project delete. Real: deleteProject (RLS-gated, full cascade,
-  // storage cleanup). In demo / showcase it's inert — no Supabase call and no
-  // fixture mutation — so nothing persists and it resets with demo mode.
+  // Permanent project delete. Only DEMO FIXTURES (demo- ids) are inert — they
+  // have no real rows to remove. REAL projects always delete for real, even
+  // while demo mode is on: creation writes real projects in demo mode, so
+  // deletion must be symmetric (otherwise a real project made in demo mode is
+  // undeletable). Real delete is RLS-gated (prof/admin), full FK cascade.
   async function confirmDelete() {
-    if (isDemo || demoShowcase) {
+    if (isDemo) {
       navigate('/projects', { replace: true });
       return;
     }
