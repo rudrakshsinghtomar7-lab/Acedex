@@ -8,7 +8,7 @@ import { useDemoMode } from '../hooks/useDemoMode.jsx';
 import { adaptTeam, listTeamsForUser } from '../lib/teams.js';
 
 export default function Projects({role}) {
-  const { supabase, user } = useAuth();
+  const { supabase, user, projectsVersion } = useAuth();
   const { demoMode, demoData } = useDemoMode();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
@@ -32,7 +32,7 @@ export default function Projects({role}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, role, supabase]);
+  }, [user?.id, role, supabase, projectsVersion]);
 
   const onOpenProject = (p) => navigate(`/projects/${p.id}`);
 

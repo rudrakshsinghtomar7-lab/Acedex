@@ -18,6 +18,11 @@ export function SessionProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Bumped whenever the set of projects changes (e.g. after creating one).
+  // Screens that list projects include it in their fetch deps, so they reload
+  // the moment it changes — even if they stayed mounted and would not otherwise
+  // re-run their effect. Guarantees a new project shows without an app restart.
+  const [projectsVersion, setProjectsVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +96,8 @@ export function SessionProvider({ children }) {
     }
   }, [session?.user?.id]);
 
+  const notifyProjectsChanged = useCallback(() => setProjectsVersion((v) => v + 1), []);
+
   const value = useMemo(() => ({
     supabase,
     session,
@@ -99,6 +106,8 @@ export function SessionProvider({ children }) {
     role: profile?.role ?? null,
     loading,
     refreshProfile,
+    projectsVersion,
+    notifyProjectsChanged,
     signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     signUp: (email, password, meta = {}) =>
       supabase.auth.signUp({ email, password, options: { data: meta } }),
@@ -106,7 +115,7 @@ export function SessionProvider({ children }) {
     requestPasswordReset: (email, redirectTo) =>
       supabase.auth.resetPasswordForEmail(email, { redirectTo }),
     updatePassword: (password) => supabase.auth.updateUser({ password }),
-  }), [session, profile, loading, refreshProfile]);
+  }), [session, profile, loading, refreshProfile, projectsVersion, notifyProjectsChanged]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

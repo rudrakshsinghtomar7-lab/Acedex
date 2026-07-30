@@ -20,7 +20,7 @@ import {
 import { timeGreeting, buildDueSoon, buildRecent, needCount } from './home/derive.js';
 
 export default function Home({ role, openSettings, openNotif, notifUnread }) {
-  const { user, profile, supabase } = useAuth();
+  const { user, profile, supabase, projectsVersion } = useAuth();
   const { demoMode, demoData } = useDemoMode();
   const navigate = useNavigate();
   const demoOn = demoMode && demoData;
@@ -62,7 +62,7 @@ export default function Home({ role, openSettings, openNotif, notifUnread }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, role, supabase]);
+  }, [user?.id, role, supabase, projectsVersion]);
 
   // Demo projects visible to this persona (pros see all; students see their own).
   const demoProjects = demoOn

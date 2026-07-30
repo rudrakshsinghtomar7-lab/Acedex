@@ -23,7 +23,7 @@ function defaultTerm() {
 }
 
 export default function ProjectCreate() {
-  const { supabase, user, profile, session } = useAuth();
+  const { supabase, user, profile, session, notifyProjectsChanged } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -170,6 +170,10 @@ export default function ProjectCreate() {
           console.error('Draft plan write failed (project still created):', planErr);
         }
       }
+
+      // Tell the project-listing screens (Home, Projects) to reload so the new
+      // project — with its milestones/tasks — shows immediately, no restart.
+      notifyProjectsChanged();
 
       navigate(`/projects/${team.id}`, { replace: true });
     } catch (e2) {
