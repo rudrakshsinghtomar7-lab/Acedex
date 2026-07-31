@@ -118,27 +118,97 @@ export async function loadHomeStatsForStudent(supabase, studentId) {
   return { projects: count ?? 0 };
 }
 
+// Delete every listed object from one bucket, failing loudly if any survives.
+//
+// storage.remove() does NOT report a path it could not delete: RLS-denied and
+// already-absent paths are both just omitted from the returned list, with no
+// error. That silence is the dangerous case for retention — a denied delete
+// looked like a clean one. So we re-check anything unremoved and only tolerate
+// it if it is genuinely gone. Throwing here (before the team delete) is
+// deliberate: it keeps the metadata rows that authorize these deletes alive,
+// so a retry can still reach the files.
+async function removeAllOrThrow(supabase, bucket, paths) {
+  if (!paths.length) return;
+
+  const { data, error } = await supabase.storage.from(bucket).remove(paths);
+  if (error) throw error;
+
+  const removed = new Set((data ?? []).map(o => o.name));
+  const unremoved = paths.filter(p => !removed.has(p));
+  if (!unremoved.length) return;
+
+  const survivors = [];
+  for (const path of unremoved) {
+    const cut = path.lastIndexOf('/');
+    const { data: listed } = await supabase.storage.from(bucket)
+      .list(path.slice(0, cut), { search: path.slice(cut + 1) });
+    if ((listed ?? []).some(o => o.name === path.slice(cut + 1))) survivors.push(path);
+  }
+  if (survivors.length) {
+    throw new Error(
+      `Storage cleanup incomplete: ${survivors.length} object(s) could not be removed ` +
+      `from '${bucket}' (${survivors.join(', ')}). Project not deleted, so the rows ` +
+      `authorizing their removal still exist — retry or clear them first.`
+    );
+  }
+}
+
 // Permanent, full delete of a project (team) and everything under it.
 // Permissions are enforced at the DB: teams_delete allows only the course
 // professor or an admin; FK ON DELETE CASCADE removes every descendant
 // (team_members, assignments + subtasks/assignees/leaders, submissions,
 // tasks + task_assignees, milestones, pdf_documents + annotations/access_log,
 // ai_analyses/findings, resources, contributions, activity_events, invitations).
-// FK cascade can't reach the PDF binaries in storage, so we clean those up
-// app-side (best-effort) after the row delete.
+//
+// FK cascade can't reach the binaries in storage, so we clean those up
+// app-side before the row delete.
+//
+// Three tables under a team hold storage paths, and all three CASCADE on team
+// delete, so all three sets of objects must be swept or they leak:
+//   pdf_documents.storage_path  → 'pdfs' bucket
+//   submissions.storage_path    → 'pdfs' bucket (see below)
+//   resources.storage_path      → 'resources' bucket
+//
+// Submissions live in the 'pdfs' bucket, not 'submissions': submitAssignment
+// uploads through uploadPdfDocument, so a submission's storage_path is the
+// path of its pdf_documents row. The 'submissions' bucket exists but nothing
+// writes to it. Usually that means the pdf sweep already covers a submission —
+// but not always: submissions.pdf_document_id is ON DELETE SET NULL, so
+// deleting a PDF on its own leaves the submission row holding the only
+// reference to that path. Sweeping submissions explicitly (and de-duping
+// against the PDF paths) is what makes retention actually hold: a deleted
+// student submission must leave the bucket.
 export async function deleteProject(supabase, teamId) {
-  const { data: pdfs } = await supabase
-    .from('pdf_documents').select('storage_path').eq('team_id', teamId);
-  const paths = (pdfs ?? []).map(p => p.storage_path).filter(Boolean);
-
-  // Remove the PDF binaries FIRST — while the pdf_documents rows still exist.
-  // The storage delete policy (storage_owns_pdf) authorizes via that row, so
-  // removing AFTER the team-delete cascade would be denied and orphan the
-  // files. Surface a storage error rather than silently leaking binaries.
-  if (paths.length) {
-    const { error: rmErr } = await supabase.storage.from('pdfs').remove(paths);
-    if (rmErr) throw rmErr;
+  const [pdfRes, subRes, resRes] = await Promise.all([
+    supabase.from('pdf_documents').select('storage_path').eq('team_id', teamId),
+    supabase.from('submissions').select('storage_path').eq('team_id', teamId),
+    supabase.from('resources').select('storage_path').eq('team_id', teamId),
+  ]);
+  // A failed lookup would silently under-collect and leak binaries, so treat
+  // it as fatal rather than deleting the rows we can no longer trace.
+  for (const { error: readErr } of [pdfRes, subRes, resRes]) {
+    if (readErr) throw readErr;
   }
+
+  const pathsOf = (rows) => (rows ?? []).map(r => r.storage_path).filter(Boolean);
+  // Same bucket, so union + de-dupe: remove() on a path twice is wasteful and
+  // makes the second call look like a missing object.
+  const pdfBucketPaths = [...new Set([...pathsOf(pdfRes.data), ...pathsOf(subRes.data)])];
+  const resourcePaths = [...new Set(pathsOf(resRes.data))];
+
+  // Remove the binaries FIRST — while the metadata rows still exist. Every
+  // storage delete policy authorizes via its metadata row (storage_owns_pdf,
+  // storage_owns_submission, storage_owns_resource), so removing AFTER the
+  // team-delete cascade would be denied and orphan the files. Surface a
+  // storage error rather than silently leaking binaries.
+  //
+  // Caveat on resources: storage_owns_resource only passes for the resource's
+  // creator or an admin — unlike pdfs/submissions it has no team-professor
+  // clause. Nothing writes resources today, so this cannot bite yet; if the
+  // feature is built out, that policy needs a professor clause or a professor
+  // deleting a project holding a student's resource will fail here.
+  await removeAllOrThrow(supabase, 'pdfs', pdfBucketPaths);
+  await removeAllOrThrow(supabase, 'resources', resourcePaths);
 
   // Now delete the project. RLS gates this to prof/admin; FK cascade removes
   // every descendant row.
