@@ -8,7 +8,6 @@ import SettingsSheet from './components/SettingsSheet.jsx';
 import NotificationsPanel from './components/NotificationsPanel.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import Loading from './components/Loading.jsx';
 import { useApiKey } from './hooks/useApiKey.js';
 import { getUnreadCount } from './lib/notifications.js';
 import Home from './screens/Home.jsx';
@@ -67,7 +66,9 @@ function ProjectDetailRoute({role, apiKey, initialTab}) {
 
 function RootRedirect() {
   const { session, loading } = useAuth();
-  if (loading) return <Loading/>;
+  if (loading) {
+    return <div className="empty"><div className="spin" style={{margin:'0 auto 12px'}}/><p className="empty-h">Loading…</p></div>;
+  }
   return <Navigate to={session ? '/home' : '/login'} replace/>;
 }
 
