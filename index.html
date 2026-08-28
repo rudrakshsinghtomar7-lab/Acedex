@@ -16,6 +16,10 @@
     var dark = m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', dark ? '#1F1A24' : '#F2EDE4');
+    // Also resolve data-theme synchronously. :root carries the DARK set, so
+    // without this a light-theme user gets a dark first paint (and the boot
+    // loader below would come up in the wrong theme) until React mounts.
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }catch(e){}
 })();
 </script>
@@ -30,7 +34,47 @@
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<div id="loading"><div class="ldr"></div><div>Loading Acedex...</div></div>
+<!-- Pre-JS boot screen. Deliberately duplicates the Loading component's mark and
+     sweep: this must paint correctly before the bundle (and, in dev, before the
+     stylesheet) exists, so it carries its own tokens and styles. Keep the path
+     in sync with MARK_PATH in src/components/Loading.jsx — matching them is what
+     makes the handoff to React invisible rather than a second loader. -->
+<style>
+  #loading{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:#F2EDE4;--g:#B5862E;--gr:181,134,46;--p:#6E4F94}
+  html[data-theme="dark"] #loading{background:#1F1A24;--g:#E0AB57;--gr:224,171,87;--p:#B79BDC}
+  #loading .bm{position:relative;width:120px;height:120px}
+  #loading svg{position:absolute;inset:0;width:120px;height:120px;overflow:visible}
+  #loading .bo{fill:none;stroke:var(--p);stroke-width:2;stroke-opacity:.20;stroke-linejoin:round}
+  #loading .bl{fill:none;stroke:var(--p);stroke-width:2;stroke-opacity:.16;stroke-linecap:round}
+  #loading .bn{fill:var(--p);fill-opacity:.20}
+  #loading i{position:absolute;top:0;left:0;display:none;border-radius:50%;
+    background:radial-gradient(circle closest-side,var(--g) 0%,rgba(var(--gr),.62) 38%,rgba(var(--gr),0) 100%);
+    offset-path:path("M64.34 27.88 L99.66 92.12 Q104 100 95 100 L25 100 Q16 100 20.34 92.12 L55.66 27.88 Q60 20 64.34 27.88 Z");
+    offset-rotate:0deg;animation:bsw 1.8s cubic-bezier(.4,.1,.6,.9) infinite;will-change:transform}
+  @keyframes bsw{from{offset-distance:0%}to{offset-distance:100%}}
+  #loading .bm{animation:bpu 2.6s ease-in-out infinite}
+  @supports (offset-path: path("M 0 0 L 1 1")){#loading i{display:block}#loading .bm{animation:none}}
+  @keyframes bpu{0%,100%{opacity:.5}50%{opacity:1}}
+  @media (prefers-reduced-motion: reduce){
+    #loading i{display:none}#loading .bm{animation:bpu 3s ease-in-out infinite}
+  }
+</style>
+<div id="loading">
+  <div class="bm">
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <path class="bo" d="M64.34 27.88 L99.66 92.12 Q104 100 95 100 L25 100 Q16 100 20.34 92.12 L55.66 27.88 Q60 20 64.34 27.88 Z"/>
+      <path class="bl" d="M44 62 Q60 69 76 62"/>
+      <circle class="bn" cx="44" cy="62" r="3.4"/><circle class="bn" cx="76" cy="62" r="3.4"/>
+    </svg>
+    <i style="width:13px;height:13px;margin:-6.5px 0 0 -6.5px;opacity:1"></i>
+    <i style="width:11px;height:11px;margin:-5.5px 0 0 -5.5px;opacity:.62;animation-delay:-.05s"></i>
+    <i style="width:10px;height:10px;margin:-5px 0 0 -5px;opacity:.40;animation-delay:-.10s"></i>
+    <i style="width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.26;animation-delay:-.16s"></i>
+    <i style="width:8px;height:8px;margin:-4px 0 0 -4px;opacity:.15;animation-delay:-.23s"></i>
+    <i style="width:7px;height:7px;margin:-3.5px 0 0 -3.5px;opacity:.08;animation-delay:-.31s"></i>
+  </div>
+</div>
 <div id="root"></div>
 <script type="module" src="/src/main.jsx"></script>
 </body>
